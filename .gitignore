@@ -1,3 +1,20 @@
-foundryvtt/*
-projectfu
+# IDE
+.idea/
+.vs/
+.vscode/
+*.code-workspace
+
+# Node Modules
+node_modules/
+npm-debug.log
+
+# Local configuration
+foundryconfig.json
+*.lock
+
+# Distribution files
 dist
+
+# Workspace
+foundryvtt
+projectfu
