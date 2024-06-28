@@ -1,0 +1,36 @@
+{
+	"id": "fu-roll-enhancements",
+	"title": "Fabula Ultima Roll Enhancements",
+	"version": "0.0.1",
+	"compatibility": {
+		"minimum": "11",
+		"verified": "11"
+	},
+	"relationships": {
+		"systems": [
+			{
+				"id": "projectfu",
+				"type": "system",
+				"compatibility": {}
+			}
+		]
+	},
+	"authors": [
+		{
+			"name": "Elemental_Re",
+			"discord": "elemental_re",
+			"flags": {}
+		}
+	],
+	"esmodules" : [
+		"fu-roll-enhancements.mjs"
+	],
+	"languages": [
+		{
+			"lang": "en",
+			"name": "English",
+			"path": "lang/en.json",
+			"flags": {}
+		}
+	]
+}
