@@ -25,6 +25,9 @@
 	"esmodules" : [
 		"fu-roll-enhancements.mjs"
 	],
+	"styles": [
+		"styles/styles.css"
+	],
 	"languages": [
 		{
 			"lang": "en",

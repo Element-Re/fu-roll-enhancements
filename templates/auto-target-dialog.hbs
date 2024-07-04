@@ -1,0 +1,45 @@
+<div class="projectfu">
+  <div class="items-list">
+    <div class="item">
+      <div class="item-name">
+        <div class="item-image">
+          <img src="{{item.img}}">
+        </div>
+          <h4 class="resource-content">
+            <span class="resource-text-m" style="align-items: center;">{{item.name}}</span>
+          </h4>
+      </div>
+    </div>
+  </div>
+  <form id="autoTargetForm">
+    <fieldset class="title-fieldset desc resource-content">
+      <legend class="resource-label-full">
+        <label class="resource-label-m">
+          {{localize "fu-roll-enhancements.autoTarget.title"}}
+        </label>
+      </legend>
+      <div class="item-settings">
+        <label class="checkbox resource-label-sm">
+          <span>{{localize "fu-roll-enhancements.autoTarget.repeat.label"}}</span><input
+            name="repeat" type="checkbox" {{checked item.flags.fu-roll-enhancements.autoTarget.repeat}}>
+        </label>
+      </div>
+      <div class="grid grid-4-col gap-5">
+        <div class="resource-content flexcol flex-group-center">
+          <label for="targetSide" class="resource-label-m flexlarge">
+            {{localize "fu-roll-enhancements.autoTarget.targetSide.label"}}
+          </label>
+          <select name="targetSide" class="resource-inputs select-dropdown-l">
+            {{selectOptions targetSides selected=item.flags.fu-roll-enhancements.autoTarget.targetSide localize=true}}
+          </select>
+        </div>
+        <div class="resource-content flexcol flex-group-center">
+          <label for="maxTargets" class="resource-label-m flexlarge">
+            {{localize "fu-roll-enhancements.autoTarget.maxTargets.label"}}
+          </label>
+          <input type="number" name="maxTargets" class="resource-inputs select-dropdown-l" value="{{item.flags.fu-roll-enhancements.autoTarget.maxTargets}}">
+        </div>
+      </div>
+    </fieldset>
+  </form>
+</div>

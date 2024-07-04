@@ -1,14 +1,30 @@
 {
-    "fu-roll-enhancements": {
-        "settings": {
-            "preRollItemMacro": {
-                "name": "Item Macro \"pre\" Event",
-                "hint": "Requires Item Macro module. Execute Item Macro on an Item before it is rolled, passing the \"pre\" event."
-            },
-            "postRollItemMacro": {
-                "name": "Item Macro \"post\" Event",
-                "hint": "Requires Item Macro module. Execute Item Macro on an Item after it is rolled, passing the \"post\" event. If you enable both this and the Item Macro \"pre\" event, be sure to check the event (args[0]) in your Item macros to avoid executing them twice."
-            }
-        }
-    }
+    "fu-roll-enhancements.settings.prerollItemMacro.name": "Item Macro \"pre\" Event",
+    "fu-roll-enhancements.settings.prerollItemMacro.hint": "Requires Item Macro module. Execute Item Macro on an Item before it is rolled, passing the \"pre\" event.",
+    "fu-roll-enhancements.settings.postRollItemMacro.name": "Item Macro \"post\" Event",
+    "fu-roll-enhancements.settings.postRollItemMacro.hint": "Requires Item Macro module. Execute Item Macro on an Item after it is rolled, passing the \"post\" event. If you enable both this and the Item Macro \"pre\" event, be sure to check the event (args[0]) in your Item macros to avoid executing them twice.",
+    "fu-roll-enhancements.autoTarget.title": "Auto Target",
+    "fu-roll-enhancements.autoTarget.skip": "Skip",
+    "fu-roll-enhancements.autoTarget.enable.label": "Enable?",
+    "fu-roll-enhancements.autoTarget.repeat.label": "Repeat targets?",
+    "fu-roll-enhancements.autoTarget.targetSide.label": "Target Side",
+    "fu-roll-enhancements.autoTarget.targetSide.sides.allies": "Allies",
+    "fu-roll-enhancements.autoTarget.targetSide.sides.enemies": "Enemies",
+    "fu-roll-enhancements.autoTarget.targetSide.sides.all": "All",
+    "fu-roll-enhancements.autoTarget.maxTargets.label": "Max Targets",
+    "fu-roll-enhancements.autoTarget.maxTargets.options.1": "One",
+    "fu-roll-enhancements.autoTarget.maxTargets.options.2": "Two",
+    "fu-roll-enhancements.autoTarget.maxTargets.options.3": "Three",
+    "fu-roll-enhancements.autoTarget.maxTargets.options.4": "Four",
+    "fu-roll-enhancements.autoTarget.maxTargets.options.5": "Five",
+    "fu-roll-enhancements.autoTarget.targetType.label": "Target Type",
+    "fu-roll-enhancements.autoTarget.targetType.types.doNotAutoTarget": "Do not auto target",
+    "fu-roll-enhancements.autoTarget.targetType.types.self": "Self",
+    "fu-roll-enhancements.autoTarget.targetType.types.oneCreature": "One creature",
+    "fu-roll-enhancements.autoTarget.targetType.types.upToTwoCreatures": "Up to two creatures",
+    "fu-roll-enhancements.autoTarget.targetType.types.upToThreeCreatures": "Up to three creatures",
+    "fu-roll-enhancements.autoTarget.targetType.types.upToFourCreatures": "Up to four creatures",
+    "fu-roll-enhancements.autoTarget.targetType.types.upToFiveCreatures": "Up to five creatures",
+    "fu-roll-enhancements.autoTarget.targetType.types.oneEquippedWeapon": "One equipped weapon",
+    "fu-roll-enhancements.autoTarget.targetType.types.special": "Special"
 }

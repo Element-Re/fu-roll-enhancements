@@ -1,0 +1,18 @@
+.auto-target .item-info {
+  display: flex;
+}
+
+.auto-target .item-info img {
+  width: 50px;
+  height: 50px;
+  margin-right: 1em;
+
+}
+
+.chat-message .projectfu.auto-target {
+  font-family: "PT Sans Narrow", sans-serif;
+}
+
+.chat-message .projectfu.auto-target .target:not(:last-child) {
+  margin-bottom: 0.5em;
+}

@@ -4,7 +4,8 @@
   "description": "Fabula Ultima Roll Enhancements",
   "main": "fu-roll-enhancements.mjs",
   "scripts": {
-    "build": "node build.js"
+    "build": "node build.js",
+    "build:watch": "node build.js --watch"
   },
   "repository": {
     "type": "git",
@@ -17,6 +18,7 @@
   },
   "homepage": "https://github.com/Elemental-Re/fu-roll-enhancements#readme",
   "dependencies": {
+    "chokidar": "^3.6.0",
     "npm": "^10.8.1"
   },
   "devDependencies": {
