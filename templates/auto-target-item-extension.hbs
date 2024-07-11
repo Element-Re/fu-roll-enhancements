@@ -1,12 +1,18 @@
 <fieldset class="title-fieldset desc resource-content">
   <legend class="resource-label-full">
     <label class="resource-label-m">
+      <i class="fas fa-crosshairs icon"></i>
       {{localize "fu-roll-enhancements.autoTarget.title"}}
     </label>
   </legend>
   <div class="item-settings">
     <label class="checkbox resource-label-sm">
       <span>{{localize "fu-roll-enhancements.autoTarget.enable.label"}}</span><input name="flags.fu-roll-enhancements.autoTarget.enable" type="checkbox" {{checked item.flags.fu-roll-enhancements.autoTarget.enable}}>
+    </label>
+    <label class="checkbox resource-label-sm">
+      <span>{{localize "fu-roll-enhancements.autoTarget.asMelee.label"}}</span><input
+        name="flags.fu-roll-enhancements.autoTarget.asMelee" type="checkbox"
+        {{checked item.flags.fu-roll-enhancements.autoTarget.asMelee}}>
     </label>
     <label class="checkbox resource-label-sm">
       <span>{{localize "fu-roll-enhancements.autoTarget.repeat.label"}}</span><input name="flags.fu-roll-enhancements.autoTarget.repeat" type="checkbox" {{checked item.flags.fu-roll-enhancements.autoTarget.repeat}}>
