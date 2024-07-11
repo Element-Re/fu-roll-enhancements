@@ -5,6 +5,8 @@
     "fu-roll-enhancements.settings.postRollItemMacro.hint": "Requires Item Macro module. Execute Item Macro on an Item after it is rolled, passing the \"post\" event. If you enable both this and the Item Macro \"pre\" event, be sure to check the event (args[0]) in your Item macros to avoid executing them twice.",
     "fu-roll-enhancements.autoTarget.title": "Auto Target",
     "fu-roll-enhancements.autoTarget.skip": "Skip",
+    "fu-roll-enhancements.autoTarget.dialog.name": "Show Auto Target Dialog",
+    "fu-roll-enhancements.autoTarget.dialog.hint": "Show a dialog to configure Auto Target when making a roll.",
     "fu-roll-enhancements.autoTarget.enable.label": "Enable?",
     "fu-roll-enhancements.autoTarget.repeat.label": "Repeat targets?",
     "fu-roll-enhancements.autoTarget.targetSide.label": "Target Side",

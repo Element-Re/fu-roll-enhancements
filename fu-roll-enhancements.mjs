@@ -1,7 +1,8 @@
-import { module, registerSettings } from "./module/settings.js";
+import { keyBinds, module, registerKeyBindings, registerSettings } from "./module/settings.js";
 
 Hooks.once('init', () => {
 	registerSettings();
+	registerKeyBindings();
 	loadTemplates([
 		"modules/fu-roll-enhancements/templates/auto-target-dialog.hbs",
 		"modules/fu-roll-enhancements/templates/auto-target-item-extension.hbs",
@@ -13,6 +14,7 @@ Hooks.once('ready', () => {
 });
 
 Hooks.on('renderFUItemSheet', async (item, $content, data) => {
+	if (!game.user.isGM) return;
 	const templateData = {
 		item: item.object,
 		targetSides: TARGET_SIDES,
@@ -31,7 +33,7 @@ const enableRollEnhancements = () => {
   // Add on-roll support for item macro
 	libWrapper.register('fu-roll-enhancements', 'CONFIG.Item.documentClass.prototype.roll', async function (wrapped, ...args) {
 		const item = this;
-		await autoTargetDialog(item);
+		await autoTargetWorkflow(item);
 		console.log("fu-roll-enhancements | done setting targets");
 		if (game.settings.get(module, "preRollItemMacro") && item.hasMacro && item.hasMacro())
 			await item.executeMacro("pre");
@@ -72,6 +74,7 @@ const autoTarget = (options, item) => {
 	}
 	
 	game.user.updateTokenTargets([...targetList.keys()].map(t => t.id));
+	
 	ChatMessage.create({
 		content: `<div class="projectfu auto-target"><fieldset class="title-fieldset"><legend class="resource-text-sm">Auto Target</legend><ol>${ [...targetList.keys()].map(t => `<li class="target">${t.document.actor.link}${targetList.get(t) > 1 ? ` x${targetList.get(t)}` : '' }</li>`).join('\n') }</ol></fieldset></div>`,
 		speaker: {
@@ -82,40 +85,50 @@ const autoTarget = (options, item) => {
 	});
 }
 
-const autoTargetDialog = async (item) => {
-	
+const autoTargetWorkflow = async (item) => {
+
 	// Only for GMs controlling NPCs, for items not marked as specifically not auto-targetable
-	if (!game.user.isGM || !item.actor || item.actor.type !== "npc" || !item.getFlag(module, "autoTarget")?.enable) return;
-	const templateData = {
-		item: item,
-		targetSides: TARGET_SIDES,
-	}
-	const targetDialogContent = await renderTemplate("modules/fu-roll-enhancements/templates/auto-target-dialog.hbs", templateData);
-	return Dialog.wait({
-		title: game.i18n.localize(`${module}.autoTarget.title`),
-		content: targetDialogContent,
-	  default: "cancel",
-		buttons: {
-			autoTarget: {
-				icon: '<i class="fas fa-bullseye"></i>',
-				label: game.i18n.localize(`${module}.autoTarget.title`),
-   			callback: (html) => {
-						const formElement = html[0].querySelector('form');
-						const formData = new FormDataExtended(formElement);
-						const formDataObject = formData.toObject();
-						autoTarget(formDataObject, item);
-				}
-			},
-			skip: {
-				icon: '<i class="fas fa-forward"></i>',
-				label: game.i18n.localize(`${module}.autoTarget.skip`),
-   			callback: () => console.log(`${module} | skipping autotarget`)
-			},
-		},
-		close: () => {
-			console.log("fu-roll-enhancements | closing dialog");
+	if (!game.user.isGM || !item.actor || item.actor.type !== "npc") return;
+
+	// If keybind is pressed, skip dialog
+	if (!keyBinds.autoTargetDialog) {
+			// Use item flag or sensible defaults
+			const options = item.getFlag(module, "autoTarget") || { maxTargets: 1, targetSide: "ENEMIES", repeat: false };
+			autoTarget(options, item);
+			return;
+	} else if (item.getFlag(module, "autoTarget")?.enable) {
+		// Handle dialog
+		const templateData = {
+			item: item,
+			targetSides: TARGET_SIDES,
 		}
-	});
+		const targetDialogContent = await renderTemplate("modules/fu-roll-enhancements/templates/auto-target-dialog.hbs", templateData);
+		return Dialog.wait({
+			title: game.i18n.localize(`${module}.autoTarget.title`),
+			content: targetDialogContent,
+			default: "cancel",
+			buttons: {
+				autoTarget: {
+					icon: '<i class="fas fa-bullseye"></i>',
+					label: game.i18n.localize(`${module}.autoTarget.title`),
+					callback: (html) => {
+							const formElement = html[0].querySelector('form');
+							const formData = new FormDataExtended(formElement);
+							const formDataObject = formData.toObject();
+							autoTarget(formDataObject, item);
+					}
+				},
+				skip: {
+					icon: '<i class="fas fa-forward"></i>',
+					label: game.i18n.localize(`${module}.autoTarget.skip`),
+					callback: () => console.log(`${module} | skipping autotarget`)
+				},
+			},
+			close: () => {
+				console.log("fu-roll-enhancements | closing dialog");
+			}
+		});
+	}
 }
 
 const TARGET_SIDES = Object.freeze ({
