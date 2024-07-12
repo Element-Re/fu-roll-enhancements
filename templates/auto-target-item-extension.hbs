@@ -2,26 +2,26 @@
   <legend class="resource-label-full">
     <label class="resource-label-m">
       <i class="fas fa-crosshairs icon"></i>
-      {{localize "fu-roll-enhancements.autoTarget.title"}}
+      {{localize "fu-roll-enhancements.autoTarget.options.title"}}
     </label>
   </legend>
   <div class="item-settings">
     <label class="checkbox resource-label-sm">
-      <span>{{localize "fu-roll-enhancements.autoTarget.enable.label"}}</span><input name="flags.fu-roll-enhancements.autoTarget.enable" type="checkbox" {{checked item.flags.fu-roll-enhancements.autoTarget.enable}}>
+      <span>{{localize "fu-roll-enhancements.autoTarget.options.enable.label"}}</span><input name="flags.fu-roll-enhancements.autoTarget.enable" type="checkbox" {{checked item.flags.fu-roll-enhancements.autoTarget.enable}}>
     </label>
     <label class="checkbox resource-label-sm">
-      <span>{{localize "fu-roll-enhancements.autoTarget.asMelee.label"}}</span><input
+      <span>{{localize "fu-roll-enhancements.autoTarget.options.asMelee.label"}}</span><input
         name="flags.fu-roll-enhancements.autoTarget.asMelee" type="checkbox"
         {{checked item.flags.fu-roll-enhancements.autoTarget.asMelee}}>
     </label>
     <label class="checkbox resource-label-sm">
-      <span>{{localize "fu-roll-enhancements.autoTarget.repeat.label"}}</span><input name="flags.fu-roll-enhancements.autoTarget.repeat" type="checkbox" {{checked item.flags.fu-roll-enhancements.autoTarget.repeat}}>
+      <span>{{localize "fu-roll-enhancements.autoTarget.options.repeat.label"}}</span><input name="flags.fu-roll-enhancements.autoTarget.repeat" type="checkbox" {{checked item.flags.fu-roll-enhancements.autoTarget.repeat}}>
     </label>
   </div>
   <div class="grid grid-4-col gap-5">
     <div class="resource-content flexcol flex-group-center">
       <label for="flags.fu-roll-enhancements.autoTarget.targetSide" class="resource-label-m flexlarge">
-        {{localize "fu-roll-enhancements.autoTarget.targetSide.label"}}
+        {{localize "fu-roll-enhancements.autoTarget.options.targetSide.label"}}
       </label>
       <select name="flags.fu-roll-enhancements.autoTarget.targetSide" class="resource-inputs select-dropdown-l">
         <option></option>
@@ -30,7 +30,7 @@
     </div>
     <div class="resource-content flexcol flex-group-center">
       <label for="flags.fu-roll-enhancements.autoTarget.maxTargets" class="resource-label-m flexlarge">
-        {{localize "fu-roll-enhancements.autoTarget.maxTargets.label"}}
+        {{localize "fu-roll-enhancements.autoTarget.options.maxTargets.label"}}
       </label>
       <input type="number" name="flags.fu-roll-enhancements.autoTarget.maxTargets" class="resource-inputs select-dropdown-l" value="{{item.flags.fu-roll-enhancements.autoTarget.maxTargets}}">
     </div>

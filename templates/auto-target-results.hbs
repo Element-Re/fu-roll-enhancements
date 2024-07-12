@@ -1,0 +1,20 @@
+<div class="projectfu auto-target">
+  <fieldset class="title-fieldset">
+    <legend class="resource-text-sm">{{localize "fu-roll-enhancements.autoTarget.results.title"}}</legend>
+    {{#if results}}
+      <ol>
+      {{#each results}}
+      <li class="target">
+        {{target.document.actor.link}}
+        {{#if (gt count 1)}}x{{count}}{{/if}}
+        {{#if wasForced}}({{localize "fu-roll-enhancements.autoTarget.results.forced"}}){{/if}}
+      </li>
+      {{/each}}
+      </ol>
+      {{else}}
+      <ul>
+        <li>{{Localize "fu-roll-enhancements.autoTarget.results.noTargets"}}</li>
+      <ul>
+    {{/if}}
+  </fieldset>
+</div>

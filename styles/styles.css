@@ -15,3 +15,11 @@
 .chat-message .projectfu.auto-target .target:not(:last-child) {
   margin-bottom: 0.5em;
 }
+
+#auto-target-dialog .dialog-buttons .dialog-button {
+  flex-basis: 50%;
+}
+
+#auto-target-dialog .dialog-buttons button {
+  margin: 0;
+}
