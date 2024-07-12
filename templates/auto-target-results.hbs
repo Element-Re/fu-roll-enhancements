@@ -1,6 +1,6 @@
 <div class="projectfu auto-target">
   <fieldset class="title-fieldset">
-    <legend class="resource-text-sm">{{localize "fu-roll-enhancements.autoTarget.results.title"}}</legend>
+    <legend class="resource-text-sm">{{localize "fu-roll-enhancements.autoTarget.results.title" targetType=targetType}}</legend>
     {{#if results}}
       <ol>
       {{#each results}}
@@ -13,7 +13,7 @@
       </ol>
       {{else}}
       <ul>
-        <li>{{Localize "fu-roll-enhancements.autoTarget.results.noTargets"}}</li>
+        <li>{{localize "fu-roll-enhancements.autoTarget.results.noTargets"}}</li>
       <ul>
     {{/if}}
   </fieldset>

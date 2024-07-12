@@ -21,21 +21,17 @@
       </legend>
       <div class="item-settings">
         <label class="checkbox resource-label-sm">
-          <span>{{localize "fu-roll-enhancements.autoTarget.options.asMelee.label"}}</span><input name="asMelee" type="checkbox"
-            {{checked item.flags.fu-roll-enhancements.autoTarget.asMelee}}>
-        </label>
-        <label class="checkbox resource-label-sm">
           <span>{{localize "fu-roll-enhancements.autoTarget.options.repeat.label"}}</span><input
             name="repeat" type="checkbox" {{checked item.flags.fu-roll-enhancements.autoTarget.repeat}}>
         </label>
       </div>
       <div class="grid grid-4-col gap-5">
         <div class="resource-content flexcol flex-group-center">
-          <label for="targetSide" class="resource-label-m flexlarge">
-            {{localize "fu-roll-enhancements.autoTarget.options.targetSide.label"}}
+          <label for="targetType" class="resource-label-m flexlarge">
+            {{localize "fu-roll-enhancements.autoTarget.options.targetType.label"}}
           </label>
-          <select name="targetSide" class="resource-inputs select-dropdown-l">
-            {{selectOptions targetSides selected=item.flags.fu-roll-enhancements.autoTarget.targetSide localize=true}}
+          <select name="targetType" class="resource-inputs select-dropdown-l">
+            {{selectOptions targetTypes selected=item.flags.fu-roll-enhancements.autoTarget.targetType localize=true}}
           </select>
         </div>
         <div class="resource-content flexcol flex-group-center">

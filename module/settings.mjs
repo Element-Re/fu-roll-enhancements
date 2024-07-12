@@ -1,11 +1,11 @@
-export const module = "fu-roll-enhancements";
+export const MODULE = "fu-roll-enhancements";
 
 export const keyBinds = { autoTargetDialog: false };
 
 export const registerSettings = () => {
-	game.settings.register(module, "preRollItemMacro", {
-		name: `${module}.settings.preRollItemMacro.name`,
-		hint: `${module}.settings.preRollItemMacro.hint`,
+	game.settings.register(MODULE, "preRollItemMacro", {
+		name: `${MODULE}.settings.preRollItemMacro.name`,
+		hint: `${MODULE}.settings.preRollItemMacro.hint`,
 		scope: "world",
 		config: true,
 		requiresReload: false,
@@ -13,21 +13,31 @@ export const registerSettings = () => {
 		default: false
 	});
 	
-	game.settings.register(module, "postRollItemMacro", {
-		name: `${module}.settings.postRollItemMacro.name`,
-		hint: `${module}.settings.postRollItemMacro.hint`,
+	game.settings.register(MODULE, "postRollItemMacro", {
+		name: `${MODULE}.settings.postRollItemMacro.name`,
+		hint: `${MODULE}.settings.postRollItemMacro.hint`,
 		scope: "world",
 		config: true,
 		requiresReload: false,
 		type: Boolean,
 		default: false
 	});
+
+	game.settings.register(MODULE, "allowPlayerAutoTarget", {
+		name: `${MODULE}.settings.allowPlayerAutoTarget.name`,
+		hint: `${MODULE}.settings.allowPlayerAutoTarget.hint`,
+		scope: "world",
+		config: true,
+		requiresReload: true,
+		type: Boolean,
+		default: false
+	});
 }
 
 export const registerKeyBindings = () => {
-	game.keybindings.register(module, "autoTargetDialog", {
-		name: game.i18n.localize(`${module}.autoTarget.dialog.name`),
-		hint: game.i18n.localize(`${module}.autoTarget.dialog.hint`),
+	game.keybindings.register(MODULE, "autoTargetDialog", {
+		name: game.i18n.localize(`${MODULE}.autoTarget.dialog.name`),
+		hint: game.i18n.localize(`${MODULE}.autoTarget.dialog.hint`),
 		editable: [
 			{
 				key: "AltLeft"
@@ -42,7 +52,6 @@ export const registerKeyBindings = () => {
 		onUp: () => {
 			keyBinds.autoTargetDialog = false;
 		},
-		restricted: true,
 		precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
 	});
 };

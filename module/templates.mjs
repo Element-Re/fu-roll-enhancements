@@ -1,10 +1,12 @@
-import { TARGET_SIDES } from './rolls.mjs';
+import { TARGET_TYPES } from './rolls.mjs';
+import { MODULE } from './settings.mjs';
 
 export const renderItemSheetHandler = async (item, $content) => {
-  if (!game.user.isGM) return;
+  if (!game.user.isGM && !game.settings.get(MODULE, "allowPlayerAutoTarget")) return;
+
     const templateData = {
       item: item.object,
-      targetSides: TARGET_SIDES,
+      targetTypes: TARGET_TYPES,
     };
     const itemExtensionContent = await renderTemplate("modules/fu-roll-enhancements/templates/auto-target-item-extension.hbs", templateData);
     const attributesTab = $content.find(".tab.attributes[data-tab=attributes]").first();

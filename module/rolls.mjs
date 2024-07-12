@@ -1,4 +1,4 @@
-import { keyBinds, module } from './settings.mjs';
+import { keyBinds, MODULE } from './settings.mjs';
 import { TEMPLATES } from './templates.mjs';
 
 export async function rollEnhancements (wrapped, ...args) {
@@ -7,36 +7,35 @@ export async function rollEnhancements (wrapped, ...args) {
 	await autoTargetWorkflow(item);
 	console.log("fu-roll-enhancements | done setting targets");
 	// Item macro "pre" event
-	if (game.settings.get(module, "preRollItemMacro") && item.hasMacro && item.hasMacro())
+	if (game.settings.get(MODULE, "preRollItemMacro") && item.hasMacro && item.hasMacro())
 		await item.executeMacro("pre");
-	// Chain wrapped functions
+	// Chain wrapped function(s)
 	const returnValue = await wrapped(...args);
 	// Item macro "post" event
-	if (game.settings.get(module, "postRollItemMacro") && item.hasMacro && item.hasMacro())
+	if (game.settings.get(MODULE, "postRollItemMacro") && item.hasMacro && item.hasMacro())
 		await item.executeMacro("post");
 	return returnValue;
 }
 
 async function autoTargetWorkflow(item) {
-	// Only for GMs controlling NPCs
-	if (!game.user.isGM || !item.actor || item.actor.type !== "npc") return;
+	if (!item.actor || (!game.user.isGM && !game.settings.get(MODULE, "allowPlayerAutoTarget"))) return;
 
 	// If keybind is pressed, show dialog
 	if (keyBinds.autoTargetDialog) {
 		const templateData = {
 			item: item,
-			options: item.getFlag(module, "autoTarget"),
-			targetSides: TARGET_SIDES,
+			options: item.getFlag(MODULE, "autoTarget"),
+			targetTypes: TARGET_TYPES,
 		};
 		const targetDialogContent = await renderTemplate(TEMPLATES.AUTO_TARGET_DIALOG, templateData);
 		return Dialog.wait({
-			title: game.i18n.localize(`${module}.autoTarget.dialog.title`),
+			title: game.i18n.localize(`${MODULE}.autoTarget.dialog.title`),
 			content: targetDialogContent,
 			default: "cancel",
 			buttons: {
 				target: {
 					icon: '<i class="fas fa-crosshairs"></i>',
-					label: game.i18n.localize(`${module}.autoTarget.dialog.buttons.target`),
+					label: game.i18n.localize(`${MODULE}.autoTarget.dialog.buttons.target`),
 					callback: (html) => {
 						const options = getFormOptions(html);
 						autoTarget(options, item);
@@ -44,29 +43,29 @@ async function autoTargetWorkflow(item) {
 				},
 				updateAndTarget: {
 					icon: '<i class="fas fa-floppy-disk"></i>',
-					label: game.i18n.localize(`${module}.autoTarget.dialog.buttons.updateAndTarget`),
+					label: game.i18n.localize(`${MODULE}.autoTarget.dialog.buttons.updateAndTarget`),
 					callback: (html) => {
 						const options = getFormOptions(html)
 						autoTarget(options, item);
-						item.setFlag(module, "autoTarget", foundry.utils.mergeObject(options, {enable: true}));
+						item.setFlag(MODULE, "autoTarget", foundry.utils.mergeObject(options, {enable: true}));
 					}
 				},
 				skip: {
 					icon: '<i class="fas fa-forward"></i>',
-					label: game.i18n.localize(`${module}.autoTarget.dialog.buttons.skip`),
+					label: game.i18n.localize(`${MODULE}.autoTarget.dialog.buttons.skip`),
 				},
 				disable: {
 					icon: '<i class="fas fa-ban"></i>',
-					label: game.i18n.localize(`${module}.autoTarget.dialog.buttons.disable`),
-					callback: () => item.setFlag(module, "autoTarget.enable", false)
+					label: game.i18n.localize(`${MODULE}.autoTarget.dialog.buttons.disable`),
+					callback: () => item.setFlag(MODULE, "autoTarget.enable", false)
 				},
 			},
 			close: () => {
 				console.log("fu-roll-enhancements | closing dialog");
 			}
 		}, {id: "auto-target-dialog"}); 
-	} else if (item.getFlag(module, "autoTarget")?.enable) {
-		const options = item.getFlag(module, "autoTarget");
+	} else if (item.getFlag(MODULE, "autoTarget")?.enable) {
+		const options = item.getFlag(MODULE, "autoTarget");
 		autoTarget(options, item);
 		return;
 	}
@@ -74,52 +73,58 @@ async function autoTargetWorkflow(item) {
 
 async function autoTarget(options, item) {
 	if (!options || !item) return;
+	options.targetType = options.targetType || "ENEMIES"; // Default to enemies
 	const targetList = new Map();
-	if (options.targetSide === "SELF") {
+	if (options.targetType === "SELF") {
 		item.actor.getActiveTokens().forEach(t => targetList.set(t, { count: 1 }));
 	} else {
 		let targetCandidates = [];
-		const rollerTokenOrProtoType = item.actor.token ? item.actor.token : item.actor.prototypeToken;
+		const rollerTokenOrProtoType = item.actor.token || item.actor.prototypeToken;
 		// Treat neutral and secret rolls as friendly for the sake of targetting.
 		const rollerDisposition = [CONST.TOKEN_DISPOSITIONS.NEUTRAL, CONST.TOKEN_DISPOSITIONS.SECRET].includes(rollerTokenOrProtoType.disposition) ? CONST.TOKEN_DISPOSITIONS.FRIENDLY : rollerTokenOrProtoType.disposition;
-		let filter;
-		if (options.targetSide === "ALLIES") {
-			filter = t => t.document.disposition === rollerDisposition && t.actor.id !== item.actor.id && t.id !== rollerTokenOrProtoType.id;
-		} else if (options.targetSide === "ALLIES_AND_SELF") {
-			filter = t => t.document.disposition === rollerDisposition;
-		} else if (options.targetSide === "ENEMIES") {
-			filter = t => {
+		let targetFilter;
+		if (options.targetType === "ALLIES") {
+			targetFilter = t => t.document.disposition === rollerDisposition && t.actor.id !== item.actor.id && t.id !== rollerTokenOrProtoType.id;
+		} else if (options.targetType === "ALLIES_AND_SELF") {
+			targetFilter = t => t.document.disposition === rollerDisposition;
+		} else if (options.targetType === "ALL") {
+			targetFilter = t => Math.abs(t.document.disposition) === Math.abs(rollerDisposition);
+		} else {
+			// ENEMIES and ENEMIES_MELEE
+			targetFilter = t => {
 				const effects = [...t.actor.effects];
 				return !t.document.hidden &&
 					t.document.disposition === -rollerDisposition &&
 					!effects.some(e => {
 						const statuses = [...e.statuses];
-						return statuses.some(s => UNTARGETABLE_ALL_EFFECTS.includes(s) || (options.asMelee && UNTARGETABLE_MELEE_EFFECTS.includes(s)));
+						return statuses.some(s => UNTARGETABLE_ALL_EFFECTS.includes(s) || (options.targetType === "ENEMIES_MELEE" && UNTARGETABLE_MELEE_EFFECTS.includes(s)));
 					});
 			};
-		} else {
-			filter = t => Math.abs(t.document.disposition) === Math.abs(rollerDisposition);
 		}
 
-		targetCandidates.push(...game.canvas.tokens.placeables.filter(filter));
+		targetCandidates.push(...game.canvas.tokens.placeables.filter(targetFilter));
 
 		if (typeof options.maxTargets === "number" && options.maxTargets > 0) {
 
 			const forcedTargetsSet = new Set();
 
-			[...item.actor.effects].forEach(e => {
-				const effectStatuses = [...e.statuses];
-				if (e.origin && effectStatuses.some(s => FORCE_TARGET_EFFECTS.includes(s))) {
-					const origin = fromUuidSync(e.origin);
-					const forcedTarget = targetCandidates.find(t => t.document.actor.uuid === (origin.actor || origin)?.uuid);
-					if (forcedTarget) {
-						forcedTargetsSet.add(forcedTarget);
-					} else {
-						ui.notifications.warn(game.i18n.localize(`${module}.autoTarget.errors.forcedTargetFailed`));
-						return false;
+			// Force targets only for rolls targeting enemies.
+			if (["ENEMIES", "ENEMIES_MELEE"].includes(options.targetType)) {
+				[...item.actor.effects].forEach(e => {
+					const effectStatuses = [...e.statuses];
+					if (e.origin && effectStatuses.some(s => FORCE_TARGET_EFFECTS.includes(s))) {
+						const origin = fromUuidSync(e.origin);
+						const forcedTargetIndex = targetCandidates.findIndex(t => t.document.actor.uuid === (origin.actor || origin)?.uuid);
+						if (forcedTargetIndex >= 0) {
+							const forcedTarget = options.repeat ? targetCandidates[forcedTargetIndex] : targetCandidates.splice(forcedTargetIndex, 1)[0];
+							forcedTargetsSet.add(forcedTarget);
+						} else {
+							ui.notifications.warn(game.i18n.format(`${MODULE}.autoTarget.errors.forcedTargetInvalid`, {effect: e.name, roller: (item.actor.token || item.actor.prototypeToken).name}));
+							return false;
+						}
 					}
-				}
-			});
+				});
+			}
 
 			const forcedTargets = [...forcedTargetsSet];
 
@@ -138,7 +143,8 @@ async function autoTarget(options, item) {
 	game.user.updateTokenTargets([...targetList.keys()].map(t => t.id));
 
 	const templateData = {
-		results: [...targetList.keys()].map(t => foundry.utils.mergeObject(targetList.get(t), {target: t}))
+		results: [...targetList.keys()].map(t => foundry.utils.mergeObject(targetList.get(t), {target: t})),
+		targetType: game.i18n.localize(TARGET_TYPES[options.targetType])
 	}
 	ChatMessage.create({
 		content: await renderTemplate(TEMPLATES.AUTO_TARGET_RESULTS, templateData),
@@ -146,22 +152,23 @@ async function autoTarget(options, item) {
 			actor: item.actor,
 			token: item.actor.token
 		},
-		flavor: item.name
+		flavor: `${item.name}`
 	});
 }
 
 function getFormOptions(html) {
 	const formElement = html[0].querySelector('form');
 	const formData = new FormDataExtended(formElement);
-	return formData.toObject();
+	return formData.object;
 }
 
-export const TARGET_SIDES = Object.freeze ({
-	ENEMIES: `${module}.autoTarget.options.targetSide.sides.enemies`,
-	ALLIES: `${module}.autoTarget.options.targetSide.sides.allies`,
-	SELF: `${module}.autoTarget.options.targetType.sides.self`,
-	ALLIES_AND_SELF: `${module}.autoTarget.options.targetSide.sides.alliesAndSelf`,
-	ALL: `${module}.autoTarget.options.targetSide.sides.all`
+export const TARGET_TYPES = Object.freeze ({
+	ENEMIES: `${MODULE}.autoTarget.options.targetType.sides.enemies`,
+	ENEMIES_MELEE: `${MODULE}.autoTarget.options.targetType.sides.enemiesMelee`,
+	ALLIES: `${MODULE}.autoTarget.options.targetType.sides.allies`,
+	SELF: `${MODULE}.autoTarget.options.targetType.sides.self`,
+	ALLIES_AND_SELF: `${MODULE}.autoTarget.options.targetType.sides.alliesAndSelf`,
+	ALL: `${MODULE}.autoTarget.options.targetType.sides.all`
 });
 
 const UNTARGETABLE_MELEE_EFFECTS = ['flying', 'cover'];
