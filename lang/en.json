@@ -20,6 +20,7 @@
     "fu-roll-enhancements.autoTarget.options.targetType.sides.allies": "Allies",
     "fu-roll-enhancements.autoTarget.options.targetType.sides.enemies": "Enemies",
     "fu-roll-enhancements.autoTarget.options.targetType.sides.enemiesMelee": "Enemies (Melee)",
+    "fu-roll-enhancements.autoTarget.options.targetType.sides.enemiesMeleeFlying": "Enemies (Melee+Flying)",
     "fu-roll-enhancements.autoTarget.options.targetType.sides.self": "Self",
     "fu-roll-enhancements.autoTarget.options.targetType.sides.alliesAndSelf": "Allies and Self",
     "fu-roll-enhancements.autoTarget.options.targetType.sides.all": "All",
