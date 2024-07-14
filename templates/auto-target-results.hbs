@@ -7,7 +7,7 @@
       <li class="target">
         {{target.document.actor.link}}
         {{#if (gt count 1)}}x{{count}}{{/if}}
-        {{#if wasForced}}({{localize "fu-roll-enhancements.autoTarget.results.forced"}}){{/if}}
+        {{#if forcedBy}}({{forcedBy.name}}){{/if}}
       </li>
       {{/each}}
       </ol>

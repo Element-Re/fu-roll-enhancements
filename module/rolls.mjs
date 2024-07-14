@@ -115,7 +115,7 @@ async function autoTarget(options, item) {
 
 		if (typeof options.maxTargets === "number" && options.maxTargets > 0) {
 
-			const forcedTargetsSet = new Set();
+			const forcedTargetsMap = new Map();
 
 			// Force targets only for rolls targeting enemies.
 			if (["ENEMIES", "ENEMIES_MELEE", "ENEMIES_MELEE_FLYING"].includes(options.targetType)) {
@@ -126,7 +126,7 @@ async function autoTarget(options, item) {
 						const forcedTargetIndex = targetCandidates.findIndex(t => t.document.actor.uuid === (origin.actor || origin)?.uuid);
 						if (forcedTargetIndex >= 0) {
 							const forcedTarget = options.repeat ? targetCandidates[forcedTargetIndex] : targetCandidates.splice(forcedTargetIndex, 1)[0];
-							forcedTargetsSet.add(forcedTarget);
+							forcedTargetsMap.set(forcedTarget, e);
 						} else {
 							ui.notifications.warn(game.i18n.format(`${MODULE}.autoTarget.errors.forcedTargetInvalid`, {effect: e.name, roller: (item.actor.token || item.actor.prototypeToken).name}));
 							return false;
@@ -135,7 +135,7 @@ async function autoTarget(options, item) {
 				});
 			}
 
-			const forcedTargets = [...forcedTargetsSet];
+			const forcedTargets = [...forcedTargetsMap.keys()];
 
 			let i = 0;
 			while (i < options.maxTargets && (forcedTargets.length > 0 || targetCandidates.length > 0)) {
@@ -143,7 +143,7 @@ async function autoTarget(options, item) {
 				let drawPile = forced ? forcedTargets : targetCandidates;
 				var start = Math.floor(Math.random() * (drawPile.length));
 				const target = options.repeat && drawPile === targetCandidates ? drawPile[start] : drawPile.splice(start, 1)[0];
-				targetList.set(target, (targetList.has(target) ? foundry.utils.mergeObject(targetList.get(target), { count: targetList.get(target).count + 1 }) : { count: 1, wasForced: forced }));
+				targetList.set(target, (targetList.has(target) ? foundry.utils.mergeObject(targetList.get(target), { count: targetList.get(target).count + 1 }) : { count: 1, forcedBy: forcedTargetsMap.get(target) }));
 				i++;
 			}
 		} else targetCandidates.forEach(t => targetList.set(t, { count: 1 }));

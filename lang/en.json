@@ -26,7 +26,6 @@
     "fu-roll-enhancements.autoTarget.options.targetType.sides.all": "All",
     "fu-roll-enhancements.autoTarget.options.maxTargets.label": "Max Targets",
     "fu-roll-enhancements.autoTarget.results.title": "Auto Target: {targetType}",
-    "fu-roll-enhancements.autoTarget.results.forced": "Forced",
     "fu-roll-enhancements.autoTarget.results.noTargets": "No valid targets",
     "fu-roll-enhancements.autoTarget.errors.forcedTargetInvalid": "Tried to force a target for {roller} due to {effect}, but the target was invalid."
 }
