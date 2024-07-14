@@ -16,10 +16,10 @@
   margin-bottom: 0.5em;
 }
 
-#auto-target-dialog .dialog-buttons .dialog-button {
+:is(#auto-target-dialog, #auto-spend-dialog) .dialog-buttons .dialog-button {
   flex-basis: 50%;
 }
 
-#auto-target-dialog .dialog-buttons button {
+:is(#auto-target-dialog, #auto-spend-dialog) .dialog-buttons button {
   margin: 0;
 }

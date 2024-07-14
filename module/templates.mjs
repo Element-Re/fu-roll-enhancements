@@ -8,7 +8,7 @@ export const renderItemSheetHandler = async (item, $content) => {
       item: item.object,
       targetTypes: TARGET_TYPES,
     };
-    const itemExtensionContent = await renderTemplate("modules/fu-roll-enhancements/templates/auto-target-item-extension.hbs", templateData);
+    const itemExtensionContent = await renderTemplate(TEMPLATES.ITEM_EXTENSION, templateData);
     const attributesTab = $content.find(".tab.attributes[data-tab=attributes]").first();
     if(!attributesTab.length) return;
     if (attributesTab.find("section.grid").length) {
@@ -20,15 +20,19 @@ export const renderItemSheetHandler = async (item, $content) => {
 export const initializeTemplates = () => {
   loadTemplates([
 		TEMPLATES.AUTO_TARGET_DIALOG,
-		TEMPLATES.AUTO_TARGET_ITEM_EXTENSION,
-    TEMPLATES.AUTO_TARGET_RESULTS
+    TEMPLATES.AUTO_SPEND_DIALOG,
+		TEMPLATES.ITEM_EXTENSION,
+    TEMPLATES.AUTO_TARGET_RESULTS,
+    TEMPLATES.SIMPLE_CHAT_MESSAGE
 	]);
 }
 
 export const TEMPLATES = Object.freeze({
   AUTO_TARGET_DIALOG: "modules/fu-roll-enhancements/templates/auto-target-dialog.hbs",
-  AUTO_TARGET_ITEM_EXTENSION: "modules/fu-roll-enhancements/templates/auto-target-item-extension.hbs",
+  AUTO_SPEND_DIALOG: "modules/fu-roll-enhancements/templates/auto-spend-dialog.hbs",
+  ITEM_EXTENSION: "modules/fu-roll-enhancements/templates/item-extension.hbs",
   AUTO_TARGET_RESULTS: "modules/fu-roll-enhancements/templates/auto-target-results.hbs",
+  SIMPLE_CHAT_MESSAGE: "modules/fu-roll-enhancements/templates/simple-chat-message.hbs",
 });
 
 

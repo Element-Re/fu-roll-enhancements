@@ -1,0 +1,48 @@
+<div class="projectfu">
+  <div class="items-list">
+    <div class="item">
+      <div class="item-name">
+        <div class="item-image">
+          <img src="{{item.img}}">
+        </div>
+        <h4 class="resource-content">
+          <span class="resource-text-m" style="align-items: center;">{{item.name}}</span>
+        </h4>
+      </div>
+    </div>
+  </div>
+  <form id="autoSpendForm">
+    <fieldset class="title-fieldset desc resource-content">
+      <legend class="resource-label-full">
+        <label class="resource-label-m">
+          <i class="fas fa-bars-progress icon"></i>
+          {{localize "fu-roll-enhancements.autoSpend.options.title"}}
+        </label>
+      </legend>
+      <div class="item-settings">
+        <label class="checkbox resource-label-sm">
+          <span>{{localize "fu-roll-enhancements.autoSpend.options.perTarget.label"}}</span><input
+            name="perTarget" type="checkbox" {{checked item.flags.fu-roll-enhancements.autoSpend.perTarget}}>
+        </label>
+      </div>
+      <div class="grid grid-4-col gap-5">
+        <div class="resource-content flexcol flex-group-center">
+          <label for="resourceType" class="resource-label-m">
+            {{localize "fu-roll-enhancements.autoSpend.options.resourceType.label"}}
+          </label>
+          <select name="resourceType" class="resource-inputs select-dropdown-l">
+            {{selectOptions resourceTypes labelAttr="label" selected=item.flags.fu-roll-enhancements.autoSpend.cost.resourceType localize=true}}
+          </select>
+        </div>
+        <div class="resource-content flexcol flex-group-center">
+          <label for="value" class="resource-label-m">
+            {{localize "fu-roll-enhancements.autoSpend.options.cost.label"}}
+          </label>
+          <input type="number" name="value" class="resource-inputs"
+            value="{{item.flags.fu-roll-enhancements.autoSpend.cost.value}}">
+        </div>
+      </div>
+    </fieldset>
+
+  </form>
+</div>

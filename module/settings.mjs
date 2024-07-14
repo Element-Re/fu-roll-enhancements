@@ -32,6 +32,16 @@ export const registerSettings = () => {
 		type: Boolean,
 		default: false
 	});
+
+	game.settings.register(MODULE, "enableAutoSpend", {
+		name: `${MODULE}.settings.enableAutoSpend.name`,
+		hint: `${MODULE}.settings.enableAutoSpend.hint`,
+		scope: "client",
+		config: true,
+		requiresReload: false,
+		type: Boolean,
+		default: true
+	});
 }
 
 export const registerKeyBindings = () => {

@@ -3,12 +3,17 @@ import { TEMPLATES } from './templates.mjs';
 
 export async function rollEnhancements (wrapped, ...args) {
 	const item = this;
-	// Run auto target workflow before roll
-	await autoTargetWorkflow(item);
+	const showDialogs = keyBinds.autoTargetDialog; // TODO: Seperate keybinds?
+
+	// Auto Target
+	await autoTargetWorkflow(item, showDialogs);
 	console.log("fu-roll-enhancements | done setting targets");
 	// Item macro "pre" event
 	if (game.settings.get(MODULE, "preRollItemMacro") && item.hasMacro && item.hasMacro())
 		await item.executeMacro("pre");
+	// Auto Spend
+	await autoSpendWorkflow(item, game.user.targets.size, showDialogs);
+	console.log("fu-roll-enhancements | done spending costs");
 	// Chain wrapped function(s)
 	const returnValue = await wrapped(...args);
 	// Item macro "post" event
@@ -17,11 +22,101 @@ export async function rollEnhancements (wrapped, ...args) {
 	return returnValue;
 }
 
-async function autoTargetWorkflow(item) {
+
+function getCost(item, targetCount, overrideCost = item.getFlag(MODULE, 'autoSpend.cost')) {
+	if (overrideCost?.value || !item.system.mpCost) return overrideCost;
+	const spellCostMatch = item.system.mpCost.value?.match(/^(\d+)(\s\w+\s)?(t)?/i);
+	const spellCost = spellCostMatch[1];
+	return spellCost ? {
+		value: new Number(spellCost) * (spellCostMatch[3] ? targetCount : 1),
+		resourceType: "MP"
+	} : null;
+}
+
+async function autoSpendWorkflow(item, targetCount, showDialog) {
+	if (!item.actor || !game.settings.get(MODULE, "enableAutoSpend")) return;
+	const templateData = {
+			item: item,
+			options: item.getFlag(MODULE, "autoSpend"),
+			resourceTypes: RESOURCE_TYPES
+		};
+	const spendDialogContent = await renderTemplate(TEMPLATES.AUTO_SPEND_DIALOG, templateData);
+	
+	const cost = getCost(item, targetCount);
+	if (cost || showDialog) {
+		return Dialog.wait({
+			title: game.i18n.localize(`${MODULE}.autoSpend.dialog.title`),
+			content: spendDialogContent,
+			buttons: {
+				spend: {
+					icon: '<i class="fas fa-coins"></i>',
+					label: game.i18n.localize(`${MODULE}.autoSpend.dialog.buttons.spend`),
+					callback: async (html) => {
+						const cost = getCost(item, targetCount, getFormOptions(html));
+						await autoSpend(item, cost);
+					}
+				},
+				updateAndSpend: {
+					icon: '<i class="fas fa-floppy-disk"></i>',
+					label: game.i18n.localize(`${MODULE}.autoSpend.dialog.buttons.updateAndSpend`),
+					callback: async (html) => {
+						const cost = getCost(item, targetCount, getFormOptions(html))
+						await autoSpend(item, cost);
+						const updateData = foundry.utils.flattenObject({[`flags.${MODULE}.autoSpend`]: cost});
+	
+						item.update(updateData);
+					}
+				},
+				skip: {
+					icon: '<i class="fas fa-forward"></i>',
+					label: game.i18n.localize(`${MODULE}.autoSpend.dialog.buttons.skip`),
+				},
+				disable: {
+					icon: '<i class="fas fa-ban"></i>',
+					label: game.i18n.localize(`${MODULE}.autoSpend.dialog.buttons.disable`),
+					callback:() => item.setFlag(MODULE, "autoSpend.enable", false)
+				},
+			},
+			close: () => {
+				console.log("fu-roll-enhancements | closing auto-spend dialog");
+			}
+		}, {id: "auto-spend-dialog"}); 
+	}
+
+}
+
+async function autoSpend(item, cost) {
+	if (!item.actor || !cost.value) return;
+	const resourceType = RESOURCE_TYPES[cost.resourceType];
+	const currentValue = foundry.utils.getProperty(item.actor, resourceType.model);
+	const newValue = Math.max(currentValue - cost.value, 0);
+	const resultsData = {
+		actor: item.actor.name,
+		amount: cost.value,
+		resource: game.i18n.localize(resourceType.label),
+		from: item.name,
+	}
+	if (newValue + cost.value !== currentValue) {
+		const errorMessage = game.i18n.format(`${MODULE}.autoSpend.errors.notEnoughResources`, resultsData);
+		ui.notifications.warn(errorMessage);
+		throw errorMessage;
+	}
+	const updates = {[resourceType.model]: newValue};
+	item.actor.update(updates);
+	ChatMessage.create({
+		speaker: ChatMessage.getSpeaker( item.actor ),
+		flavor: game.i18n.format(`${MODULE}.autoSpend.results.flavor`, {item: item.name}),
+		content: await renderTemplate(TEMPLATES.SIMPLE_CHAT_MESSAGE, {
+			message: game.i18n.format(`${MODULE}.autoSpend.results.chatMessage`, resultsData)
+		}),
+	});
+}
+
+async function autoTargetWorkflow(item, showDialog) {
 	if (!item.actor || (!game.user.isGM && !game.settings.get(MODULE, "allowPlayerAutoTarget"))) return;
 
 	// If keybind is pressed, show dialog
-	if (keyBinds.autoTargetDialog) {
+	if (showDialog) {
 		const templateData = {
 			item: item,
 			options: item.getFlag(MODULE, "autoTarget"),
@@ -31,23 +126,23 @@ async function autoTargetWorkflow(item) {
 		return Dialog.wait({
 			title: game.i18n.localize(`${MODULE}.autoTarget.dialog.title`),
 			content: targetDialogContent,
-			default: "cancel",
 			buttons: {
 				target: {
 					icon: '<i class="fas fa-crosshairs"></i>',
 					label: game.i18n.localize(`${MODULE}.autoTarget.dialog.buttons.target`),
-					callback: (html) => {
+					callback: async (html) => {
 						const options = getFormOptions(html);
-						autoTarget(options, item);
+						await autoTarget(options, item);
 					}
 				},
 				updateAndTarget: {
 					icon: '<i class="fas fa-floppy-disk"></i>',
 					label: game.i18n.localize(`${MODULE}.autoTarget.dialog.buttons.updateAndTarget`),
-					callback: (html) => {
+					callback: async (html) => {
 						const options = getFormOptions(html)
-						autoTarget(options, item);
-						item.setFlag(MODULE, "autoTarget", foundry.utils.mergeObject(options, {enable: true}));
+						await autoTarget(options, item);
+						const updateData = foundry.utils.flattenObject({[`flags.${MODULE}.autoTarget`]: foundry.utils.mergeObject(options, {enable: true})});
+						item.update(updateData);
 					}
 				},
 				skip: {
@@ -61,14 +156,14 @@ async function autoTargetWorkflow(item) {
 				},
 			},
 			close: () => {
-				console.log("fu-roll-enhancements | closing dialog");
+				console.log("fu-roll-enhancements | closing auto-target dialog");
 			}
 		}, {id: "auto-target-dialog"}); 
 	} else if (item.getFlag(MODULE, "autoTarget")?.enable) {
 		const options = item.getFlag(MODULE, "autoTarget");
-		autoTarget(options, item);
-		return;
+		await autoTarget(options, item);
 	}
+
 }
 
 function actorHasStatus(actor, ...statuses) {
@@ -77,7 +172,9 @@ function actorHasStatus(actor, ...statuses) {
 
 async function autoTarget(options, item) {
 	if (!options || !item) return;
-	options.targetType = options.targetType || "ENEMIES"; // Default to enemies
+	// Default targetType to "ENEMIES"
+	options = foundry.utils.deepClone(options);
+	options.targetType = options.targetType || "ENEMIES";
 	const targetList = new Map();
 	if (options.targetType === "SELF") {
 		item.actor.getActiveTokens().forEach(t => targetList.set(t, { count: 1 }));
@@ -94,7 +191,6 @@ async function autoTarget(options, item) {
 		} else if (options.targetType === "ALLIES_AND_SELF") {
 			targetFilter = t => t.document.disposition === rollerDisposition;
 		} else if (options.targetType === "ALL") {
-			// Due to FU conflicts ultimately being a 
 			targetFilter = t => [CONST.TOKEN_DISPOSITIONS.FRIENDLY, CONST.TOKEN_DISPOSITIONS.HOSTILE].includes(t.document.disposition);
 		} else {
 			// ENEMIES, ENEMIES_MELEE, ENEMIES_MELEE_FLYING
@@ -171,17 +267,24 @@ async function autoTarget(options, item) {
 function getFormOptions(html) {
 	const formElement = html[0].querySelector('form');
 	const formData = new FormDataExtended(formElement);
-	return formData.object;
+	return foundry.utils.expandObject(formData.object);
 }
 
 export const TARGET_TYPES = Object.freeze ({
-	ENEMIES: `${MODULE}.autoTarget.options.targetType.sides.enemies`,
-	ENEMIES_MELEE: `${MODULE}.autoTarget.options.targetType.sides.enemiesMelee`,
-	ENEMIES_MELEE_FLYING: `${MODULE}.autoTarget.options.targetType.sides.enemiesMeleeFlying`,
-	ALLIES: `${MODULE}.autoTarget.options.targetType.sides.allies`,
-	SELF: `${MODULE}.autoTarget.options.targetType.sides.self`,
-	ALLIES_AND_SELF: `${MODULE}.autoTarget.options.targetType.sides.alliesAndSelf`,
-	ALL: `${MODULE}.autoTarget.options.targetType.sides.all`
+	ENEMIES: `${MODULE}.autoTarget.options.targetType.types.enemies`,
+	ENEMIES_MELEE: `${MODULE}.autoTarget.options.targetType.types.enemiesMelee`,
+	ENEMIES_MELEE_FLYING: `${MODULE}.autoTarget.options.targetType.types.enemiesMeleeFlying`,
+	ALLIES: `${MODULE}.autoTarget.options.targetType.types.allies`,
+	SELF: `${MODULE}.autoTarget.options.targetType.types.self`,
+	ALLIES_AND_SELF: `${MODULE}.autoTarget.options.targetType.types.alliesAndSelf`,
+	ALL: `${MODULE}.autoTarget.options.targetType.types.all`
+});
+
+export const RESOURCE_TYPES = Object.freeze ({
+	MP: {label: `FU.MindPoints`, model: `system.resources.mp.value`},
+	IP: {label: `FU.InventoryPoints`, model: `system.resources.ip.value`},
+	HP: {label: `FU.HealthPoints`, model: `system.resources.hp.value`},
+	ZENIT: {label: `FU.Zenit`, model: `system.resources.zenit.value`},
 });
 
 const UNTARGETABLE_MELEE_EFFECTS = ['flying', 'cover'];
