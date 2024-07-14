@@ -84,23 +84,26 @@ async function autoTarget(options, item) {
 	} else {
 		let targetCandidates = [];
 		const rollerTokenOrProtoType = item.actor.token || item.actor.prototypeToken;
-		// Treat neutral and secret rolls as friendly for the sake of targetting.
-		const rollerDisposition = [CONST.TOKEN_DISPOSITIONS.NEUTRAL, CONST.TOKEN_DISPOSITIONS.SECRET].includes(rollerTokenOrProtoType.disposition) ? CONST.TOKEN_DISPOSITIONS.FRIENDLY : rollerTokenOrProtoType.disposition;
+		// Treat neutral rolls as friendly and secret rolls as hostile for the sake of targetting.
+		const rollerDisposition = rollerTokenOrProtoType.disposition === CONST.TOKEN_DISPOSITIONS.NEUTRAL ? CONST.TOKEN_DISPOSITIONS.FRIENDLY : 
+			rollerTokenOrProtoType.disposition === CONST.TOKEN_DISPOSITIONS.SECRET ? CONST.TOKEN_DISPOSITIONS.HOSTILE : 
+			rollerTokenOrProtoType.disposition;
 		let targetFilter;
 		if (options.targetType === "ALLIES") {
 			targetFilter = t => t.document.disposition === rollerDisposition && t.actor.id !== item.actor.id && t.id !== rollerTokenOrProtoType.id;
 		} else if (options.targetType === "ALLIES_AND_SELF") {
 			targetFilter = t => t.document.disposition === rollerDisposition;
 		} else if (options.targetType === "ALL") {
-			targetFilter = t => Math.abs(t.document.disposition) === Math.abs(rollerDisposition);
+			// Due to FU conflicts ultimately being a 
+			targetFilter = t => [CONST.TOKEN_DISPOSITIONS.FRIENDLY, CONST.TOKEN_DISPOSITIONS.HOSTILE].includes(t.document.disposition);
 		} else {
 			// ENEMIES, ENEMIES_MELEE, ENEMIES_MELEE_FLYING
 			targetFilter = t => {
+				// TODO: Define this in a more general way and/or allow the user to customize somehow
 				const effects = [...t.actor.effects];
 				return !t.document.hidden &&
 					t.document.disposition === -rollerDisposition &&
 					!effects.some(e => 
-						// TODO: Define this in a more general way and/or allow the user to customize somehow
 						!e.disabled && [...e.statuses].some(s => !s.disabled && 
 							(
 								UNTARGETABLE_ALL_EFFECTS.includes(s) || 
