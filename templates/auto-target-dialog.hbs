@@ -12,35 +12,6 @@
     </div>
   </div>
   <form id="autoTargetForm">
-    <fieldset class="title-fieldset desc resource-content">
-      <legend class="resource-label-full">
-        <label class="resource-label-m">
-          <i class="fas fa-crosshairs icon"></i>
-          {{localize "fu-roll-enhancements.autoTarget.options.title"}}
-        </label>
-      </legend>
-      <div class="item-settings">
-        <label class="checkbox resource-label-sm">
-          <span>{{localize "fu-roll-enhancements.autoTarget.options.repeat.label"}}</span><input
-            name="repeat" type="checkbox" {{checked item.flags.fu-roll-enhancements.autoTarget.repeat}}>
-        </label>
-      </div>
-      <div class="grid grid-4-col gap-5">
-        <div class="resource-content flexcol flex-group-center">
-          <label for="targetType" class="resource-label-m">
-            {{localize "fu-roll-enhancements.autoTarget.options.targetType.label"}}
-          </label>
-          <select name="targetType" class="resource-inputs select-dropdown-l">
-            {{selectOptions targetTypes selected=item.flags.fu-roll-enhancements.autoTarget.targetType localize=true}}
-          </select>
-        </div>
-        <div class="resource-content flexcol flex-group-center">
-          <label for="maxTargets" class="resource-label-m">
-            {{localize "fu-roll-enhancements.autoTarget.options.maxTargets.label"}}
-          </label>
-          <input type="number" name="maxTargets" class="resource-inputs" value="{{item.flags.fu-roll-enhancements.autoTarget.maxTargets}}">
-        </div>
-      </div>
-    </fieldset>    
+    {{> "modules/fu-roll-enhancements/templates/auto-target-fieldset.hbs" targetTypes=targetTypes item=item}}
   </form>
 </div>

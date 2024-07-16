@@ -1,0 +1,50 @@
+<fieldset class="title-fieldset desc resource-content">
+  <legend class="resource-label-full">
+    <label class="resource-label-m">
+      <i class="fas fa-bars-progress icon"></i>
+      {{localize "fu-roll-enhancements.autoSpend.options.title"}}
+    </label>
+  </legend>
+  <div class="item-settings">
+    {{#if showEnable}}
+    <label class="checkbox resource-label-m">
+      <span>
+        {{#if (eq item.type "spell")}}
+        {{localize "fu-roll-enhancements.autoSpend.options.override.label"}}
+        {{else}}
+        {{localize "fu-roll-enhancements.autoSpend.options.enable.label"}}
+        {{/if}}
+      </span>
+      <input
+        name="flags.fu-roll-enhancements.autoSpend.enable" type="checkbox"
+        {{checked item.flags.fu-roll-enhancements.autoSpend.enable}}>
+    </label>
+    {{else}}
+    &nbsp;
+    {{/if}}
+  </div>
+  <div class="grid grid-3col">
+    <div class="resource-content flexcol flex-group-center">
+      <label for="flags.fu-roll-enhancements.autoSpend.cost" class="resource-label-m">
+        {{localize "fu-roll-enhancements.autoSpend.options.cost.label"}}
+      </label>
+      <input type="number" name="flags.fu-roll-enhancements.autoSpend.cost" class="resource-inputs"
+        value="{{item.flags.fu-roll-enhancements.autoSpend.cost}}">
+    </div>
+    <div class="resource-content flexcol flex-group-center">
+      <label for="flags.fu-roll-enhancements.autoSpend.resourceType" class="resource-label-m">
+        {{localize "fu-roll-enhancements.autoSpend.options.resourceType.label"}}
+      </label>
+      <select name="flags.fu-roll-enhancements.autoSpend.resourceType" class="resource-inputs select-dropdown-m">
+        {{selectOptions resourceTypes labelAttr="label" selected=item.flags.fu-roll-enhancements.autoSpend.resourceType localize=true}}
+      </select>
+    </div>
+    <div class="resource-content flexcol flex-group-center">
+      <label for="flags.fu-roll-enhancements.autoSpend.perTarget" class="resource-label-m">
+        {{localize "fu-roll-enhancements.autoSpend.options.perTarget.label"}}
+      </label>
+      <input name="flags.fu-roll-enhancements.autoSpend.perTarget" type="checkbox"
+        {{checked item.flags.fu-roll-enhancements.autoSpend.perTarget}}>
+    </div>
+  </div>
+</fieldset>

@@ -1,12 +1,13 @@
-import { TARGET_TYPES } from './rolls.mjs';
+import { RESOURCE_TYPES, TARGET_TYPES } from './rolls.mjs';
 import { MODULE } from './settings.mjs';
 
 export const renderItemSheetHandler = async (item, $content) => {
-  if (!game.user.isGM && !game.settings.get(MODULE, "allowPlayerAutoTarget")) return;
-
     const templateData = {
       item: item.object,
+      showAutoTarget: game.user.isGM || game.settings.get(MODULE, "allowPlayerAutoTarget"),
+      showAutoSpend: game.settings.get(MODULE, "enableAutoSpend"),
       targetTypes: TARGET_TYPES,
+      resourceTypes: RESOURCE_TYPES
     };
     const itemExtensionContent = await renderTemplate(TEMPLATES.ITEM_EXTENSION, templateData);
     const attributesTab = $content.find(".tab.attributes[data-tab=attributes]").first();
@@ -19,7 +20,9 @@ export const renderItemSheetHandler = async (item, $content) => {
 
 export const initializeTemplates = () => {
   loadTemplates([
+    TEMPLATES.AUTO_TARGET_FIELDSET,
 		TEMPLATES.AUTO_TARGET_DIALOG,
+    TEMPLATES.AUTO_SPEND_FIELDSET,
     TEMPLATES.AUTO_SPEND_DIALOG,
 		TEMPLATES.ITEM_EXTENSION,
     TEMPLATES.AUTO_TARGET_RESULTS,
@@ -28,7 +31,9 @@ export const initializeTemplates = () => {
 }
 
 export const TEMPLATES = Object.freeze({
+  AUTO_TARGET_FIELDSET: "modules/fu-roll-enhancements/templates/auto-target-fieldset.hbs",
   AUTO_TARGET_DIALOG: "modules/fu-roll-enhancements/templates/auto-target-dialog.hbs",
+  AUTO_SPEND_FIELDSET: "modules/fu-roll-enhancements/templates/auto-spend-fieldset.hbs",
   AUTO_SPEND_DIALOG: "modules/fu-roll-enhancements/templates/auto-spend-dialog.hbs",
   ITEM_EXTENSION: "modules/fu-roll-enhancements/templates/item-extension.hbs",
   AUTO_TARGET_RESULTS: "modules/fu-roll-enhancements/templates/auto-target-results.hbs",

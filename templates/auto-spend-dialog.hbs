@@ -12,37 +12,6 @@
     </div>
   </div>
   <form id="autoSpendForm">
-    <fieldset class="title-fieldset desc resource-content">
-      <legend class="resource-label-full">
-        <label class="resource-label-m">
-          <i class="fas fa-bars-progress icon"></i>
-          {{localize "fu-roll-enhancements.autoSpend.options.title"}}
-        </label>
-      </legend>
-      <div class="item-settings">
-        <label class="checkbox resource-label-sm">
-          <span>{{localize "fu-roll-enhancements.autoSpend.options.perTarget.label"}}</span><input
-            name="perTarget" type="checkbox" {{checked item.flags.fu-roll-enhancements.autoSpend.perTarget}}>
-        </label>
-      </div>
-      <div class="grid grid-4-col gap-5">
-        <div class="resource-content flexcol flex-group-center">
-          <label for="resourceType" class="resource-label-m">
-            {{localize "fu-roll-enhancements.autoSpend.options.resourceType.label"}}
-          </label>
-          <select name="resourceType" class="resource-inputs select-dropdown-l">
-            {{selectOptions resourceTypes labelAttr="label" selected=item.flags.fu-roll-enhancements.autoSpend.resourceType localize=true}}
-          </select>
-        </div>
-        <div class="resource-content flexcol flex-group-center">
-          <label for="cost" class="resource-label-m">
-            {{localize "fu-roll-enhancements.autoSpend.options.cost.label"}}
-          </label>
-          <input type="number" name="cost" class="resource-inputs"
-            value="{{item.flags.fu-roll-enhancements.autoSpend.cost}}">
-        </div>
-      </div>
-    </fieldset>
-
+    {{> "modules/fu-roll-enhancements/templates/auto-spend-fieldset.hbs" resourceTypes=resourceTypes item=item}}
   </form>
 </div>

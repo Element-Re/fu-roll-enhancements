@@ -28,13 +28,14 @@ export async function rollEnhancements (wrapped, ...args) {
 }
 
 
-function getSpellCost(item, targetCount) {
+function getSpellCost(item) {
 	if (!item.system.mpCost) return;
 	const spellCostMatch = item.system.mpCost.value?.match(/^(\d+)(\s\w+\s)?(t)?/i);
 	const spellCost = spellCostMatch[1];
 	return spellCost ? {
-		cost: new Number(spellCost) * (spellCostMatch[3] ? targetCount : 1),
-		resourceType: "MP"
+		cost: Number(spellCost),
+		resourceType: "MP",
+		perTarget: Boolean(spellCostMatch[3])
 	} : null;
 }
 
@@ -42,8 +43,8 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 	if (!item.actor || !game.settings.get(MODULE, "enableAutoSpend")) return;
 	const templateData = {
 			item: item,
-			options: item.getFlag(MODULE, "autoSpend"),
-			resourceTypes: RESOURCE_TYPES
+			resourceTypes: RESOURCE_TYPES,
+			showEnable: item.type === "spell"
 		};
 	const spendDialogContent = await renderTemplate(TEMPLATES.AUTO_SPEND_DIALOG, templateData);
 	
@@ -56,18 +57,23 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 					icon: '<i class="fas fa-coins"></i>',
 					label: game.i18n.localize(`${MODULE}.autoSpend.dialog.buttons.spend`),
 					callback: async (html) => {
-						const spendOptions = getFormOptions(html);
-						await autoSpend(item, spendOptions.cost ? spendOptions : getSpellCost(item, targetCount));
+						// Always enabled for anything that is not a spell
+						const formInput = item.type === "spell" ? getFormInput(html) : 
+							foundry.utils.mergeObject(getFormInput(html), {flags: { [MODULE]: {autoSpend: {enable: true}}}});
+						const autoSpendOptions = formInput.flags[MODULE].autoSpend.enable ? formInput.flags[MODULE].autoSpend : getSpellCost(item);
+						await autoSpend(item, autoSpendOptions, targetCount);
 					}
 				},
 				updateAndSpend: {
 					icon: '<i class="fas fa-floppy-disk"></i>',
 					label: game.i18n.localize(`${MODULE}.autoSpend.dialog.buttons.updateAndSpend`),
 					callback: async (html) => {
-						const spendOptions = getFormOptions(html);
-						await autoSpend(item, spendOptions.cost ? spendOptions : getSpellCost(item, targetCount));
-						const updateData = foundry.utils.flattenObject({[`flags.${MODULE}.autoSpend`]: spendOptions});
-						item.update(updateData);
+						// Always enabled for anything that is not a spell
+						const formInput = item.type === "spell" ? getFormInput(html) : 
+							foundry.utils.mergeObject(getFormInput(html), {flags: { [MODULE]: {autoSpend: {enable: true}}}});
+						const autoSpendOptions = formInput.flags[MODULE].autoSpend.enable ? formInput.flags[MODULE].autoSpend : getSpellCost(item);
+						item.update(formInput);
+						await autoSpend(item, autoSpendOptions, targetCount);
 					}
 				},
 				skip: {
@@ -86,23 +92,24 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 		}, {id: "auto-spend-dialog"}); 
 	} else {
 		const autoSpendOptions = item.getFlag(MODULE, 'autoSpend');
-		await autoSpend(item, autoSpendOptions.cost ? autoSpendOptions : getSpellCost(item, targetCount));
+		await autoSpend(item, autoSpendOptions.enable ? autoSpendOptions : getSpellCost(item), targetCount);
 	}
 
 }
 
-async function autoSpend(item, options) {
+async function autoSpend(item, options, targetCount) {
 	if (!item.actor || (options?.cost || -1) < 0) return;
 	const resourceType = RESOURCE_TYPES[options.resourceType];
+	const finalCost = options.cost * (options.perTarget ? targetCount : 1)
 	const currentValue = foundry.utils.getProperty(item.actor, resourceType.model);
-	const newValue = Math.max(currentValue - options.cost, 0);
+	const newValue = Math.max(currentValue - finalCost, 0);
 	const resultsData = {
 		actor: item.actor.name,
-		amount: options.cost,
+		amount: finalCost,
 		resource: game.i18n.localize(resourceType.label),
 		from: item.name,
 	}
-	if (newValue + options.cost !== currentValue) {
+	if (newValue + finalCost !== currentValue) {
 		let errorMessage = game.i18n.format(`${MODULE}.autoSpend.errors.notEnoughResources.message`, resultsData);
 		const skipBinding = game.keybindings.actions.get(`${MODULE}.skipAutoSpend`).editable[0];
 		if (skipBinding) {
@@ -129,7 +136,6 @@ async function autoTargetWorkflow(item, showDialog) {
 	if (showDialog) {
 		const templateData = {
 			item: item,
-			options: item.getFlag(MODULE, "autoTarget"),
 			targetTypes: TARGET_TYPES,
 		};
 		const targetDialogContent = await renderTemplate(TEMPLATES.AUTO_TARGET_DIALOG, templateData);
@@ -141,18 +147,18 @@ async function autoTargetWorkflow(item, showDialog) {
 					icon: '<i class="fas fa-crosshairs"></i>',
 					label: game.i18n.localize(`${MODULE}.autoTarget.dialog.buttons.target`),
 					callback: async (html) => {
-						const targetOptions = getFormOptions(html);
-						await autoTarget(targetOptions, item);
+						const formInput = getFormInput(html);
+						await autoTarget(formInput.flags[MODULE].autoTarget, item);
 					}
 				},
 				updateAndTarget: {
 					icon: '<i class="fas fa-floppy-disk"></i>',
 					label: game.i18n.localize(`${MODULE}.autoTarget.dialog.buttons.updateAndTarget`),
 					callback: async (html) => {
-						const targetOptions = getFormOptions(html)
-						await autoTarget(targetOptions, item);
-						const updateData = foundry.utils.flattenObject({[`flags.${MODULE}.autoTarget`]: foundry.utils.mergeObject(targetOptions, {enable: true})});
-						item.update(updateData);
+						const formInput = getFormInput(html)
+						const updateData = foundry.utils.flattenObject(foundry.utils.mergeObject(formInput, {flags: { [MODULE]: {autoTarget: {enable: true}}}}));
+						await item.update(updateData);
+						await autoTarget(formInput.flags[MODULE].autoTarget, item);
 					}
 				},
 				skip: {
@@ -274,7 +280,7 @@ async function autoTarget(options, item) {
 	});
 }
 
-function getFormOptions(html) {
+function getFormInput(html) {
 	const formElement = html[0].querySelector('form');
 	const formData = new FormDataExtended(formElement);
 	return foundry.utils.expandObject(formData.object);
