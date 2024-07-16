@@ -1,6 +1,6 @@
 {
   "name": "fu-roll-enhancements",
-  "version": "0.0.1",
+  "version": "#{VERSION}#",
   "description": "FU Roll Enhancements",
   "main": "fu-roll-enhancements.mjs",
   "scripts": {
@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Elemental-Re/fu-roll-enhancements.git"
+    "url": "git+https://github.com/Element-Re/fu-roll-enhancements.git"
   },
-  "author": "Elemental_Re",
+  "author": "Element_Re",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Elemental-Re/fu-roll-enhancements/issues"
+    "url": "https://github.com/Element-Re/fu-roll-enhancements/issues"
   },
-  "homepage": "https://github.com/Elemental-Re/fu-roll-enhancements#readme",
+  "homepage": "https://github.com/Element-Re/fu-roll-enhancements#readme",
   "dependencies": {
     "chokidar": "^3.6.0",
     "npm": "^10.8.1"

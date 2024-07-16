@@ -1,7 +1,7 @@
 {
 	"id": "fu-roll-enhancements",
 	"title": "FU Roll Enhancements",
-	"version": "0.0.1",
+	"version": "#{VERSION}#",
 	"compatibility": {
 		"minimum": "11",
 		"verified": "11"
@@ -17,8 +17,8 @@
 	},
 	"authors": [
 		{
-			"name": "Elemental_Re",
-			"discord": "elemental_re",
+			"name": "Element_Re",
+			"discord": "element_re",
 			"flags": {}
 		}
 	],
