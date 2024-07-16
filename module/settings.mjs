@@ -1,6 +1,6 @@
 export const MODULE = "fu-roll-enhancements";
 
-export const keyBinds = { autoTargetDialog: false };
+export const keyBinds = { autoTargetDialog: false, skipAutoTarget: false, autoSpendDialog: false, skipAutoSpend: false };
 
 export const registerSettings = () => {
 	game.settings.register(MODULE, "preRollItemMacro", {
@@ -61,6 +61,66 @@ export const registerKeyBindings = () => {
 		},
 		onUp: () => {
 			keyBinds.autoTargetDialog = false;
+		},
+		precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
+	});
+
+	game.keybindings.register(MODULE, "autoSpendDialog", {
+		name: game.i18n.localize(`${MODULE}.autoSpend.dialog.name`),
+		hint: game.i18n.localize(`${MODULE}.autoSpend.dialog.hint`),
+		editable: [
+			{
+				key: "ShiftLeft"
+			},
+			{
+				key: "ShiftRight"
+			}
+		],
+		onDown: () => {
+			keyBinds.autoSpendDialog = true;
+		},
+		onUp: () => {
+			keyBinds.autoSpendDialog = false;
+		},
+		precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
+	});
+
+	game.keybindings.register(MODULE, "skipAutoSpend", {
+		name: game.i18n.localize(`${MODULE}.autoSpend.skip.name`),
+		hint: game.i18n.localize(`${MODULE}.autoSpend.skip.hint`),
+		editable: [
+			{
+				key: "ControlLeft"
+			},
+			{
+				key: "ControlRight"
+			}
+		],
+		onDown: () => {
+			keyBinds.skipAutoSpend = true;
+		},
+		onUp: () => {
+			keyBinds.skipAutoSpend = false;
+		},
+		precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
+	});
+
+	game.keybindings.register(MODULE, "skipAutoTarget", {
+		name: game.i18n.localize(`${MODULE}.autoTarget.skip.name`),
+		hint: game.i18n.localize(`${MODULE}.autoTarget.skip.hint`),
+		editable: [
+			{
+				key: "ControlLeft"
+			},
+			{
+				key: "ControlRight"
+			}
+		],
+		onDown: () => {
+			keyBinds.skipAutoTarget = true;
+		},
+		onUp: () => {
+			keyBinds.skipAutoTarget = false;
 		},
 		precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
 	});

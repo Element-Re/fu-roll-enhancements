@@ -31,15 +31,15 @@
             {{localize "fu-roll-enhancements.autoSpend.options.resourceType.label"}}
           </label>
           <select name="resourceType" class="resource-inputs select-dropdown-l">
-            {{selectOptions resourceTypes labelAttr="label" selected=item.flags.fu-roll-enhancements.autoSpend.cost.resourceType localize=true}}
+            {{selectOptions resourceTypes labelAttr="label" selected=item.flags.fu-roll-enhancements.autoSpend.resourceType localize=true}}
           </select>
         </div>
         <div class="resource-content flexcol flex-group-center">
-          <label for="value" class="resource-label-m">
+          <label for="cost" class="resource-label-m">
             {{localize "fu-roll-enhancements.autoSpend.options.cost.label"}}
           </label>
-          <input type="number" name="value" class="resource-inputs"
-            value="{{item.flags.fu-roll-enhancements.autoSpend.cost.value}}">
+          <input type="number" name="cost" class="resource-inputs"
+            value="{{item.flags.fu-roll-enhancements.autoSpend.cost}}">
         </div>
       </div>
     </fieldset>

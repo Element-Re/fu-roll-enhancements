@@ -3,16 +3,21 @@ import { TEMPLATES } from './templates.mjs';
 
 export async function rollEnhancements (wrapped, ...args) {
 	const item = this;
-	const showDialogs = keyBinds.autoTargetDialog; // TODO: Seperate keybinds?
+	const showAutoTargetDialog = keyBinds.autoTargetDialog;
+	const showAutoSpendDialog = keyBinds.autoSpendDialog;
+	const skipAutoTarget = keyBinds.skipAutoTarget;
+	const skipAutoSpend = keyBinds.skipAutoSpend;
 
 	// Auto Target
-	await autoTargetWorkflow(item, showDialogs);
+	if(!skipAutoTarget)
+		await autoTargetWorkflow(item, showAutoTargetDialog);
 	console.log("fu-roll-enhancements | done setting targets");
 	// Item macro "pre" event
 	if (game.settings.get(MODULE, "preRollItemMacro") && item.hasMacro && item.hasMacro())
 		await item.executeMacro("pre");
 	// Auto Spend
-	await autoSpendWorkflow(item, game.user.targets.size, showDialogs);
+	if (!skipAutoSpend)
+		await autoSpendWorkflow(item, game.user.targets.size, showAutoSpendDialog);
 	console.log("fu-roll-enhancements | done spending costs");
 	// Chain wrapped function(s)
 	const returnValue = await wrapped(...args);
@@ -23,12 +28,12 @@ export async function rollEnhancements (wrapped, ...args) {
 }
 
 
-function getCost(item, targetCount, overrideCost = item.getFlag(MODULE, 'autoSpend.cost')) {
-	if (overrideCost?.value || !item.system.mpCost) return overrideCost;
+function getSpellCost(item, targetCount) {
+	if (!item.system.mpCost) return;
 	const spellCostMatch = item.system.mpCost.value?.match(/^(\d+)(\s\w+\s)?(t)?/i);
 	const spellCost = spellCostMatch[1];
 	return spellCost ? {
-		value: new Number(spellCost) * (spellCostMatch[3] ? targetCount : 1),
+		cost: new Number(spellCost) * (spellCostMatch[3] ? targetCount : 1),
 		resourceType: "MP"
 	} : null;
 }
@@ -42,8 +47,7 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 		};
 	const spendDialogContent = await renderTemplate(TEMPLATES.AUTO_SPEND_DIALOG, templateData);
 	
-	const cost = getCost(item, targetCount);
-	if (cost || showDialog) {
+	if (showDialog) {
 		return Dialog.wait({
 			title: game.i18n.localize(`${MODULE}.autoSpend.dialog.title`),
 			content: spendDialogContent,
@@ -52,18 +56,17 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 					icon: '<i class="fas fa-coins"></i>',
 					label: game.i18n.localize(`${MODULE}.autoSpend.dialog.buttons.spend`),
 					callback: async (html) => {
-						const cost = getCost(item, targetCount, getFormOptions(html));
-						await autoSpend(item, cost);
+						const spendOptions = getFormOptions(html);
+						await autoSpend(item, spendOptions.cost ? spendOptions : getSpellCost(item, targetCount));
 					}
 				},
 				updateAndSpend: {
 					icon: '<i class="fas fa-floppy-disk"></i>',
 					label: game.i18n.localize(`${MODULE}.autoSpend.dialog.buttons.updateAndSpend`),
 					callback: async (html) => {
-						const cost = getCost(item, targetCount, getFormOptions(html))
-						await autoSpend(item, cost);
-						const updateData = foundry.utils.flattenObject({[`flags.${MODULE}.autoSpend`]: cost});
-	
+						const spendOptions = getFormOptions(html);
+						await autoSpend(item, spendOptions.cost ? spendOptions : getSpellCost(item, targetCount));
+						const updateData = foundry.utils.flattenObject({[`flags.${MODULE}.autoSpend`]: spendOptions});
 						item.update(updateData);
 					}
 				},
@@ -81,23 +84,30 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 				console.log("fu-roll-enhancements | closing auto-spend dialog");
 			}
 		}, {id: "auto-spend-dialog"}); 
+	} else {
+		const autoSpendOptions = item.getFlag(MODULE, 'autoSpend');
+		await autoSpend(item, autoSpendOptions.cost ? autoSpendOptions : getSpellCost(item, targetCount));
 	}
 
 }
 
-async function autoSpend(item, cost) {
-	if (!item.actor || !cost.value) return;
-	const resourceType = RESOURCE_TYPES[cost.resourceType];
+async function autoSpend(item, options) {
+	if (!item.actor || (options?.cost || -1) < 0) return;
+	const resourceType = RESOURCE_TYPES[options.resourceType];
 	const currentValue = foundry.utils.getProperty(item.actor, resourceType.model);
-	const newValue = Math.max(currentValue - cost.value, 0);
+	const newValue = Math.max(currentValue - options.cost, 0);
 	const resultsData = {
 		actor: item.actor.name,
-		amount: cost.value,
+		amount: options.cost,
 		resource: game.i18n.localize(resourceType.label),
 		from: item.name,
 	}
-	if (newValue + cost.value !== currentValue) {
-		const errorMessage = game.i18n.format(`${MODULE}.autoSpend.errors.notEnoughResources`, resultsData);
+	if (newValue + options.cost !== currentValue) {
+		let errorMessage = game.i18n.format(`${MODULE}.autoSpend.errors.notEnoughResources.message`, resultsData);
+		const skipBinding = game.keybindings.actions.get(`${MODULE}.skipAutoSpend`).editable[0];
+		if (skipBinding) {
+			errorMessage = game.i18n.format(`${MODULE}.autoSpend.errors.notEnoughResources.skipHint`, {baseMessage: errorMessage, skipKey: skipBinding.key});
+		}
 		ui.notifications.warn(errorMessage);
 		throw errorMessage;
 	}
@@ -131,17 +141,17 @@ async function autoTargetWorkflow(item, showDialog) {
 					icon: '<i class="fas fa-crosshairs"></i>',
 					label: game.i18n.localize(`${MODULE}.autoTarget.dialog.buttons.target`),
 					callback: async (html) => {
-						const options = getFormOptions(html);
-						await autoTarget(options, item);
+						const targetOptions = getFormOptions(html);
+						await autoTarget(targetOptions, item);
 					}
 				},
 				updateAndTarget: {
 					icon: '<i class="fas fa-floppy-disk"></i>',
 					label: game.i18n.localize(`${MODULE}.autoTarget.dialog.buttons.updateAndTarget`),
 					callback: async (html) => {
-						const options = getFormOptions(html)
-						await autoTarget(options, item);
-						const updateData = foundry.utils.flattenObject({[`flags.${MODULE}.autoTarget`]: foundry.utils.mergeObject(options, {enable: true})});
+						const targetOptions = getFormOptions(html)
+						await autoTarget(targetOptions, item);
+						const updateData = foundry.utils.flattenObject({[`flags.${MODULE}.autoTarget`]: foundry.utils.mergeObject(targetOptions, {enable: true})});
 						item.update(updateData);
 					}
 				},

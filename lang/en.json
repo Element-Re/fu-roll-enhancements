@@ -35,7 +35,7 @@
     "fu-roll-enhancements.autoSpend.dialog.buttons.updateAndSpend": "Update and Spend",
     "fu-roll-enhancements.autoSpend.dialog.buttons.skip": "Skip",
     "fu-roll-enhancements.autoSpend.dialog.buttons.disable": "Disable",
-    "fu-roll-enhancements.autoSpend.options.title": "Auto Spend",
+    "fu-roll-enhancements.autoSpend.options.title": "Auto Spend (Manual)",
     "fu-roll-enhancements.autoSpend.options.perTarget.label": "Per Target?",
     "fu-roll-enhancements.autoSpend.options.resourceType.label": "Resource Type",
     "fu-roll-enhancements.autoSpend.options.resourceType.types.mp": "Mind Points",
@@ -44,5 +44,6 @@
     "fu-roll-enhancements.autoSpend.options.cost.label": "Cost",
     "fu-roll-enhancements.autoSpend.results.chatMessage": "<strong>{actor}</strong> spent <strong>{amount} {resource}</strong> on <strong>{from}</strong>",
     "fu-roll-enhancements.autoSpend.results.flavor": "Auto Spend: {item}",
-    "fu-roll-enhancements.autoSpend.errors.notEnoughResources": "{actor} tried to spend {amount} {resource} on {from} but did not have enough."
+    "fu-roll-enhancements.autoSpend.errors.notEnoughResources.message": "{actor} tried to spend {amount} {resource} on {from} but did not have enough.",
+    "fu-roll-enhancements.autoSpend.errors.notEnoughResources.skipHint": "{baseMessage} Press {skipKey} to skip."
 }
