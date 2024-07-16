@@ -70,10 +70,10 @@ export const registerKeyBindings = () => {
 		hint: game.i18n.localize(`${MODULE}.autoSpend.dialog.hint`),
 		editable: [
 			{
-				key: "ShiftLeft"
+				key: "CtrlLeft"
 			},
 			{
-				key: "ShiftRight"
+				key: "CtrlRight"
 			}
 		],
 		onDown: () => {
@@ -81,46 +81,6 @@ export const registerKeyBindings = () => {
 		},
 		onUp: () => {
 			keyBinds.autoSpendDialog = false;
-		},
-		precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
-	});
-
-	game.keybindings.register(MODULE, "skipAutoSpend", {
-		name: game.i18n.localize(`${MODULE}.autoSpend.skip.name`),
-		hint: game.i18n.localize(`${MODULE}.autoSpend.skip.hint`),
-		editable: [
-			{
-				key: "ControlLeft"
-			},
-			{
-				key: "ControlRight"
-			}
-		],
-		onDown: () => {
-			keyBinds.skipAutoSpend = true;
-		},
-		onUp: () => {
-			keyBinds.skipAutoSpend = false;
-		},
-		precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
-	});
-
-	game.keybindings.register(MODULE, "skipAutoTarget", {
-		name: game.i18n.localize(`${MODULE}.autoTarget.skip.name`),
-		hint: game.i18n.localize(`${MODULE}.autoTarget.skip.hint`),
-		editable: [
-			{
-				key: "ControlLeft"
-			},
-			{
-				key: "ControlRight"
-			}
-		],
-		onDown: () => {
-			keyBinds.skipAutoTarget = true;
-		},
-		onUp: () => {
-			keyBinds.skipAutoTarget = false;
 		},
 		precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
 	});

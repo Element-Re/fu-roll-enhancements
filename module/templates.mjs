@@ -1,4 +1,4 @@
-import { RESOURCE_TYPES, TARGET_TYPES } from './rolls.mjs';
+import { getResourceTypes, TARGET_TYPES } from './rolls.mjs';
 import { MODULE } from './settings.mjs';
 
 export const renderItemSheetHandler = async (item, $content) => {
@@ -7,7 +7,7 @@ export const renderItemSheetHandler = async (item, $content) => {
       showAutoTarget: game.user.isGM || game.settings.get(MODULE, "allowPlayerAutoTarget"),
       showAutoSpend: game.settings.get(MODULE, "enableAutoSpend"),
       targetTypes: TARGET_TYPES,
-      resourceTypes: RESOURCE_TYPES
+      resourceTypes: getResourceTypes(item.actor)
     };
     const itemExtensionContent = await renderTemplate(TEMPLATES.ITEM_EXTENSION, templateData);
     const attributesTab = $content.find(".tab.attributes[data-tab=attributes]").first();

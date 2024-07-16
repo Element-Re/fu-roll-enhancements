@@ -7,18 +7,21 @@ export async function rollEnhancements (wrapped, ...args) {
 	const showAutoSpendDialog = keyBinds.autoSpendDialog;
 	const skipAutoTarget = keyBinds.skipAutoTarget;
 	const skipAutoSpend = keyBinds.skipAutoSpend;
+	let autoTarget;
 
 	// Auto Target
 	if(!skipAutoTarget)
-		await autoTargetWorkflow(item, showAutoTargetDialog);
-	console.log("fu-roll-enhancements | done setting targets");
+		autoTarget = await autoTargetWorkflow(item, showAutoTargetDialog);
+	console.log("fu-roll-enhancements | done getting targets");
 	// Item macro "pre" event
 	if (game.settings.get(MODULE, "preRollItemMacro") && item.hasMacro && item.hasMacro())
 		await item.executeMacro("pre");
 	// Auto Spend
 	if (!skipAutoSpend)
-		await autoSpendWorkflow(item, game.user.targets.size, showAutoSpendDialog);
+		await autoSpendWorkflow(item, autoTarget?.count || game.user.targets.size, showAutoSpendDialog);
 	console.log("fu-roll-enhancements | done spending costs");
+	await autoTarget?.finalize();
+	console.log("fu-roll-enhancements | done finalizing targets");
 	// Chain wrapped function(s)
 	const returnValue = await wrapped(...args);
 	// Item macro "post" event
@@ -43,7 +46,7 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 	if (!item.actor || !game.settings.get(MODULE, "enableAutoSpend")) return;
 	const templateData = {
 			item: item,
-			resourceTypes: RESOURCE_TYPES,
+			resourceTypes: getResourceTypes(item.actor),
 			showEnable: item.type === "spell"
 		};
 	const spendDialogContent = await renderTemplate(TEMPLATES.AUTO_SPEND_DIALOG, templateData);
@@ -94,12 +97,11 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 		const autoSpendOptions = item.getFlag(MODULE, 'autoSpend');
 		await autoSpend(item, autoSpendOptions.enable ? autoSpendOptions : getSpellCost(item), targetCount);
 	}
-
 }
 
 async function autoSpend(item, options, targetCount) {
 	if (!item.actor || (options?.cost || -1) < 0) return;
-	const resourceType = RESOURCE_TYPES[options.resourceType];
+	const resourceType = getResourceTypes(item.actor)[options.resourceType];
 	const finalCost = options.cost * (options.perTarget ? targetCount : 1)
 	const currentValue = foundry.utils.getProperty(item.actor, resourceType.model);
 	const newValue = Math.max(currentValue - finalCost, 0);
@@ -109,11 +111,11 @@ async function autoSpend(item, options, targetCount) {
 		resource: game.i18n.localize(resourceType.label),
 		from: item.name,
 	}
-	if (newValue + finalCost !== currentValue) {
+	if ((item.actor.type === "npc" && ["IP", "ZENIT"].includes(options.resourceType)) || newValue + finalCost !== currentValue) {
 		let errorMessage = game.i18n.format(`${MODULE}.autoSpend.errors.notEnoughResources.message`, resultsData);
-		const skipBinding = game.keybindings.actions.get(`${MODULE}.skipAutoSpend`).editable[0];
-		if (skipBinding) {
-			errorMessage = game.i18n.format(`${MODULE}.autoSpend.errors.notEnoughResources.skipHint`, {baseMessage: errorMessage, skipKey: skipBinding.key});
+		const dialogBinding = game.keybindings.actions.get(`${MODULE}.autoSpendDialog`).editable[0];
+		if (dialogBinding) {
+			errorMessage = game.i18n.format(`${MODULE}.autoSpend.errors.notEnoughResources.skipHint`, {baseMessage: errorMessage, dialogKey: dialogBinding.key});
 		}
 		ui.notifications.warn(errorMessage);
 		throw errorMessage;
@@ -148,7 +150,7 @@ async function autoTargetWorkflow(item, showDialog) {
 					label: game.i18n.localize(`${MODULE}.autoTarget.dialog.buttons.target`),
 					callback: async (html) => {
 						const formInput = getFormInput(html);
-						await autoTarget(formInput.flags[MODULE].autoTarget, item);
+						return await autoTarget(formInput.flags[MODULE].autoTarget, item);
 					}
 				},
 				updateAndTarget: {
@@ -158,7 +160,7 @@ async function autoTargetWorkflow(item, showDialog) {
 						const formInput = getFormInput(html)
 						const updateData = foundry.utils.flattenObject(foundry.utils.mergeObject(formInput, {flags: { [MODULE]: {autoTarget: {enable: true}}}}));
 						await item.update(updateData);
-						await autoTarget(formInput.flags[MODULE].autoTarget, item);
+						return await autoTarget(formInput.flags[MODULE].autoTarget, item);
 					}
 				},
 				skip: {
@@ -177,7 +179,7 @@ async function autoTargetWorkflow(item, showDialog) {
 		}, {id: "auto-target-dialog"}); 
 	} else if (item.getFlag(MODULE, "autoTarget")?.enable) {
 		const options = item.getFlag(MODULE, "autoTarget");
-		await autoTarget(options, item);
+		return await autoTarget(options, item);
 	}
 
 }
@@ -264,20 +266,26 @@ async function autoTarget(options, item) {
 		} else targetCandidates.forEach(t => targetList.set(t, { count: 1 }));
 	}
 
-	game.user.updateTokenTargets([...targetList.keys()].map(t => t.id));
+	return {
+		count: [...targetList.keys()].reduce((count, t) => targetList.get(t).count + count, 0),
+		finalize: async () => {
+			game.user.updateTokenTargets([...targetList.keys()].map(t => t.id));
 
-	const templateData = {
-		results: [...targetList.keys()].map(t => foundry.utils.mergeObject(targetList.get(t), {target: t})),
-		targetType: game.i18n.localize(TARGET_TYPES[options.targetType])
+			const templateData = {
+				results: [...targetList.keys()].map(t => foundry.utils.mergeObject(targetList.get(t), {target: t})),
+				targetType: game.i18n.localize(TARGET_TYPES[options.targetType])
+			}
+			ChatMessage.create({
+				content: await renderTemplate(TEMPLATES.AUTO_TARGET_RESULTS, templateData),
+				speaker: {
+					actor: item.actor,
+					token: item.actor.token
+				},
+				flavor: `${item.name}`
+			});
+		}
 	}
-	ChatMessage.create({
-		content: await renderTemplate(TEMPLATES.AUTO_TARGET_RESULTS, templateData),
-		speaker: {
-			actor: item.actor,
-			token: item.actor.token
-		},
-		flavor: `${item.name}`
-	});
+	
 }
 
 function getFormInput(html) {
@@ -296,11 +304,24 @@ export const TARGET_TYPES = Object.freeze ({
 	ALL: `${MODULE}.autoTarget.options.targetType.types.all`
 });
 
-export const RESOURCE_TYPES = Object.freeze ({
+export function getResourceTypes(actor) {
+	return actor.type !== "npc" ? RESOURCE_TYPES : NPC_RESOURCE_TYPES;
+}
+
+const RESOURCE_TYPES = Object.freeze ({
 	MP: {label: `FU.MindPoints`, model: `system.resources.mp.value`},
 	IP: {label: `FU.InventoryPoints`, model: `system.resources.ip.value`},
 	HP: {label: `FU.HealthPoints`, model: `system.resources.hp.value`},
 	ZENIT: {label: `FU.Zenit`, model: `system.resources.zenit.value`},
+	FP: {label: `FU.FabulaPoints`, model: `system.resources.fp.value`},
+});
+
+const NPC_RESOURCE_TYPES = Object.freeze({
+	MP: {label: `FU.MindPoints`, model: `system.resources.mp.value`},
+	IP: {label: `FU.InventoryPoints`, model: `system.resources.ip.value`},
+	HP: {label: `FU.HealthPoints`, model: `system.resources.hp.value`},
+	ZENIT: {label: `FU.Zenit`, model: `system.resources.zenit.value`},
+	FP: {label: `FU.UltimaPoints`, model: `system.resources.fp.value`},
 });
 
 const UNTARGETABLE_MELEE_EFFECTS = ['flying', 'cover'];

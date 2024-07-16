@@ -47,5 +47,5 @@
     "fu-roll-enhancements.autoSpend.results.chatMessage": "<strong>{actor}</strong> spent <strong>{amount} {resource}</strong> on <strong>{from}</strong>.",
     "fu-roll-enhancements.autoSpend.results.flavor": "Auto Spend: {item}",
     "fu-roll-enhancements.autoSpend.errors.notEnoughResources.message": "{actor} tried to spend {amount} {resource} on {from} but did not have enough.",
-    "fu-roll-enhancements.autoSpend.errors.notEnoughResources.skipHint": "{baseMessage} Press {skipKey} to skip."
+    "fu-roll-enhancements.autoSpend.errors.notEnoughResources.skipHint": "{baseMessage} Hold {dialogKey} to configure or skip."
 }
