@@ -54,6 +54,12 @@ export const registerKeyBindings = () => {
 			},
 			{
 				key: "AltRight"
+			},
+			{
+				key: "CtrlLeft"
+			},
+			{
+				key: "CtrlRight"
 			}
 		],
 		onDown: () => {
