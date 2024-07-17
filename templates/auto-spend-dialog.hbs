@@ -1,17 +1,5 @@
-<div class="projectfu">
-  <div class="items-list">
-    <div class="item">
-      <div class="item-name">
-        <div class="item-image">
-          <img src="{{item.img}}">
-        </div>
-        <h4 class="resource-content">
-          <span class="resource-text-m" style="align-items: center;">{{item.name}}</span>
-        </h4>
-      </div>
-    </div>
-  </div>
-  <form id="autoSpendForm">
-    {{> "modules/fu-roll-enhancements/templates/auto-spend-fieldset.hbs" resourceTypes=resourceTypes item=item}}
-  </form>
-</div>
+{{#> "modules/fu-roll-enhancements/templates/item-dialog.hbs" item=item}}
+<form id="autoSpendForm">
+  {{> "modules/fu-roll-enhancements/templates/auto-spend-fieldset.hbs" resourceTypes=resourceTypes item=item}}
+</form>
+{{/"modules/fu-roll-enhancements/templates/item-dialog.hbs"}}

@@ -1,6 +1,9 @@
 export const MODULE = "fu-roll-enhancements";
 
-export const keyBinds = { autoTargetDialog: false, skipAutoTarget: false, autoSpendDialog: false, skipAutoSpend: false };
+export const keyBinds = { 
+	autoTargetDialog: false, 
+	autoSpendDialog: false 
+};
 
 export const registerSettings = () => {
 	game.settings.register(MODULE, "preRollItemMacro", {
@@ -56,10 +59,10 @@ export const registerKeyBindings = () => {
 				key: "AltRight"
 			},
 			{
-				key: "CtrlLeft"
+				key: "ControlLeft"
 			},
 			{
-				key: "CtrlRight"
+				key: "ControlRight"
 			}
 		],
 		onDown: () => {
@@ -76,10 +79,10 @@ export const registerKeyBindings = () => {
 		hint: game.i18n.localize(`${MODULE}.autoSpend.dialog.hint`),
 		editable: [
 			{
-				key: "CtrlLeft"
+				key: "ControlLeft"
 			},
 			{
-				key: "CtrlRight"
+				key: "ControlRight"
 			}
 		],
 		onDown: () => {

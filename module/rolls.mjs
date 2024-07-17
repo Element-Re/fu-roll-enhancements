@@ -3,22 +3,17 @@ import { TEMPLATES } from './templates.mjs';
 
 export async function rollEnhancements (wrapped, ...args) {
 	const item = this;
-	const showAutoTargetDialog = keyBinds.autoTargetDialog;
-	const showAutoSpendDialog = keyBinds.autoSpendDialog;
-	const skipAutoTarget = keyBinds.skipAutoTarget;
-	const skipAutoSpend = keyBinds.skipAutoSpend;
+	const rollKeys = foundry.utils.deepClone(keyBinds);
 	let autoTarget;
 
 	// Auto Target
-	if(!skipAutoTarget)
-		autoTarget = await autoTargetWorkflow(item, showAutoTargetDialog);
+	autoTarget = await autoTargetWorkflow(item, rollKeys.autoTargetDialog);
 	console.log("fu-roll-enhancements | done getting targets");
 	// Item macro "pre" event
 	if (game.settings.get(MODULE, "preRollItemMacro") && item.hasMacro && item.hasMacro())
 		await item.executeMacro("pre");
 	// Auto Spend
-	if (!skipAutoSpend)
-		await autoSpendWorkflow(item, autoTarget?.count || game.user.targets.size, showAutoSpendDialog);
+	await autoSpendWorkflow(item, autoTarget?.count || game.user.targets.size, rollKeys.autoSpendDialog);
 	console.log("fu-roll-enhancements | done spending costs");
 	if (autoTarget?.finalize)
 		await autoTarget.finalize();

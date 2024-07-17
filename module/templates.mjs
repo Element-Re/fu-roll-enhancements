@@ -25,6 +25,7 @@ export const initializeTemplates = () => {
     TEMPLATES.AUTO_SPEND_FIELDSET,
     TEMPLATES.AUTO_SPEND_DIALOG,
 		TEMPLATES.ITEM_EXTENSION,
+    TEMPLATES.ITEM_DIALOG,
     TEMPLATES.AUTO_TARGET_RESULTS,
     TEMPLATES.SIMPLE_CHAT_MESSAGE
 	]);
@@ -36,6 +37,7 @@ export const TEMPLATES = Object.freeze({
   AUTO_SPEND_FIELDSET: "modules/fu-roll-enhancements/templates/auto-spend-fieldset.hbs",
   AUTO_SPEND_DIALOG: "modules/fu-roll-enhancements/templates/auto-spend-dialog.hbs",
   ITEM_EXTENSION: "modules/fu-roll-enhancements/templates/item-extension.hbs",
+  ITEM_DIALOG: "modules/fu-roll-enhancements/templates/item-dialog.hbs",
   AUTO_TARGET_RESULTS: "modules/fu-roll-enhancements/templates/auto-target-results.hbs",
   SIMPLE_CHAT_MESSAGE: "modules/fu-roll-enhancements/templates/simple-chat-message.hbs",
 });
