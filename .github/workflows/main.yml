@@ -66,6 +66,8 @@ jobs:
             contents: write
 
         steps:
+            - name: Setup Node.js environment
+              uses: actions/setup-node@v4.0.3
             - name: Checkout Repository
               uses: actions/checkout@v4
 
