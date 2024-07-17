@@ -7,6 +7,6 @@ Available targets are derived from the scene and filtered based on rules such as
 Derives cost from the MP Cost field on spells, or manually configure for any item, including the ability to specify "per target" costs.
 ### Experimental Item Macro Support
 Provides experimental but optional support for the Item Macro module.
-### Default Keybinds
-* Ctrl: Override Cost Settings when Rolling
-* Alt: Override Target Settings when Rolling
+## Default Keybinds
+* *Ctrl:* Override Cost Settings when Rolling
+* *Alt:* Override Target Settings when Rolling
