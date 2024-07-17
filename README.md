@@ -8,5 +8,5 @@ Derives cost from the MP Cost field on spells, or manually configure for any ite
 ### Experimental Item Macro Support
 Provides experimental but optional support for the Item Macro module.
 ## Default Keybinds
-* *Ctrl:* Override Cost Settings when Rolling
-* *Alt:* Override Target Settings when Rolling
+* **Ctrl:** Override Cost Settings when Rolling
+* **Alt:** Override Target Settings when Rolling
