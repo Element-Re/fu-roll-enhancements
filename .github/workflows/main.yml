@@ -66,8 +66,6 @@ jobs:
             contents: write
 
         steps:
-            - name: Setup Node.js environment
-              uses: actions/setup-node@v4.0.3
             - name: Checkout Repository
               uses: actions/checkout@v4
 
@@ -102,11 +100,6 @@ jobs:
                   URL: ${{ env.project_url }}
                   MANIFEST: ${{ env.latest_manifest_url }}
                   DOWNLOAD: ${{ env.release_module_url }}
-
-            # Run npm script to convert YML to LDB before creating release
-            - name: Convert YML to LDB
-              run: npm run pullYMLtoLDB
-              working-directory: ./tools
 
             # Create a "fu-roll-enhancements.zip" archive containing all the module's required files.
             # If you have other directories or files that will need to be added to
