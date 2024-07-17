@@ -13,6 +13,13 @@
 				"type": "system",
 				"compatibility": {}
 			}
+		],
+		"requires": [
+			{
+				"id": "lib-wrapper",
+				"type": "module",
+				"compatibility": {}
+			}
 		]
 	},
 	"authors": [
