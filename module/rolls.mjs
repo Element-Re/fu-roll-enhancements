@@ -32,8 +32,8 @@ export async function rollEnhancements (wrapped, ...args) {
 }
 
 function getSpellCost(item) {
-	if (!item.system.mpCost) return;
-	const spellCostMatch = item.system.mpCost.value?.match(/^(\d+)(\s\w+\s)?(t)?/i);
+	if (!item.system.mpCost?.value) return;
+	const spellCostMatch = item.system.mpCost.value.match(/^(\d+)(\s\w+\s)?(t)?/i);
 	const spellCost = spellCostMatch[1];
 	return spellCost ? {
 		cost: Number(spellCost),
@@ -95,7 +95,7 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 		}, {id: "auto-spend-dialog"}); 
 	} else {
 		const autoSpendOptions = item.getFlag(MODULE, 'autoSpend');
-		await autoSpend(item, autoSpendOptions.enable ? autoSpendOptions : getSpellCost(item), targetCount);
+		await autoSpend(item, autoSpendOptions?.enable ? autoSpendOptions : getSpellCost(item), targetCount);
 	}
 }
 
