@@ -20,7 +20,8 @@ export async function rollEnhancements (wrapped, ...args) {
 	if (!skipAutoSpend)
 		await autoSpendWorkflow(item, autoTarget?.count || game.user.targets.size, showAutoSpendDialog);
 	console.log("fu-roll-enhancements | done spending costs");
-	await autoTarget?.finalize();
+	if (autoTarget?.finalize)
+		await autoTarget.finalize();
 	console.log("fu-roll-enhancements | done finalizing targets");
 	// Chain wrapped function(s)
 	const returnValue = await wrapped(...args);
@@ -29,7 +30,6 @@ export async function rollEnhancements (wrapped, ...args) {
 		await item.executeMacro("post");
 	return returnValue;
 }
-
 
 function getSpellCost(item) {
 	if (!item.system.mpCost) return;
@@ -45,7 +45,7 @@ function getSpellCost(item) {
 async function autoSpendWorkflow(item, targetCount, showDialog) {
 	if (!item.actor || !game.settings.get(MODULE, "enableAutoSpend")) return;
 	const templateData = {
-			item: item,
+			item: item.type === "spell" ? foundry.utils.mergeObject(item.toObject(), {flags: { [MODULE]: {autoSpend: {enable: true}}}}) : item,
 			resourceTypes: getResourceTypes(item.actor),
 			showEnable: item.type === "spell"
 		};
