@@ -6,6 +6,27 @@ export const keyBinds = {
 };
 
 export const registerSettings = () => {
+
+	game.settings.register(MODULE, "enableAutoSpend", {
+		name: `${MODULE}.settings.enableAutoSpend.name`,
+		hint: `${MODULE}.settings.enableAutoSpend.hint`,
+		scope: "client",
+		config: true,
+		requiresReload: false,
+		type: Boolean,
+		default: true
+	});
+
+	game.settings.register(MODULE, "allowPlayerAutoTarget", {
+		name: `${MODULE}.settings.allowPlayerAutoTarget.name`,
+		hint: `${MODULE}.settings.allowPlayerAutoTarget.hint`,
+		scope: "world",
+		config: true,
+		requiresReload: true,
+		type: Boolean,
+		default: false
+	});
+
 	game.settings.register(MODULE, "preRollItemMacro", {
 		name: `${MODULE}.settings.preRollItemMacro.name`,
 		hint: `${MODULE}.settings.preRollItemMacro.hint`,
@@ -24,26 +45,6 @@ export const registerSettings = () => {
 		requiresReload: false,
 		type: Boolean,
 		default: false
-	});
-
-	game.settings.register(MODULE, "allowPlayerAutoTarget", {
-		name: `${MODULE}.settings.allowPlayerAutoTarget.name`,
-		hint: `${MODULE}.settings.allowPlayerAutoTarget.hint`,
-		scope: "world",
-		config: true,
-		requiresReload: true,
-		type: Boolean,
-		default: false
-	});
-
-	game.settings.register(MODULE, "enableAutoSpend", {
-		name: `${MODULE}.settings.enableAutoSpend.name`,
-		hint: `${MODULE}.settings.enableAutoSpend.hint`,
-		scope: "client",
-		config: true,
-		requiresReload: false,
-		type: Boolean,
-		default: true
 	});
 }
 

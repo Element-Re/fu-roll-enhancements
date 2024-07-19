@@ -19,16 +19,16 @@ export async function rollEnhancements (wrapped, ...args) {
 		await autoTarget.finalize();
 	console.log("fu-roll-enhancements | done finalizing targets");
 	// Chain wrapped function(s)
-	const returnValue = await wrapped(...args);
+	const rollResults = await wrapped(...args);
 	// Item macro "post" event
 	if (game.settings.get(MODULE, "postRollItemMacro") && item.hasMacro && item.hasMacro())
-		await item.executeMacro("post");
-	return returnValue;
+		await item.executeMacro("post", rollResults);
+	return rollResults;
 }
 
 function getSpellCost(item) {
-	if (!item.system.mpCost?.value) return;
-	const spellCostMatch = item.system.mpCost.value.match(/^(\d+)(\s\w+\s)?(t)?/i);
+	const spellCostMatch = item.system.mpCost?.value?.match(/^(\d+)(\s\w+\s)?(t)?/i);
+	if (!spellCostMatch) return null;
 	const spellCost = spellCostMatch[1];
 	return spellCost ? {
 		cost: Number(spellCost),
