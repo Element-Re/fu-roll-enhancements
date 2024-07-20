@@ -95,9 +95,10 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 }
 
 async function autoSpend(item, options, targetCount) {
-	if (!item.actor || (options?.cost || -1) < 0) return;
+	if (!item.actor || (options?.cost || -1) <= 0) return;
 	const resourceType = getResourceTypes(item.actor)[options.resourceType];
-	const finalCost = options.cost * (options.perTarget ? targetCount : 1)
+	const finalCost = options.cost * (options.perTarget ? targetCount : 1);
+	if (finalCost <= 0) return;
 	const currentValue = foundry.utils.getProperty(item.actor, resourceType.model);
 	const newValue = Math.max(currentValue - finalCost, 0);
 	const resultsData = {
