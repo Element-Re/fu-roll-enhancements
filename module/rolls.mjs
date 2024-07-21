@@ -301,7 +301,7 @@ export const TARGET_TYPES = Object.freeze ({
 });
 
 export function getResourceTypes(actor) {
-	return actor.type !== "npc" ? RESOURCE_TYPES : NPC_RESOURCE_TYPES;
+	return actor?.type !== "npc" ? RESOURCE_TYPES : NPC_RESOURCE_TYPES;
 }
 
 const RESOURCE_TYPES = Object.freeze ({
