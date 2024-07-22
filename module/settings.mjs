@@ -50,8 +50,8 @@ export const registerSettings = () => {
 
 export const registerKeyBindings = () => {
 	game.keybindings.register(MODULE, "autoTargetDialog", {
-		name: game.i18n.localize(`${MODULE}.autoTarget.dialog.name`),
-		hint: game.i18n.localize(`${MODULE}.autoTarget.dialog.hint`),
+		name: `${MODULE}.keybinds.autoTarget.dialog.name`,
+		hint: `${MODULE}.keybinds.autoTarget.dialog.hint`,
 		editable: [
 			{
 				key: "AltLeft"
@@ -76,8 +76,8 @@ export const registerKeyBindings = () => {
 	});
 
 	game.keybindings.register(MODULE, "autoSpendDialog", {
-		name: game.i18n.localize(`${MODULE}.autoSpend.dialog.name`),
-		hint: game.i18n.localize(`${MODULE}.autoSpend.dialog.hint`),
+		name: `${MODULE}.keybinds.autoSpend.dialog.name`,
+		hint: `${MODULE}.keybinds.autoSpend.dialog.hint`,
 		editable: [
 			{
 				key: "ControlLeft"
