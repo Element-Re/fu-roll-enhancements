@@ -27,13 +27,13 @@ export async function rollEnhancements (wrapped, ...args) {
 }
 
 function getSpellCost(item) {
-	const spellCostMatch = item.system.mpCost?.value?.match(/^(\d+)(\s\w+\s)?(t)?/i);
+	const spellCostMatch = item.system.mpCost?.value?.match(/^(\d+)(\s+[x*×]\s+)?(t)?/i);
 	if (!spellCostMatch) return null;
 	const spellCost = spellCostMatch[1];
 	return spellCost ? {
 		cost: Number(spellCost),
 		resourceType: "MP",
-		perTarget: Boolean(spellCostMatch[3])
+		perTarget: spellCostMatch[2] && spellCostMatch [3]
 	} : null;
 }
 
