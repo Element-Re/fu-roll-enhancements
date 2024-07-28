@@ -54,17 +54,8 @@ export const registerKeyBindings = () => {
 		hint: `${MODULE}.keybinds.autoTarget.dialog.hint`,
 		editable: [
 			{
-				key: "AltLeft"
+				key: "KeyT"
 			},
-			{
-				key: "AltRight"
-			},
-			{
-				key: "ControlLeft"
-			},
-			{
-				key: "ControlRight"
-			}
 		],
 		onDown: () => {
 			keyBinds.autoTargetDialog = true;
@@ -80,11 +71,8 @@ export const registerKeyBindings = () => {
 		hint: `${MODULE}.keybinds.autoSpend.dialog.hint`,
 		editable: [
 			{
-				key: "ControlLeft"
+				key: "KeyR"
 			},
-			{
-				key: "ControlRight"
-			}
 		],
 		onDown: () => {
 			keyBinds.autoSpendDialog = true;

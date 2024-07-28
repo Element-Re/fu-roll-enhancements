@@ -6,9 +6,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
  
 ## [0.1.2-beta]
 
-## Fixed
+### Fixed
 
 * Made spell MP Cost parsing a bit more robust.
+
+### Changed
+
+* Adjusted default keybinds to reduce conflicts.
+  * Show Auto Target Dialog: **[T]**
+  * Show Auto Spend Dialog: **[R]**
+
 
 ## [0.1.1]
  
