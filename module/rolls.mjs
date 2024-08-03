@@ -26,15 +26,26 @@ export async function rollEnhancements (wrapped, ...args) {
 	return rollResults;
 }
 
-function getSpellCost(item) {
-	const spellCostMatch = item.system.mpCost?.value?.match(/^(\d+)(\s+[x*×]\s+)?(t)?/i);
-	if (!spellCostMatch) return null;
-	const spellCost = spellCostMatch[1];
-	return spellCost ? {
-		cost: Number(spellCost),
-		resourceType: "MP",
-		perTarget: spellCostMatch[2] && spellCostMatch [3]
-	} : null;
+function getDefaultMpCost(item) {
+	if (typeof item.system.mpCost?.value === "number") {
+		return {
+			cost: item.system.mpCost.value,
+				resourceType: "MP",
+				// NOTE: This should only apply to rituals, which do not have per-target costs.
+				perTarget: false 
+		}
+	} else if (typeof item.system.mpCost?.value === "string") {
+		const mpCostMatch = item.system.mpCost.value.match(/^(\d+)(\s+[x*×]\s+)?(t)?/i);
+			if (!mpCostMatch) return null;
+			const mpCost = mpCostMatch[1];
+			return mpCost ? {
+				cost: Number(mpCost),
+				resourceType: "MP",
+				perTarget: mpCostMatch[2] && mpCostMatch [3]
+			} : null;
+	} else  {
+		return null;
+	}
 }
 
 async function autoSpendWorkflow(item, targetCount, showDialog) {
@@ -58,7 +69,7 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 						// Always enabled for anything that is not a spell
 						const formInput = item.type === "spell" ? getFormInput(html) : 
 							foundry.utils.mergeObject(getFormInput(html), {flags: { [MODULE]: {autoSpend: {enable: true}}}});
-						const autoSpendOptions = formInput.flags[MODULE].autoSpend.enable ? formInput.flags[MODULE].autoSpend : getSpellCost(item);
+						const autoSpendOptions = formInput.flags[MODULE].autoSpend.enable ? formInput.flags[MODULE].autoSpend : getDefaultMpCost(item);
 						await autoSpend(item, autoSpendOptions, targetCount);
 					}
 				},
@@ -69,7 +80,7 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 						// Always enabled for anything that is not a spell
 						const formInput = item.type === "spell" ? getFormInput(html) : 
 							foundry.utils.mergeObject(getFormInput(html), {flags: { [MODULE]: {autoSpend: {enable: true}}}});
-						const autoSpendOptions = formInput.flags[MODULE].autoSpend.enable ? formInput.flags[MODULE].autoSpend : getSpellCost(item);
+						const autoSpendOptions = formInput.flags[MODULE].autoSpend.enable ? formInput.flags[MODULE].autoSpend : getDefaultMpCost(item);
 						item.update(formInput);
 						await autoSpend(item, autoSpendOptions, targetCount);
 					}
@@ -90,7 +101,7 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 		}, {id: "auto-spend-dialog"}); 
 	} else {
 		const autoSpendOptions = item.getFlag(MODULE, 'autoSpend');
-		await autoSpend(item, autoSpendOptions?.enable ? autoSpendOptions : getSpellCost(item), targetCount);
+		await autoSpend(item, autoSpendOptions?.enable ? autoSpendOptions : getDefaultMpCost(item), targetCount);
 	}
 }
 
