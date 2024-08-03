@@ -4,18 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
-## [0.1.2-beta]
+## [0.1.2-beta.2]
 
 ### Fixed
 
-* Made spell MP Cost parsing a bit more robust.
+* Resolved Auto Spend error on rituals without an overridden cost.
 
 ### Changed
 
 * Adjusted default keybinds to reduce conflicts.
   * Show Auto Target Dialog: **[T]**
   * Show Auto Spend Dialog: **[R]**
+* Adjusted size of Resource Type dropdown in Auto Spend fields.
 
+## [0.1.2-beta.1]
+
+### Fixed
+
+* Made spell MP Cost parsing a bit more robust.
 
 ## [0.1.1]
  
