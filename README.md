@@ -13,7 +13,7 @@ Provides experimental but optional support for the Item Macro module to allow fo
 *Animations are handled by the [Automated Animations](https://github.com/otigon/automated-jb2a-animations) module and used for demonstration purposes.*
 
 ## More Info
-For a more comprehensive overview of this module and how to use it, check out the [project wiki](https://github.com/Element-Re/fu-roll-enhancements/wiki).
+For a more comprehensive overview of this module and instructions how to use it, check out the [project wiki](https://github.com/Element-Re/fu-roll-enhancements/wiki).
 
 ## Installation
 ### Semi-Automatic Installation
