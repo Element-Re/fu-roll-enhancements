@@ -3,7 +3,17 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
- 
+
+## [0.1.2-beta.3]
+
+### Fixed
+
+* Corrected steps of the Roll Enhancements Workflow to the intended order.
+
+### Changed
+
+* Updated README to include links to the latest release manifest and the project wiki.
+
 ## [0.1.2-beta.2]
 
 ### Fixed

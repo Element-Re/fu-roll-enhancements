@@ -9,7 +9,7 @@ export async function rollEnhancements (wrapped, ...args) {
 	// Auto Target
 	autoTarget = await autoTargetWorkflow(item, rollKeys.autoTargetDialog);
 	console.log("fu-roll-enhancements | done getting targets");
-		// Auto Spend
+	// Auto Spend
 	await autoSpendWorkflow(item, autoTarget?.count || game.user.targets.size, rollKeys.autoSpendDialog);
 	console.log("fu-roll-enhancements | done spending costs");
 	// Item macro "pre" event
