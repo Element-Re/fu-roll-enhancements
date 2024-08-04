@@ -1,5 +1,5 @@
 ﻿# FU Roll Enhancements for Project FU
-Improves the experience when rolling items in the Project FU system for Foundry VTT.
+Improves the experience when rolling items in the [Project FU system](https://github.com/League-of-Fabulous-Developers/FoundryVTT-Fabula-Ultima) for [Foundry VTT](https://foundryvtt.com/).
 ## Features
 ### Intelligent Random Auto Targeting
 Available targets are derived from the scene and filtered based on rules such as melee attacks not targeting flying or covered creatures, or create a custom Active Effect with the "force-target" status that forces NPCs to target the source of the effect if possible.
