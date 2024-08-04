@@ -6,7 +6,7 @@ Available targets are derived from the scene and filtered based on rules such as
 ### Auto Spend Resources
 Derives cost from the MP Cost field on spells, or manually configure for any item, including the ability to specify "per target" costs.
 ### Experimental Item Macro Support
-Provides experimental but optional support for the Item Macro module.
+Provides experimental but optional support for the Item Macro module to allow for even more comprehensive automation for individual items.
 
 ![ezgif-2-a15b42b47c](https://github.com/user-attachments/assets/0ee4fe34-9008-4dc5-ac03-e38753422e2c)
 
