@@ -9,12 +9,12 @@ export async function rollEnhancements (wrapped, ...args) {
 	// Auto Target
 	autoTarget = await autoTargetWorkflow(item, rollKeys.autoTargetDialog);
 	console.log("fu-roll-enhancements | done getting targets");
+		// Auto Spend
+	await autoSpendWorkflow(item, autoTarget?.count || game.user.targets.size, rollKeys.autoSpendDialog);
+	console.log("fu-roll-enhancements | done spending costs");
 	// Item macro "pre" event
 	if (game.settings.get(MODULE, "preRollItemMacro") && item.hasMacro && item.hasMacro())
 		await item.executeMacro("pre");
-	// Auto Spend
-	await autoSpendWorkflow(item, autoTarget?.count || game.user.targets.size, rollKeys.autoSpendDialog);
-	console.log("fu-roll-enhancements | done spending costs");
 	if (autoTarget?.finalize)
 		await autoTarget.finalize();
 	console.log("fu-roll-enhancements | done finalizing targets");
