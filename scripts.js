@@ -11,7 +11,7 @@ const modulePath = path.join(__dirname, 'module');
 const langPath = path.join(__dirname, 'lang');
 const templatesPath = path.join(__dirname, 'templates');
 const stylesPath = path.join(__dirname, 'styles');
-const filesToCopy = ['module.json', 'fu-roll-enhancements.mjs'];
+const filesToCopy = ['module.json', 'CHANGELOG.MD', 'README.MD', 'fu-roll-enhancements.mjs'];
 
 const copyFolder = (source, destination) => {
   return new Promise((resolve, reject) => {
