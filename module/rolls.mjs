@@ -26,6 +26,32 @@ export async function rollEnhancements (wrapped, ...args) {
 	return rollResults;
 }
 
+function getItemDisplayData(item) {
+	let displayData = {};
+	switch (item.type) {
+		case "weapon":
+			displayData = item.getWeaponDisplayData(item.actor);
+			break;
+		case "basic":
+			displayData = foundry.utils.mergeObject(item.getWeaponDisplayData(item.actor), {qualityString: item.system.quality?.value || game.i18n.localize('FU.BasicAttack')})
+			break;
+		case "spell":
+			displayData =  item.getSpellDisplayData();
+			break;
+		case "skill":
+			displayData = item.getSkillDisplayData();
+			break;
+		default:
+			displayData = item.getItemDisplayData() || displayData;
+			break;
+	}
+
+	displayData.qualityString = displayData.qualityString || item.system.summary.value || game.i18n.localize(`TYPES.Item.${item.type}`)
+
+	return displayData;
+};
+
+
 function getDefaultMpCost(item) {
 	if (typeof item.system.mpCost?.value === "number") {
 		return {
@@ -53,7 +79,8 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 	const templateData = {
 			item: item.type === "spell" ? foundry.utils.mergeObject(item.toObject(), {flags: { [MODULE]: {autoSpend: {enable: true}}}}) : item,
 			resourceTypes: getResourceTypes(item.actor),
-			showEnable: item.type === "spell"
+			showEnable: item.type === "spell",
+			displayData: getItemDisplayData(item),
 		};
 	const spendDialogContent = await renderTemplate(TEMPLATES.AUTO_SPEND_DIALOG, templateData);
 	
@@ -146,6 +173,7 @@ async function autoTargetWorkflow(item, showDialog) {
 		const templateData = {
 			item: item,
 			targetTypes: TARGET_TYPES,
+			displayData: getItemDisplayData(item),
 		};
 		const targetDialogContent = await renderTemplate(TEMPLATES.AUTO_TARGET_DIALOG, templateData);
 		return Dialog.wait({

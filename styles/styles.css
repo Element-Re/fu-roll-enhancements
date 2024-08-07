@@ -23,3 +23,18 @@
 :is(#auto-target-dialog, #auto-spend-dialog) .dialog-buttons button {
   margin: 0;
 }
+
+:is(#auto-target-dialog, #auto-spend-dialog) .projectfu .items-list .item h4.resource-content > * {
+  align-items: center;
+}
+
+:is(#auto-target-dialog, #auto-spend-dialog) .projectfu .items-list .item {
+  background: transparent;
+  border: 2px solid transparent;
+  transition: inherit;
+  -webkit-transition: inherit;
+}
+
+:is(#auto-target-dialog, #auto-spend-dialog) .projectfu .items-list .item:hover {
+  color: #2b4a42;
+}

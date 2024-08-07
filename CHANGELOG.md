@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [unreleased]
+
+### Changed
+
+* Improved the info displayed on the rolled item in the Auto Target and Auto Spend dialogs.
+
 ## [0.1.2]
 
 ### Fixed
