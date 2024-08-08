@@ -11,7 +11,7 @@ const modulePath = path.join(__dirname, 'module');
 const langPath = path.join(__dirname, 'lang');
 const templatesPath = path.join(__dirname, 'templates');
 const stylesPath = path.join(__dirname, 'styles');
-const filesToCopy = ['module.json', 'CHANGELOG.MD', 'README.MD', 'fu-roll-enhancements.mjs'];
+const filesToCopy = ['module.json', 'CHANGELOG.MD', 'README.MD', 'fu-roll-enhancements.mjs', 'fu-roll-enhancements.lock'];
 
 const copyFolder = (source, destination) => {
   return new Promise((resolve, reject) => {
@@ -49,7 +49,12 @@ const build = async () => {
 
     // Standalone files
     for (const file of filesToCopy) {
-      await copyFile(path.join(__dirname, file), path.join(distPath, file));
+      const source = path.join(__dirname, file);
+      if (fs.existsSync(source)) {
+        await copyFile(source, path.join(distPath, file));
+      } else {
+        console.warn(`Warning: ${file} does not exist and will be skipped.`);
+      }
     }
 
     console.log('Build completed successfully!');
