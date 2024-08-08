@@ -1,29 +1,114 @@
 import { keyBinds, MODULE } from './settings.mjs';
 import { TEMPLATES } from './templates.mjs';
 
+export const prepareCheckHandler = (check, actor, item, registerCallback) => {
+	console.log("fu-roll-enhancements | preparing check...", check);
+	
+	registerCallback(async (check) => {
+		console.log("fu-roll-enhancements | entering prepared check callback...", check);
+		
+		console.log("fu-roll-enhancements | exiting prepared check callback...", check);
+	})
+	
+	console.log("fu-roll-enhancements | ...done preparing check", check);
+}
+
+export const processCheckHandler =  async (check, actor, item) => {
+	console.log("fu-roll-enhancements | processing check...", check,);
+	const rollKeys = foundry.utils.deepClone(keyBinds);
+	
+	check.additionalData.autoTarget = autoTargetWorkflow(item, rollKeys.autoTargetDialog);
+	check.additionalData.autoSpend = Promise.resolve(check.additionalData.autoTarget)
+	.then(autoTarget => autoSpendWorkflow(item, autoTarget?.count || game.user.targets.size, rollKeys.autoSpendDialog));
+	
+	check.additionalData.pre = Promise.all([check.additionalData.autoTarget, check.additionalData.autoSpend]).then(results => {
+		if (game.settings.get(MODULE, "preRollItemMacro") && item.hasMacro && item.hasMacro())
+			return item.executeMacro("pre", check);
+	});
+		
+	check.additionalData.post = Promise.resolve(check.additionalData.pre).then(pre => {
+		if (game.settings.get(MODULE, "postRollItemMacro") && item.hasMacro && item.hasMacro())
+			return item.executeMacro("post", check);
+	})
+		
+	console.log("fu-roll-enhancements | ...done processing check", check);
+}
+	
+export const renderCheckHandler = (sections, check, actor, item) => {
+		
+	console.log("fu-roll-enhancements | rendering check...", check);
+
+
+
+	if (item.getFlag(MODULE, 'autoTarget.enable')) {
+		const oldTargetsIndex = sections.findIndex(s => s.partial === "systems/projectfu/templates/chat/partials/chat-check-targets.hbs")
+		if (oldTargetsIndex >= 0) {
+			sections.splice(oldTargetsIndex, 1);
+		} 
+		sections.push(Promise.resolve(check.additionalData.autoTarget).then(autoTargetResults => {
+			if (autoTargetResults) {
+				game.user.updateTokenTargets(autoTargetResults.targets.map(t => t.id));
+				check.additionalData.targets = prepareTargets(autoTargetResults.targets, check)
+				return renderTemplate(TEMPLATES.CHAT_CHECK_TARGETS, {targets: check.additionalData.targets})
+			}
+		}).then(content => ({
+			content: content,
+			order: 1000	
+		})));
+	}
+	sections.push(
+		Promise.resolve(check.additionalData.autoTarget)
+			.then(autoTargetResults => {
+				return autoTargetResults?.content
+			})
+			.then(content => ({
+					content: content,
+					order: -1900	
+			}))
+	);
+
+	console.log("fu-roll-enhancements | ...done rendering check", check);
+}
+
 export async function rollEnhancements (wrapped, ...args) {
 	const item = this;
 	const rollKeys = foundry.utils.deepClone(keyBinds);
-	let autoTarget;
-
+	
 	// Auto Target
-	autoTarget = await autoTargetWorkflow(item, rollKeys.autoTargetDialog);
+	const autoTargetPromise = Promise.resolve(autoTargetWorkflow(item, rollKeys.autoTargetDialog));
 	console.log("fu-roll-enhancements | done getting targets");
 	// Auto Spend
-	await autoSpendWorkflow(item, autoTarget?.count || game.user.targets.size, rollKeys.autoSpendDialog);
+	const autoSpendPromise = autoTargetPromise.then(autoTarget => autoSpendWorkflow(item, autoTarget?.count || game.user.targets.size, rollKeys.autoSpendDialog));
 	console.log("fu-roll-enhancements | done spending costs");
+
+	let prePromise = Promise.resolve();
 	// Item macro "pre" event
 	if (game.settings.get(MODULE, "preRollItemMacro") && item.hasMacro && item.hasMacro())
-		await item.executeMacro("pre");
-	if (autoTarget?.finalize)
-		await autoTarget.finalize();
+		prePromise =  Promise.resolve(item.executeMacro("pre"));
+	
+	Promise.all([autoTargetPromise, autoSpendPromise]).then(results => {
+		const autoTarget = results[0];
+		if (autoTarget?.finalize)
+			return autoTarget.finalize();
+	});
+	
 	console.log("fu-roll-enhancements | done finalizing targets");
 	// Chain wrapped function(s)
-	const rollResults = await wrapped(...args);
-	// Item macro "post" event
-	if (game.settings.get(MODULE, "postRollItemMacro") && item.hasMacro && item.hasMacro())
-		await item.executeMacro("post", rollResults);
-	return rollResults;
+	const rollResultsPromise = Promise.resolve(wrapped(...args));
+
+	const postPromise = Promise.all([rollResultsPromise, autoSpendPromise]).then(promises => {
+		const rollResults = promises[0];
+		const autoSpend = promises[1];
+		const $content = $(rollResults.content);
+		$content.append(autoSpend.results.content);
+		//console.log(autoSpend, $content.html());
+		return rollResults.update({content: $content.html()}).then(newResults => {
+			// Item macro "post" event
+			if (game.settings.get(MODULE, "postRollItemMacro") && item.hasMacro && item.hasMacro())
+				return item.executeMacro("post", newResults);
+		});
+	})
+	return postPromise.then(() => rollResultsPromise);
 }
 
 function getItemDisplayData(item) {
@@ -109,7 +194,7 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 							foundry.utils.mergeObject(getFormInput(html), {flags: { [MODULE]: {autoSpend: {enable: true}}}});
 						const autoSpendOptions = formInput.flags[MODULE].autoSpend.enable ? formInput.flags[MODULE].autoSpend : getDefaultMpCost(item);
 						item.update(formInput);
-						await autoSpend(item, autoSpendOptions, targetCount);
+						return await autoSpend(item, autoSpendOptions, targetCount);
 					}
 				},
 				skip: {
@@ -128,7 +213,7 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 		}, {id: "auto-spend-dialog"}); 
 	} else {
 		const autoSpendOptions = item.getFlag(MODULE, 'autoSpend');
-		await autoSpend(item, autoSpendOptions?.enable ? autoSpendOptions : getDefaultMpCost(item), targetCount);
+		return await autoSpend(item, autoSpendOptions?.enable ? autoSpendOptions : getDefaultMpCost(item), targetCount);
 	}
 }
 
@@ -140,10 +225,11 @@ async function autoSpend(item, options, targetCount) {
 	const currentValue = foundry.utils.getProperty(item.actor, resourceType.model);
 	const newValue = Math.max(currentValue - finalCost, 0);
 	const resultsData = {
-		actor: item.actor.name,
-		amount: finalCost,
-		resource: game.i18n.localize(resourceType.label),
-		from: item.name,
+		formattedStarting: game.i18n.format(`${MODULE}.autoSpend.results.format.resource.${resourceType.shortLabel}`, {amount: currentValue}),
+		formattedSpent: game.i18n.format(`${MODULE}.autoSpend.results.format.subtraction`, {
+			resource: game.i18n.format(`${MODULE}.autoSpend.results.format.resource.${resourceType.shortLabel}`, {amount: finalCost})
+		}),
+		formattedRemaining: game.i18n.format(`${MODULE}.autoSpend.results.format.resource.${resourceType.shortLabel}`, {amount: newValue}),
 	}
 	if ((item.actor.type === "npc" && ["IP", "ZENIT"].includes(options.resourceType)) || newValue + finalCost !== currentValue) {
 		let errorMessage = game.i18n.format(`${MODULE}.autoSpend.errors.notEnoughResources.message`, resultsData);
@@ -156,13 +242,19 @@ async function autoSpend(item, options, targetCount) {
 	}
 	const updates = {[resourceType.model]: newValue};
 	item.actor.update(updates);
-	ChatMessage.create({
-		speaker: ChatMessage.getSpeaker( item.actor ),
-		flavor: game.i18n.format(`${MODULE}.autoSpend.results.flavor`, {item: item.name}),
-		content: await renderTemplate(TEMPLATES.SIMPLE_CHAT_MESSAGE, {
-			message: game.i18n.format(`${MODULE}.autoSpend.results.chatMessage`, resultsData)
-		}),
-	});
+
+	return {
+		results: {
+			content: await renderTemplate(TEMPLATES.AUTO_SPEND_RESULTS, {results: resultsData})
+		}
+	};
+	// ChatMessage.create({
+	// 	speaker: ChatMessage.getSpeaker( item.actor ),
+	// 	flavor: game.i18n.format(`${MODULE}.autoSpend.results.flavor`, {item: item.name}),
+	// 	content: await renderTemplate(TEMPLATES.SIMPLE_CHAT_MESSAGE, {
+	// 		message: game.i18n.format(`${MODULE}.autoSpend.results.chatMessage`, resultsData)
+	// 	}),
+	// });
 }
 
 async function autoTargetWorkflow(item, showDialog) {
@@ -295,30 +387,38 @@ async function autoTarget(options, item) {
 				let drawPile = forced ? forcedTargets : targetCandidates;
 				var start = Math.floor(Math.random() * (drawPile.length));
 				const target = options.repeat && drawPile === targetCandidates ? drawPile[start] : drawPile.splice(start, 1)[0];
-				targetList.set(target, (targetList.has(target) ? foundry.utils.mergeObject(targetList.get(target), { count: targetList.get(target).count + 1 }) : { count: 1, forcedBy: forcedTargetsMap.get(target) }));
+				targetList.set(target, (targetList.has(target) ? foundry.utils.mergeObject(targetList.get(target), { count: targetList.get(target).count + 1 }) : { count: 1, forced: forcedTargetsMap.get(target) }));
 				i++;
 			}
 		} else targetCandidates.forEach(t => targetList.set(t, { count: 1 }));
 	}
 
-	return {
-		count: [...targetList.keys()].reduce((count, t) => targetList.get(t).count + count, 0),
-		finalize: async () => {
-			game.user.updateTokenTargets([...targetList.keys()].map(t => t.id));
 
-			const templateData = {
-				results: [...targetList.keys()].map(t => foundry.utils.mergeObject(targetList.get(t), {target: t})),
-				targetType: game.i18n.localize(TARGET_TYPES[options.targetType])
-			}
-			ChatMessage.create({
-				content: await renderTemplate(TEMPLATES.AUTO_TARGET_RESULTS, templateData),
-				speaker: {
-					actor: item.actor,
-					token: item.actor.token
-				},
-				flavor: `${item.name}`
-			});
-		}
+	const templateData = {
+		results: [...targetList.keys()].map(t => foundry.utils.mergeObject(targetList.get(t), {target: t})),
+		targetType: game.i18n.localize(TARGET_TYPES[options.targetType])
+	}
+
+	return {
+		totalCount: [...targetList.keys()].reduce((count, t) => targetList.get(t).count + count, 0),
+		targets: [...targetList.keys()],//({id: t.id, count: targetList.get(t).count, forced: targetList.get(t).forced})),
+		content: renderTemplate(TEMPLATES.AUTO_TARGET_RESULTS, templateData)
+		// finalize: async () => {
+		// 	game.user.updateTokenTargets([...targetList.keys()].map(t => t.id));
+
+		// 	const templateData = {
+		// 		results: [...targetList.keys()].map(t => foundry.utils.mergeObject(targetList.get(t), {target: t})),
+		// 		targetType: game.i18n.localize(TARGET_TYPES[options.targetType])
+		// 	}
+		// 	ChatMessage.create({
+		// 		content: await renderTemplate(TEMPLATES.AUTO_TARGET_RESULTS, templateData),
+		// 		speaker: {
+		// 			actor: item.actor,
+		// 			token: item.actor.token
+		// 		},
+		// 		flavor: `${item.name}`
+		// 	});
+		// }
 	}
 	
 }
@@ -343,20 +443,35 @@ export function getResourceTypes(actor) {
 	return actor?.type !== "npc" ? RESOURCE_TYPES : NPC_RESOURCE_TYPES;
 }
 
+function prepareTargets(targets, check) {
+	const targetedDefense = check.additionalData.targetedDefense;
+	if (!targetedDefense) return [];
+
+	return [...targets]
+		.filter((token) => !!token.actor)
+		.map((token) => ({
+			name: token.actor.name,
+			uuid: token.actor.uuid,
+			link: token.actor.link,
+			difficulty: token.actor.system.derived[targetedDefense].value,
+			result: (check.critical || (!check.fumble && check.result >= token.actor.system.derived[targetedDefense].value)) ? 'hit' : 'miss'
+		}));
+}
+
 const RESOURCE_TYPES = Object.freeze ({
-	MP: {label: `FU.MindPoints`, model: `system.resources.mp.value`},
-	IP: {label: `FU.InventoryPoints`, model: `system.resources.ip.value`},
-	HP: {label: `FU.HealthPoints`, model: `system.resources.hp.value`},
-	ZENIT: {label: `FU.Zenit`, model: `system.resources.zenit.value`},
-	FP: {label: `FU.FabulaPoints`, model: `system.resources.fp.value`},
+	MP: {label: `FU.MindPoints`, shortLabel: `mp`, model: `system.resources.mp.value`},
+	IP: {label: `FU.InventoryPoints`, shortLabel: `ip`, model: `system.resources.ip.value`},
+	HP: {label: `FU.HealthPoints`, shortLabel: `hp`, model: `system.resources.hp.value`},
+	ZENIT: {label: `FU.Zenit`, shortLabel: `z`, model: `system.resources.zenit.value`},
+	FP: {label: `FU.FabulaPoints`, shortLabel: `fp`, model: `system.resources.fp.value`},
 });
 
 const NPC_RESOURCE_TYPES = Object.freeze({
-	MP: {label: `FU.MindPoints`, model: `system.resources.mp.value`},
-	IP: {label: `FU.InventoryPoints`, model: `system.resources.ip.value`},
-	HP: {label: `FU.HealthPoints`, model: `system.resources.hp.value`},
-	ZENIT: {label: `FU.Zenit`, model: `system.resources.zenit.value`},
-	FP: {label: `FU.UltimaPoints`, model: `system.resources.fp.value`},
+	MP: {label: `FU.MindPoints`, shortLabel: `mp`, model: `system.resources.mp.value`},
+	IP: {label: `FU.InventoryPoints`, shortLabel: `ip`, model: `system.resources.ip.value`},
+	HP: {label: `FU.HealthPoints`, shortLabel: `hp`, model: `system.resources.hp.value`},
+	ZENIT: {label: `FU.Zenit`, shortLabel: `z`, model: `system.resources.zenit.value`},
+	FP: {label: `FU.UltimaPoints`, shortLabel: `up`, model: `system.resources.fp.value`},
 });
 
 const UNTARGETABLE_MELEE_EFFECTS = ['flying', 'cover'];

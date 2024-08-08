@@ -1,20 +1,18 @@
-<div class="projectfu auto-target">
-  <fieldset class="title-fieldset">
-    <legend class="resource-text-sm">{{localize "fu-roll-enhancements.autoTarget.results.title" targetType=targetType}}</legend>
-    {{#if results}}
-      <ol>
-      {{#each results}}
-      <li class="target">
-        {{target.document.actor.link}}
-        {{#if (gt count 1)}}x{{count}}{{/if}}
-        {{#if forcedBy}}({{forcedBy.name}}){{/if}}
-      </li>
-      {{/each}}
-      </ol>
-      {{else}}
-      <ul>
-        <li>{{localize "fu-roll-enhancements.autoTarget.results.noTargets"}}</li>
-      <ul>
-    {{/if}}
-  </fieldset>
-</div>
+<header class="title-desc chat-header flexrow">
+  <h2>{{localize "fu-roll-enhancements.autoTarget.results.title" targetType=targetType}}</h2>
+</header>
+{{#if results}}
+<ol>
+  {{#each results}}
+  <li class="target">
+  {{target.document.actor.link}}
+  {{#if (gt count 1)}}x{{count}}{{/if}}
+  {{#if forced}}({{forced.name}}){{/if}}
+  </li>
+  {{/each}}
+</ol>
+{{else}}
+<ul>
+  <li>{{localize "fu-roll-enhancements.autoTarget.results.noTargets"}}</li>
+<ul>
+{{/if}}

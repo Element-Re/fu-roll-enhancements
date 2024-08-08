@@ -27,6 +27,7 @@ export const initializeTemplates = () => {
 		TEMPLATES.ITEM_EXTENSION,
     TEMPLATES.ITEM_DIALOG,
     TEMPLATES.AUTO_TARGET_RESULTS,
+    TEMPLATES.AUTO_SPEND_RESULTS,
     TEMPLATES.SIMPLE_CHAT_MESSAGE
 	]);
 }
@@ -39,7 +40,9 @@ export const TEMPLATES = Object.freeze({
   ITEM_EXTENSION: "modules/fu-roll-enhancements/templates/item-extension.hbs",
   ITEM_DIALOG: "modules/fu-roll-enhancements/templates/item-dialog.hbs",
   AUTO_TARGET_RESULTS: "modules/fu-roll-enhancements/templates/auto-target-results.hbs",
+  AUTO_SPEND_RESULTS: "modules/fu-roll-enhancements/templates/auto-spend-results.hbs",
   SIMPLE_CHAT_MESSAGE: "modules/fu-roll-enhancements/templates/simple-chat-message.hbs",
+  CHAT_CHECK_TARGETS: "systems/projectfu/templates/chat/partials/chat-check-targets.hbs"
 });
 
 
