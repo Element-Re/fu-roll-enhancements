@@ -6,10 +6,9 @@
     </label>
   </legend>
   <div class="item-settings">
-    {{#if showEnable}}
     <label class="checkbox resource-label-m">
       <span>
-        {{#if (eq item.type "spell")}}
+        {{#if hasDefaultCost}}
         {{localize "fu-roll-enhancements.autoSpend.options.override.label"}}
         {{else}}
         {{localize "fu-roll-enhancements.autoSpend.options.enable.label"}}
@@ -19,9 +18,6 @@
         name="flags.fu-roll-enhancements.autoSpend.enable" type="checkbox"
         {{checked item.flags.fu-roll-enhancements.autoSpend.enable}}>
     </label>
-    {{else}}
-    &nbsp;
-    {{/if}}
   </div>
   <div class="grid grid-3col">
     <div class="resource-content flexcol flex-group-center">

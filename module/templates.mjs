@@ -7,6 +7,7 @@ export const renderItemSheetHandler = async (item, $content) => {
       showAutoTarget: game.user.isGM || game.settings.get(MODULE, "allowPlayerAutoTarget"),
       showAutoSpend: game.settings.get(MODULE, "enableAutoSpend"),
       targetTypes: TARGET_TYPES,
+      hasDefaultCost: hasDefaultCost(item.object),
       resourceTypes: getResourceTypes(item.actor)
     };
     const itemExtensionContent = await renderTemplate(TEMPLATES.ITEM_EXTENSION, templateData);
@@ -42,4 +43,8 @@ export const TEMPLATES = Object.freeze({
   SIMPLE_CHAT_MESSAGE: "modules/fu-roll-enhancements/templates/simple-chat-message.hbs",
 });
 
+const _hasDefaultCostTypes = ['spell', 'ritual', 'consumable'];
 
+export function hasDefaultCost(item) { 
+  return item && _hasDefaultCostTypes.includes(item.type); 
+}

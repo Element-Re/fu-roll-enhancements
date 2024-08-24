@@ -39,7 +39,7 @@
     "fu-roll-enhancements.autoSpend.dialog.buttons.disable": "Disable",
     "fu-roll-enhancements.autoSpend.options.title": "Auto Spend",
     "fu-roll-enhancements.autoSpend.options.enable.label": "Enable?",
-    "fu-roll-enhancements.autoSpend.options.override.label": "Override Spell MP Cost?",
+    "fu-roll-enhancements.autoSpend.options.override.label": "Override Default Cost?",
     "fu-roll-enhancements.autoSpend.options.perTarget.label": "Per Target?",
     "fu-roll-enhancements.autoSpend.options.resourceType.label": "Resource Type",
     "fu-roll-enhancements.autoSpend.options.resourceType.types.mp": "Mind Points",

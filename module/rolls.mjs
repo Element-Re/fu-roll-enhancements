@@ -1,5 +1,5 @@
 import { keyBinds, MODULE } from './settings.mjs';
-import { TEMPLATES } from './templates.mjs';
+import { TEMPLATES, hasDefaultCost } from './templates.mjs';
 
 export async function rollEnhancements (wrapped, ...args) {
 	const item = this;
@@ -52,12 +52,11 @@ function getItemDisplayData(item) {
 };
 
 
-function getDefaultMpCost(item) {
+function getDefaultCost(item) {
 	if (typeof item.system.mpCost?.value === "number") {
 		return {
 			cost: item.system.mpCost.value,
 				resourceType: "MP",
-				// NOTE: This should only apply to rituals, which do not have per-target costs.
 				perTarget: false 
 		}
 	} else if (typeof item.system.mpCost?.value === "string") {
@@ -69,6 +68,12 @@ function getDefaultMpCost(item) {
 				resourceType: "MP",
 				perTarget: mpCostMatch[2] && mpCostMatch [3]
 			} : null;
+	} else if (typeof item.system.ipCost?.value === "number") {
+		return {
+			cost: item.system.ipCost.value,
+				resourceType: "IP",
+				perTarget: false 
+		}
 	} else  {
 		return null;
 	}
@@ -77,9 +82,9 @@ function getDefaultMpCost(item) {
 async function autoSpendWorkflow(item, targetCount, showDialog) {
 	if (!item.actor || !game.settings.get(MODULE, "enableAutoSpend")) return;
 	const templateData = {
-			item: item.type === "spell" ? foundry.utils.mergeObject(item.toObject(), {flags: { [MODULE]: {autoSpend: {enable: true}}}}) : item,
+			item: item,
 			resourceTypes: getResourceTypes(item.actor),
-			showEnable: item.type === "spell",
+			hasDefaultCost: hasDefaultCost(item),
 			displayData: getItemDisplayData(item),
 		};
 	const spendDialogContent = await renderTemplate(TEMPLATES.AUTO_SPEND_DIALOG, templateData);
@@ -96,7 +101,7 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 						// Always enabled for anything that is not a spell
 						const formInput = item.type === "spell" ? getFormInput(html) : 
 							foundry.utils.mergeObject(getFormInput(html), {flags: { [MODULE]: {autoSpend: {enable: true}}}});
-						const autoSpendOptions = formInput.flags[MODULE].autoSpend.enable ? formInput.flags[MODULE].autoSpend : getDefaultMpCost(item);
+						const autoSpendOptions = formInput.flags[MODULE].autoSpend.enable ? formInput.flags[MODULE].autoSpend : getDefaultCost(item);
 						await autoSpend(item, autoSpendOptions, targetCount);
 					}
 				},
@@ -105,9 +110,8 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 					label: game.i18n.localize(`${MODULE}.autoSpend.dialog.buttons.updateAndSpend`),
 					callback: async (html) => {
 						// Always enabled for anything that is not a spell
-						const formInput = item.type === "spell" ? getFormInput(html) : 
-							foundry.utils.mergeObject(getFormInput(html), {flags: { [MODULE]: {autoSpend: {enable: true}}}});
-						const autoSpendOptions = formInput.flags[MODULE].autoSpend.enable ? formInput.flags[MODULE].autoSpend : getDefaultMpCost(item);
+						const formInput = getFormInput(html);
+						const autoSpendOptions = formInput.flags[MODULE].autoSpend.enable ? formInput.flags[MODULE].autoSpend : getDefaultCost(item);
 						item.update(formInput);
 						await autoSpend(item, autoSpendOptions, targetCount);
 					}
@@ -119,7 +123,13 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 				disable: {
 					icon: '<i class="fas fa-ban"></i>',
 					label: game.i18n.localize(`${MODULE}.autoSpend.dialog.buttons.disable`),
-					callback:() => item.setFlag(MODULE, "autoSpend.enable", false)
+					callback:() => {
+						if (hasDefaultCost(item)) {
+							item.update({[`flags.${MODULE}.autoSpend`]: {enable: true, 'cost': 0}});
+						} else {
+							item.setFlag(MODULE, "autoSpend.enable", false);
+					  }
+					}
 				},
 			},
 			close: () => {
@@ -128,7 +138,7 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 		}, {id: "auto-spend-dialog"}); 
 	} else {
 		const autoSpendOptions = item.getFlag(MODULE, 'autoSpend');
-		await autoSpend(item, autoSpendOptions?.enable ? autoSpendOptions : getDefaultMpCost(item), targetCount);
+		await autoSpend(item, autoSpendOptions?.enable ? autoSpendOptions : getDefaultCost(item), targetCount);
 	}
 }
 
@@ -193,8 +203,7 @@ async function autoTargetWorkflow(item, showDialog) {
 					label: game.i18n.localize(`${MODULE}.autoTarget.dialog.buttons.updateAndTarget`),
 					callback: async (html) => {
 						const formInput = getFormInput(html)
-						const updateData = foundry.utils.flattenObject(foundry.utils.mergeObject(formInput, {flags: { [MODULE]: {autoTarget: {enable: true}}}}));
-						await item.update(updateData);
+						await item.update(formInput);
 						return await autoTarget(formInput.flags[MODULE].autoTarget, item);
 					}
 				},
