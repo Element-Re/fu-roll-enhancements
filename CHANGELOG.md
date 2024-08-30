@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+### New
+* FR localization courtesy of [Zakarik](https://github.com/Zakarik). Merci!
+
 ### Fixed
 * Resolved an issue which caused the "Enable" checkbox to not appear for Auto Target fields.
 * Resolved an issue which caused Auto Target to not consider Active Effects from items when it should have and to consider Active Effects that were disabled due to a crisis dependency when it shouldn't have.
@@ -16,6 +19,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 * Auto Spend will now use the default system IP cost on consumables unless overridden.
 * Auto Spend configuration "enable/override" field will now behave the same way in both item sheets and the Auto Spend dialog when rolling. Specifically, the field is never hidden, and the label will indicate that it enables Auto Spend on items without a default system cost, whereas it overrides the default system cost in cases where there is one.
 * Slightly changed the behavior of the "Disable" button in the Auto Spend dialog. Specifically, it unsets the "Enable" field for items without a default system cost, whereas it sets the "Override Default Cost" field and sets the cost to 0 for items with a default system cost. In either case, the result is that the item will not cost anything for this roll and others in the future.
+* Verified for Foundry V12.
 
 ## [0.1.2]
 
