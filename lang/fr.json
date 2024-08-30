@@ -19,7 +19,7 @@
     "fu-roll-enhancements.autoTarget.options.title": "Ciblage automatique",
     "fu-roll-enhancements.autoTarget.options.enable.label": "Activer ?",
     "fu-roll-enhancements.autoTarget.options.repeat.label": "Cibles répétées ?",
-    "fu-roll-enhancements.autoTarget.options.asMelee.label": "Comme mêlée ?",
+    "fu-roll-enhancements.autoTarget.options.asMelee.label": "En mêlée ?",
     "fu-roll-enhancements.autoTarget.options.targetType.label": "Type de cibles",
     "fu-roll-enhancements.autoTarget.options.targetType.types.allies": "Alliés",
     "fu-roll-enhancements.autoTarget.options.targetType.types.enemies": "Ennemis",
