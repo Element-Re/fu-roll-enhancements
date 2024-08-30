@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+### Fixed
+* Resolved an issue which caused the "Enable" checkbox to not appear for Auto Target fields.
+* Resolved an issue which caused Auto Target to not consider Active Effects from items when it should have and to consider Active Effects that were disabled due to a crisis dependency when it shouldn't have.
+
 ### Changed
 
 * Improved the info displayed on the rolled item in the Auto Target and Auto Spend dialogs.

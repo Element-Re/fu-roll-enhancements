@@ -229,7 +229,7 @@ async function autoTargetWorkflow(item, showDialog) {
 }
 
 function actorHasStatus(actor, ...statuses) {
-	return [...actor.effects].some(e => !e.disabled && [...e.statuses].some(s => statuses.includes(s)));
+	return actor.statuses.some(s => statuses.includes(s));
 }
 
 async function autoTarget(options, item) {
@@ -257,18 +257,17 @@ async function autoTarget(options, item) {
 		} else {
 			// ENEMIES, ENEMIES_MELEE, ENEMIES_MELEE_FLYING
 			targetFilter = t => {
-				// TODO: Define this in a more general way and/or allow the user to customize somehow
-				const effects = [...t.actor.effects];
 				return !t.document.hidden &&
-					t.document.disposition === -rollerDisposition &&
-					!effects.some(e => 
-						!e.disabled && [...e.statuses].some(s => !s.disabled && 
-							(
-								UNTARGETABLE_ALL_EFFECTS.includes(s) || 
-								("ENEMIES_MELEE" === options.targetType && !actorHasStatus(item.actor, 'flying') && UNTARGETABLE_MELEE_EFFECTS.includes(s)) ||
-								(("ENEMIES_MELEE" === options.targetType && actorHasStatus(item.actor, 'flying') || "ENEMIES_MELEE_FLYING" === options.targetType) && actorHasStatus(item.actor, 'flying') && UNTARGETABLE_MELEE_FLYING_EFFECTS.includes(s))
-							)
-					));
+					t.document.disposition === -rollerDisposition && 
+					!actorHasStatus(t.actor, ...UNTARGETABLE_ALL_EFFECTS) && 
+					!(
+						("ENEMIES_MELEE" === options.targetType && !actorHasStatus(item.actor, 'flying') && actorHasStatus(t.actor, ...UNTARGETABLE_MELEE_EFFECTS))
+						|| 
+						(
+							("ENEMIES_MELEE_FLYING" === options.targetType || ("ENEMIES_MELEE" === options.targetType && actorHasStatus(item.actor, 'flying'))) && 
+							actorHasStatus(t.actor, ...UNTARGETABLE_MELEE_FLYING_EFFECTS)
+						)
+					)
 			};
 		}
 
@@ -280,7 +279,7 @@ async function autoTarget(options, item) {
 
 			// Force targets only for rolls targeting enemies.
 			if (["ENEMIES", "ENEMIES_MELEE", "ENEMIES_MELEE_FLYING"].includes(options.targetType)) {
-				[...item.actor.effects].forEach(e => {
+				[...item.actor.appliedEffects].forEach(e => {
 					const effectStatuses = [...e.statuses];
 					if (e.origin && effectStatuses.some(s => FORCE_TARGET_EFFECTS.includes(s))) {
 						const origin = fromUuidSync(e.origin);
