@@ -17,7 +17,7 @@ For a more comprehensive overview of this module and instructions how to use it,
 
 ## Installation
 ### Semi-Automatic Installation
-1. Navigate to the **Add-on Modules** Tab and click **Install Module**.
+1. Navigate to the **Add-on Modules** Tab on your Foundry server's Setup page and click **Install Module**.
 2. Paste a manifest URL for a [version](https://github.com/Element-Re/fu-roll-enhancements/releases) into the **Manifest URL** field. This URL is for the latest release version:
 
 `https://github.com/Element-Re/fu-roll-enhancements/releases/latest/download/module.json`
