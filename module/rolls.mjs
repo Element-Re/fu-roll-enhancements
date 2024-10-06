@@ -8,37 +8,37 @@ export async function rollEnhancements (wrapped, ...args) {
 
 	// Auto Target
 	autoTarget = await autoTargetWorkflow(item, rollKeys.autoTargetDialog);
-	console.log("fu-roll-enhancements | done getting targets");
+	console.log(`${MODULE} | done getting targets`);
 	// Auto Spend
 	await autoSpendWorkflow(item, autoTarget?.count || game.user.targets.size, rollKeys.autoSpendDialog);
-	console.log("fu-roll-enhancements | done spending costs");
-	// Item macro "pre" event
-	if (game.settings.get(MODULE, "preRollItemMacro") && item.hasMacro && item.hasMacro())
-		await item.executeMacro("pre");
+	console.log(`${MODULE} | done spending costs`);
+	// Item macro 'pre' event
+	if (game.settings.get(MODULE, 'preRollItemMacro') && item.hasMacro && item.hasMacro())
+		await item.executeMacro('pre');
 	if (autoTarget?.finalize)
 		await autoTarget.finalize();
-	console.log("fu-roll-enhancements | done finalizing targets");
+	console.log(`${MODULE} | done finalizing targets`);
 	// Chain wrapped function(s)
 	const rollResults = await wrapped(...args);
-	// Item macro "post" event
-	if (game.settings.get(MODULE, "postRollItemMacro") && item.hasMacro && item.hasMacro())
-		await item.executeMacro("post", rollResults);
+	// Item macro 'post' event
+	if (game.settings.get(MODULE, 'postRollItemMacro') && item.hasMacro && item.hasMacro())
+		await item.executeMacro('post', rollResults);
 	return rollResults;
 }
 
 function getItemDisplayData(item) {
 	let displayData = {};
 	switch (item.type) {
-		case "weapon":
+		case 'weapon':
 			displayData = item.getWeaponDisplayData(item.actor);
 			break;
-		case "basic":
+		case 'basic':
 			displayData = foundry.utils.mergeObject(item.getWeaponDisplayData(item.actor), {qualityString: item.system.quality?.value || game.i18n.localize('FU.BasicAttack')})
 			break;
-		case "spell":
+		case 'spell':
 			displayData =  item.getSpellDisplayData();
 			break;
-		case "skill":
+		case 'skill':
 			displayData = item.getSkillDisplayData();
 			break;
 		default:
@@ -53,25 +53,25 @@ function getItemDisplayData(item) {
 
 
 function getDefaultCost(item) {
-	if (typeof item.system.mpCost?.value === "number") {
+	if (typeof item.system.mpCost?.value === 'number') {
 		return {
 			cost: item.system.mpCost.value,
-				resourceType: "MP",
+				resourceType: 'MP',
 				perTarget: false 
 		}
-	} else if (typeof item.system.mpCost?.value === "string") {
+	} else if (typeof item.system.mpCost?.value === 'string') {
 		const mpCostMatch = item.system.mpCost.value.match(/^(\d+)(\s+[x*×]\s+)?(t)?/i);
 			if (!mpCostMatch) return null;
 			const mpCost = mpCostMatch[1];
 			return mpCost ? {
 				cost: Number(mpCost),
-				resourceType: "MP",
+				resourceType: 'MP',
 				perTarget: mpCostMatch[2] && mpCostMatch [3]
 			} : null;
-	} else if (typeof item.system.ipCost?.value === "number") {
+	} else if (typeof item.system.ipCost?.value === 'number') {
 		return {
 			cost: item.system.ipCost.value,
-				resourceType: "IP",
+				resourceType: 'IP',
 				perTarget: false 
 		}
 	} else  {
@@ -80,7 +80,7 @@ function getDefaultCost(item) {
 }
 
 async function autoSpendWorkflow(item, targetCount, showDialog) {
-	if (!item.actor || !game.settings.get(MODULE, "enableAutoSpend")) return;
+	if (!item.actor || !game.settings.get(MODULE, 'enableAutoSpend')) return;
 	const templateData = {
 			item: item,
 			resourceTypes: getResourceTypes(item.actor),
@@ -99,8 +99,10 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 					label: game.i18n.localize(`${MODULE}.autoSpend.dialog.buttons.spend`),
 					callback: async (html) => {
 						const formInput = getFormInput(html);
-						const autoSpendOptions = formInput.flags[MODULE].autoSpend.enable ? formInput.flags[MODULE].autoSpend : getDefaultCost(item);
-						await autoSpend(item, autoSpendOptions, targetCount);
+							const autoSpendOptions = (hasDefaultCost(item) && !formInput.flags[MODULE].autoSpend.enable) ? 
+								getDefaultCost(item) :
+								formInput.flags[MODULE].autoSpend;
+							await autoSpend(item, autoSpendOptions, targetCount);
 					}
 				},
 				updateAndSpend: {
@@ -109,6 +111,10 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 					callback: async (html) => {
 						const formInput = getFormInput(html);
 						await item.update(formInput);
+						const defaultCost = getDefaultCost(item);
+						(defaultCost && !formInput.flags[MODULE].autoSpend.enable) ? 
+								defaultCost :
+								formInput.flags[MODULE].autoSpend;
 						const autoSpendOptions = formInput.flags[MODULE].autoSpend.enable ? formInput.flags[MODULE].autoSpend : getDefaultCost(item);
 						
 						await autoSpend(item, autoSpendOptions, targetCount);
@@ -125,15 +131,29 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 						if (hasDefaultCost(item)) {
 							item.update({[`flags.${MODULE}.autoSpend`]: {enable: true, 'cost': 0}});
 						} else {
-							item.setFlag(MODULE, "autoSpend.enable", false);
+							item.setFlag(MODULE, 'autoSpend.enable', false);
 					  }
 					}
 				},
 			},
 			close: () => {
-				console.log("fu-roll-enhancements | closing auto-spend dialog");
+				console.log(`${MODULE} | closing auto-spend dialog`);
+			},
+			render: (html) => {
+				  // Make 'enable' field display *if* there is no default cost, because modifying it is already handled by the dialog options.
+					if(!hasDefaultCost(item)) {
+						$(html).find(`input[name="flags.${MODULE}.autoSpend.enable"]`)
+							.prop('disabled', true)
+							.css('cursor', 'help')
+							// With this, the "enable" field will always be considered set to true.
+							.after(`<input type="checkbox" name="flags.${MODULE}.autoSpend.enable" style="display: none" checked />`);
+						$(html).find(`label:has(input[name="flags.${MODULE}.autoSpend.enable"])`)
+							.attr('data-tooltip', game.i18n.localize(`${MODULE}.autoSpend.options.enable.locked.enableDisableHint`))
+							.css('cursor', 'help')
+
+					}
 			}
-		}, {id: "auto-spend-dialog"}); 
+		}, {id: 'auto-spend-dialog'}); 
 	} else {
 		const autoSpendOptions = item.getFlag(MODULE, 'autoSpend');
 		await autoSpend(item, autoSpendOptions?.enable ? autoSpendOptions : getDefaultCost(item), targetCount);
@@ -153,7 +173,7 @@ async function autoSpend(item, options, targetCount) {
 		resource: game.i18n.localize(resourceType.label),
 		from: item.name,
 	}
-	if ((item.actor.type === "npc" && ["IP", "ZENIT"].includes(options.resourceType)) || newValue + finalCost !== currentValue) {
+	if ((item.actor.type === 'npc' && ['IP', 'ZENIT'].includes(options.resourceType)) || newValue + finalCost !== currentValue) {
 		let errorMessage = game.i18n.format(`${MODULE}.autoSpend.errors.notEnoughResources.message`, resultsData);
 		const dialogBinding = game.keybindings.actions.get(`${MODULE}.autoSpendDialog`).editable[0];
 		if (dialogBinding) {
@@ -174,7 +194,7 @@ async function autoSpend(item, options, targetCount) {
 }
 
 async function autoTargetWorkflow(item, showDialog) {
-	if (!item.actor || (!game.user.isGM && !game.settings.get(MODULE, "allowPlayerAutoTarget"))) return;
+	if (!item.actor || (!game.user.isGM && !game.settings.get(MODULE, 'allowPlayerAutoTarget'))) return;
 
 	// If keybind is pressed, show dialog
 	if (showDialog) {
@@ -218,24 +238,24 @@ async function autoTargetWorkflow(item, showDialog) {
 				disable: {
 					icon: '<i class="fas fa-ban"></i>',
 					label: game.i18n.localize(`${MODULE}.autoTarget.dialog.buttons.disable`),
-					callback: () => item.setFlag(MODULE, "autoTarget.enable", false)
+					callback: () => item.setFlag(MODULE, 'autoTarget.enable', false)
 				},
 			},
 			close: () => {
-				console.log("fu-roll-enhancements | closing auto-target dialog");
+				console.log(`${MODULE} | closing auto-target dialog`);
 			},
 			render: (html) => {
-				  // Make "enable" field display only, because modifying it is already handled by the dialog options.
-				  $(html).find(`input[name="flags.fu-roll-enhancements.autoTarget.enable"]`)
+				  // Make 'enable' field display only, because modifying it is already handled by the dialog options.
+				  $(html).find(`input[name="flags.${MODULE}.autoTarget.enable"]`)
 						.prop('disabled', true)
 						.css('cursor', 'help');
-					$(html).find(`label:has(input[name="flags.fu-roll-enhancements.autoTarget.enable"])`)
+					$(html).find(`label:has(input[name="flags.${MODULE}.autoTarget.enable"])`)
 						.attr('data-tooltip', game.i18n.localize(`${MODULE}.autoTarget.options.enable.locked.enableDisableHint`))
 						.css('cursor', 'help');
 			}
-		}, {id: "auto-target-dialog"}); 
-	} else if (item.getFlag(MODULE, "autoTarget")?.enable) {
-		const options = item.getFlag(MODULE, "autoTarget");
+		}, {id: 'auto-target-dialog'}); 
+	} else if (item.getFlag(MODULE, 'autoTarget')?.enable) {
+		const options = item.getFlag(MODULE, 'autoTarget');
 		return await autoTarget(options, item);
 	}
 
@@ -247,11 +267,11 @@ function actorHasStatus(actor, ...statuses) {
 
 async function autoTarget(options, item) {
 	if (!options || !item) return;
-	// Default targetType to "ENEMIES"
+	// Default targetType to 'ENEMIES'
 	options = foundry.utils.deepClone(options);
-	options.targetType = options.targetType || "ENEMIES";
+	options.targetType = options.targetType || 'ENEMIES';
 	const targetList = new Map();
-	if (options.targetType === "SELF") {
+	if (options.targetType === 'SELF') {
 		item.actor.getActiveTokens().forEach(t => targetList.set(t, { count: 1 }));
 	} else {
 		let targetCandidates = [];
@@ -261,11 +281,11 @@ async function autoTarget(options, item) {
 			rollerTokenOrProtoType.disposition === CONST.TOKEN_DISPOSITIONS.SECRET ? CONST.TOKEN_DISPOSITIONS.HOSTILE : 
 			rollerTokenOrProtoType.disposition;
 		let targetFilter;
-		if (options.targetType === "ALLIES") {
+		if (options.targetType === 'ALLIES') {
 			targetFilter = t => t.document.disposition === rollerDisposition && t.actor.id !== item.actor.id && t.id !== rollerTokenOrProtoType.id;
-		} else if (options.targetType === "ALLIES_AND_SELF") {
+		} else if (options.targetType === 'ALLIES_AND_SELF') {
 			targetFilter = t => t.document.disposition === rollerDisposition;
-		} else if (options.targetType === "ALL") {
+		} else if (options.targetType === 'ALL') {
 			targetFilter = t => [CONST.TOKEN_DISPOSITIONS.FRIENDLY, CONST.TOKEN_DISPOSITIONS.HOSTILE].includes(t.document.disposition);
 		} else {
 			// ENEMIES, ENEMIES_MELEE, ENEMIES_MELEE_FLYING
@@ -274,10 +294,10 @@ async function autoTarget(options, item) {
 					t.document.disposition === -rollerDisposition && 
 					!actorHasStatus(t.actor, ...UNTARGETABLE_ALL_EFFECTS) && 
 					!(
-						("ENEMIES_MELEE" === options.targetType && !actorHasStatus(item.actor, 'flying') && actorHasStatus(t.actor, ...UNTARGETABLE_MELEE_EFFECTS))
+						('ENEMIES_MELEE' === options.targetType && !actorHasStatus(item.actor, 'flying') && actorHasStatus(t.actor, ...UNTARGETABLE_MELEE_EFFECTS))
 						|| 
 						(
-							("ENEMIES_MELEE_FLYING" === options.targetType || ("ENEMIES_MELEE" === options.targetType && actorHasStatus(item.actor, 'flying'))) && 
+							('ENEMIES_MELEE_FLYING' === options.targetType || ('ENEMIES_MELEE' === options.targetType && actorHasStatus(item.actor, 'flying'))) && 
 							actorHasStatus(t.actor, ...UNTARGETABLE_MELEE_FLYING_EFFECTS)
 						)
 					)
@@ -286,12 +306,12 @@ async function autoTarget(options, item) {
 
 		targetCandidates.push(...game.canvas.tokens.placeables.filter(targetFilter));
 
-		if (typeof options.maxTargets === "number" && options.maxTargets > 0) {
+		if (typeof options.maxTargets === 'number' && options.maxTargets > 0) {
 
 			const forcedTargetsMap = new Map();
 
 			// Force targets only for rolls targeting enemies.
-			if (["ENEMIES", "ENEMIES_MELEE", "ENEMIES_MELEE_FLYING"].includes(options.targetType)) {
+			if (['ENEMIES', 'ENEMIES_MELEE', 'ENEMIES_MELEE_FLYING'].includes(options.targetType)) {
 				[...item.actor.appliedEffects].forEach(e => {
 					const effectStatuses = [...e.statuses];
 					if (e.origin && effectStatuses.some(s => FORCE_TARGET_EFFECTS.includes(s))) {
@@ -361,7 +381,7 @@ export const TARGET_TYPES = Object.freeze ({
 });
 
 export function getResourceTypes(actor) {
-	return actor?.type !== "npc" ? RESOURCE_TYPES : NPC_RESOURCE_TYPES;
+	return actor?.type !== 'npc' ? RESOURCE_TYPES : NPC_RESOURCE_TYPES;
 }
 
 const RESOURCE_TYPES = Object.freeze ({

@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 * Slightly changed the behavior of the "Disable" button in the Auto Spend dialog. Specifically, it unsets the "Enable" field for items without a default system cost, whereas it sets the "Override Default Cost" field and sets the cost to 0 for items with a default system cost. In either case, the result is that the item will not cost anything for this roll and others in the future.
 * Verified for Foundry V12.
 * General improvements to Auto Target dialog to reduce clicks needed while providing better information about the item's current configuration. The "Enable" checkbox is display only, but has a tooltip explaining how it can be toggled on or off by the dialog options.
+* The above improvement also applies to the Auto Spend dialog for items without a default cost (i.e. not a spell, ritual, or consumable). For items with a default cost, you will still need to explicitly specify whether or not to override the default cost.
 
 ## [0.1.2]
 

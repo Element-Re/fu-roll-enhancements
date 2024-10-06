@@ -40,6 +40,7 @@
     "fu-roll-enhancements.autoSpend.dialog.buttons.disable": "Disable",
     "fu-roll-enhancements.autoSpend.options.title": "Auto Spend",
     "fu-roll-enhancements.autoSpend.options.enable.label": "Enable?",
+    "fu-roll-enhancements.autoSpend.options.enable.locked.enableDisableHint": "Select <strong>Update and Spend</strong> to toggle on, or <strong>Disable</strong> to toggle off.",
     "fu-roll-enhancements.autoSpend.options.override.label": "Override Default Cost?",
     "fu-roll-enhancements.autoSpend.options.perTarget.label": "Per Target?",
     "fu-roll-enhancements.autoSpend.options.resourceType.label": "Resource Type",
