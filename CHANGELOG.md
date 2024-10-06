@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 * Resolved an issue which caused the "Enable" checkbox to not appear for Auto Target fields.
 * Resolved an issue which caused Auto Target to not consider Active Effects from items when it should have and to consider Active Effects that were disabled due to a crisis dependency when it shouldn't have.
+* Resolved issue with Auto Spend dialog not respecting the "Enable" checkbox when clicking "Spend" only.
 
 ### Changed
 
