@@ -226,7 +226,6 @@ async function autoTargetWorkflow(item, showDialog) {
 							formInput,
 							foundry.utils.expandObject({[`flags.${MODULE}.autoTarget.enable`]: true})
 						);
-						console.log(updateData);
 						await item.update(updateData);
 						return await autoTarget(autoTargetOptions, item);
 					}
