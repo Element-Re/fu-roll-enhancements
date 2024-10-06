@@ -98,9 +98,7 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 					icon: '<i class="fas fa-coins"></i>',
 					label: game.i18n.localize(`${MODULE}.autoSpend.dialog.buttons.spend`),
 					callback: async (html) => {
-						// Always enabled for anything that is not a spell
-						const formInput = item.type === "spell" ? getFormInput(html) : 
-							foundry.utils.mergeObject(getFormInput(html), {flags: { [MODULE]: {autoSpend: {enable: true}}}});
+						const formInput = getFormInput(html);
 						const autoSpendOptions = formInput.flags[MODULE].autoSpend.enable ? formInput.flags[MODULE].autoSpend : getDefaultCost(item);
 						await autoSpend(item, autoSpendOptions, targetCount);
 					}
@@ -109,10 +107,10 @@ async function autoSpendWorkflow(item, targetCount, showDialog) {
 					icon: '<i class="fas fa-floppy-disk"></i>',
 					label: game.i18n.localize(`${MODULE}.autoSpend.dialog.buttons.updateAndSpend`),
 					callback: async (html) => {
-						// Always enabled for anything that is not a spell
 						const formInput = getFormInput(html);
+						await item.update(formInput);
 						const autoSpendOptions = formInput.flags[MODULE].autoSpend.enable ? formInput.flags[MODULE].autoSpend : getDefaultCost(item);
-						item.update(formInput);
+						
 						await autoSpend(item, autoSpendOptions, targetCount);
 					}
 				},
@@ -202,9 +200,15 @@ async function autoTargetWorkflow(item, showDialog) {
 					icon: '<i class="fas fa-floppy-disk"></i>',
 					label: game.i18n.localize(`${MODULE}.autoTarget.dialog.buttons.updateAndTarget`),
 					callback: async (html) => {
-						const formInput = getFormInput(html)
-						await item.update(formInput);
-						return await autoTarget(formInput.flags[MODULE].autoTarget, item);
+						const formInput = getFormInput(html);
+						const autoTargetOptions = formInput.flags[MODULE].autoTarget;
+						const updateData = foundry.utils.mergeObject(
+							formInput,
+							foundry.utils.expandObject({[`flags.${MODULE}.autoTarget.enable`]: true})
+						);
+						console.log(updateData);
+						await item.update(updateData);
+						return await autoTarget(autoTargetOptions, item);
 					}
 				},
 				skip: {
@@ -219,6 +223,15 @@ async function autoTargetWorkflow(item, showDialog) {
 			},
 			close: () => {
 				console.log("fu-roll-enhancements | closing auto-target dialog");
+			},
+			render: (html) => {
+				  // Make "enable" field display only, because modifying it is already handled by the dialog options.
+				  $(html).find(`input[name="flags.fu-roll-enhancements.autoTarget.enable"]`)
+						.prop('disabled', true)
+						.css('cursor', 'help');
+					$(html).find(`label:has(input[name="flags.fu-roll-enhancements.autoTarget.enable"])`)
+						.attr('data-tooltip', game.i18n.localize(`${MODULE}.autoTarget.options.enable.locked.enableDisableHint`))
+						.css('cursor', 'help');
 			}
 		}, {id: "auto-target-dialog"}); 
 	} else if (item.getFlag(MODULE, "autoTarget")?.enable) {

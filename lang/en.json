@@ -18,6 +18,7 @@
     "fu-roll-enhancements.autoTarget.dialog.buttons.disable": "Disable",
     "fu-roll-enhancements.autoTarget.options.title": "Auto Target",
     "fu-roll-enhancements.autoTarget.options.enable.label": "Enable?",
+    "fu-roll-enhancements.autoTarget.options.enable.locked.enableDisableHint": "Select <strong>Update and Target</strong> to toggle on, or <strong>Disable</strong> to toggle off.",
     "fu-roll-enhancements.autoTarget.options.repeat.label": "Repeat targets?",
     "fu-roll-enhancements.autoTarget.options.asMelee.label": "As melee?",
     "fu-roll-enhancements.autoTarget.options.targetType.label": "Target Type",
