@@ -21,14 +21,14 @@ export const renderItemSheetHandler = async (item, $content) => {
 export const initializeTemplates = () => {
   loadTemplates([
     TEMPLATES.AUTO_TARGET_FIELDSET,
-		TEMPLATES.AUTO_TARGET_DIALOG,
+    TEMPLATES.AUTO_TARGET_DIALOG,
     TEMPLATES.AUTO_SPEND_FIELDSET,
     TEMPLATES.AUTO_SPEND_DIALOG,
-		TEMPLATES.ITEM_EXTENSION,
+    TEMPLATES.ITEM_EXTENSION,
     TEMPLATES.ITEM_DIALOG,
     TEMPLATES.AUTO_TARGET_RESULTS,
     TEMPLATES.SIMPLE_CHAT_MESSAGE
-	]);
+  ]);
 }
 
 export const TEMPLATES = Object.freeze({
