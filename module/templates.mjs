@@ -11,12 +11,11 @@ export const renderItemSheetHandler = async (item, $content) => {
       resourceTypes: getResourceTypes(item.actor)
     };
     const itemExtensionContent = await renderTemplate(TEMPLATES.ITEM_EXTENSION, templateData);
-    const attributesTab = $content.find(".tab.attributes[data-tab=attributes]").first();
-    if(!attributesTab.length) return;
-    if (attributesTab.find("section.grid").length) {
-      attributesTab.find("section.grid").last().append(itemExtensionContent);
-    } else
-      attributesTab.append($(`<section class="grid grid-2col gap-5"></section>`).append(itemExtensionContent));
+    const nav = $content.find("nav#item-navbar");
+    nav.append('<a class="item rollable tab button-style" data-tab="rolls"><i class="fas fa-dice"></i></a>');
+    const sheetBody = $content.find("section.sheet-body");
+    sheetBody.append('<div class="tab rolls" data-group="primary" data-tab="rolls"></div>')
+      .find('.tab.rolls').append(itemExtensionContent);
 }
 
 export const initializeTemplates = () => {
