@@ -2,6 +2,7 @@ import { getResourceTypes, TARGET_TYPES } from './rolls.mjs';
 import { MODULE } from './settings.mjs';
 
 export const renderItemSheetHandler = async (item, $content) => {
+    // Render module-specific item form fields
     const templateData = {
       item: item.object,
       showAutoTarget: game.user.isGM || game.settings.get(MODULE, "allowPlayerAutoTarget"),
@@ -11,11 +12,34 @@ export const renderItemSheetHandler = async (item, $content) => {
       resourceTypes: getResourceTypes(item.actor)
     };
     const itemExtensionContent = await renderTemplate(TEMPLATES.ITEM_EXTENSION, templateData);
+    // Add tabs to item sheet
     const nav = $content.find("nav#item-navbar");
-    nav.append('<a class="item rollable tab button-style" data-tab="rolls"><i class="fas fa-dice"></i></a>');
+    nav.append(`<a class="item rollable tab button-style" data-tab="rolls"><i class="fas fa-dice"></i></a>`);
     const sheetBody = $content.find("section.sheet-body");
     sheetBody.append('<div class="tab rolls" data-group="primary" data-tab="rolls"></div>')
-      .find('.tab.rolls').append(itemExtensionContent);
+    sheetBody.find('.tab.rolls').append(itemExtensionContent);
+    // Check if last recorded tab change was our "rolls" tab, and activate it if so.
+    if(item.lastTab === 'rolls') {
+      item._tabs[0].activate('rolls');
+    }
+    // Record tab changes
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if(mutation.type === 'attributes' && mutation.attributeName ==='class') {
+          if(mutation.target.classList.contains("active")) {
+            item.lastTab = mutation.target.dataset['tab'];
+            break;
+          };
+        }
+      }
+    });
+    const config = {
+      attributes: true,
+      attributeFilter: ['class'],
+      subtree: false,
+      childList: false
+    }
+    nav.find('a.tab[data-tab]').each((_, a) => observer.observe(a, config));
 }
 
 export const initializeTemplates = () => {
