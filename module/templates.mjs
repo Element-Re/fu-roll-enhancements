@@ -5,18 +5,18 @@ export const renderItemSheetHandler = async (item, $content) => {
     // Render module-specific item form fields
     const templateData = {
       item: item.object,
-      showAutoTarget: game.user.isGM || game.settings.get(MODULE, "allowPlayerAutoTarget"),
-      showAutoSpend: game.settings.get(MODULE, "enableAutoSpend"),
+      showAutoTarget: game.user.isGM || game.settings.get(MODULE, 'allowPlayerAutoTarget'),
+      showAutoSpend: game.settings.get(MODULE, 'enableAutoSpend'),
       targetTypes: TARGET_TYPES,
       hasDefaultCost: hasDefaultCost(item.object),
       resourceTypes: getResourceTypes(item.actor)
     };
     const itemExtensionContent = await renderTemplate(TEMPLATES.ITEM_EXTENSION, templateData);
     // Add tabs to item sheet
-    const nav = $content.find("nav#item-navbar");
-    nav.append(`<a class="item rollable tab button-style" data-tab="rolls"><i class="fas fa-dice"></i></a>`);
-    const sheetBody = $content.find("section.sheet-body");
-    sheetBody.append('<div class="tab rolls" data-group="primary" data-tab="rolls"></div>')
+    const nav = $content.find('nav#item-navbar');
+    nav.append('<a class="item rollable tab button-style" data-tab="rolls"><i class="fas fa-dice"></i></a>');
+    const sheetBody = $content.find('section.sheet-body');
+    sheetBody.append('<div class="tab rolls" data-group="primary" data-tab="rolls"></div>');
     sheetBody.find('.tab.rolls').append(itemExtensionContent);
     // Check if last recorded tab change was our "rolls" tab, and activate it if so.
     if(item.lastTab === 'rolls') {
@@ -26,7 +26,7 @@ export const renderItemSheetHandler = async (item, $content) => {
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         if(mutation.type === 'attributes' && mutation.attributeName ==='class') {
-          if(mutation.target.classList.contains("active")) {
+          if(mutation.target.classList.contains('active')) {
             item.lastTab = mutation.target.dataset['tab'];
             break;
           };
@@ -38,9 +38,9 @@ export const renderItemSheetHandler = async (item, $content) => {
       attributeFilter: ['class'],
       subtree: false,
       childList: false
-    }
+    };
     nav.find('a.tab[data-tab]').each((_, a) => observer.observe(a, config));
-}
+};
 
 export const initializeTemplates = () => {
   loadTemplates([
@@ -53,21 +53,19 @@ export const initializeTemplates = () => {
     TEMPLATES.AUTO_TARGET_RESULTS,
     TEMPLATES.SIMPLE_CHAT_MESSAGE
   ]);
-}
+};
 
 export const TEMPLATES = Object.freeze({
-  AUTO_TARGET_FIELDSET: "modules/fu-roll-enhancements/templates/auto-target-fieldset.hbs",
-  AUTO_TARGET_DIALOG: "modules/fu-roll-enhancements/templates/auto-target-dialog.hbs",
-  AUTO_SPEND_FIELDSET: "modules/fu-roll-enhancements/templates/auto-spend-fieldset.hbs",
-  AUTO_SPEND_DIALOG: "modules/fu-roll-enhancements/templates/auto-spend-dialog.hbs",
-  ITEM_EXTENSION: "modules/fu-roll-enhancements/templates/item-extension.hbs",
-  ITEM_DIALOG: "modules/fu-roll-enhancements/templates/item-dialog.hbs",
-  AUTO_TARGET_RESULTS: "modules/fu-roll-enhancements/templates/auto-target-results.hbs",
-  SIMPLE_CHAT_MESSAGE: "modules/fu-roll-enhancements/templates/simple-chat-message.hbs",
+  AUTO_TARGET_FIELDSET: 'modules/fu-roll-enhancements/templates/auto-target-fieldset.hbs',
+  AUTO_TARGET_DIALOG: 'modules/fu-roll-enhancements/templates/auto-target-dialog.hbs',
+  AUTO_SPEND_FIELDSET: 'modules/fu-roll-enhancements/templates/auto-spend-fieldset.hbs',
+  AUTO_SPEND_DIALOG: 'modules/fu-roll-enhancements/templates/auto-spend-dialog.hbs',
+  ITEM_EXTENSION: 'modules/fu-roll-enhancements/templates/item-extension.hbs',
+  ITEM_DIALOG: 'modules/fu-roll-enhancements/templates/item-dialog.hbs',
+  AUTO_TARGET_RESULTS: 'modules/fu-roll-enhancements/templates/auto-target-results.hbs',
+  SIMPLE_CHAT_MESSAGE: 'modules/fu-roll-enhancements/templates/simple-chat-message.hbs',
 });
 
-const _hasDefaultCostTypes = ['spell', 'ritual', 'consumable'];
-
 export function hasDefaultCost(item) { 
-  return item && _hasDefaultCostTypes.includes(item.type); 
+  return item && typeof item.system.mpCost?.value === 'number' ||  typeof item.system.ipCost?.value === 'number' ||  typeof item.system.cost?.amount === 'number'; 
 }

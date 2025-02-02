@@ -1,6 +1,6 @@
 import { rollEnhancements } from './module/rolls.mjs';
-import { registerKeyBindings, registerSettings } from "./module/settings.mjs";
-import { renderItemSheetHandler, initializeTemplates } from "./module/templates.mjs"
+import { registerKeyBindings, registerSettings } from './module/settings.mjs';
+import { renderItemSheetHandler, initializeTemplates } from './module/templates.mjs';
 
 Hooks.once('init', () => {
 	registerSettings();
