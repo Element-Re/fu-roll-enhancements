@@ -1,15 +1,17 @@
 import { getResourceTypes, TARGET_TYPES } from './rolls.mjs';
+import { AutoTarget } from './autoTarget.mjs';
 import { MODULE } from './settings.mjs';
 
-export const renderItemSheetHandler = async (item, $content) => {
+export const renderItemSheetHandler = async (itemSheet, $content) => {
     // Render module-specific item form fields
     const templateData = {
-      item: item.object,
+      item: itemSheet.object,
       showAutoTarget: game.user.isGM || game.settings.get(MODULE, 'allowPlayerAutoTarget'),
       showAutoSpend: game.settings.get(MODULE, 'enableAutoSpend'),
       targetTypes: TARGET_TYPES,
-      hasDefaultCost: hasDefaultCost(item.object),
-      resourceTypes: getResourceTypes(item.actor)
+      hasDefaultCost: hasDefaultCost(itemSheet.object),
+      hasDefaultTargetStrategy: AutoTarget.hasDefaultStrategyFor(itemSheet.object),
+      resourceTypes: getResourceTypes(itemSheet.actor)
     };
     const itemExtensionContent = await renderTemplate(TEMPLATES.ITEM_EXTENSION, templateData);
     // Add tabs to item sheet
@@ -19,15 +21,15 @@ export const renderItemSheetHandler = async (item, $content) => {
     sheetBody.append('<div class="tab rolls" data-group="primary" data-tab="rolls"></div>');
     sheetBody.find('.tab.rolls').append(itemExtensionContent);
     // Check if last recorded tab change was our "rolls" tab, and activate it if so.
-    if(item.lastTab === 'rolls') {
-      item._tabs[0].activate('rolls');
+    if(itemSheet.lastTab === 'rolls') {
+      itemSheet._tabs[0].activate('rolls');
     }
     // Record tab changes
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         if(mutation.type === 'attributes' && mutation.attributeName ==='class') {
           if(mutation.target.classList.contains('active')) {
-            item.lastTab = mutation.target.dataset['tab'];
+            itemSheet.lastTab = mutation.target.dataset['tab'];
             break;
           };
         }

@@ -29,7 +29,7 @@
     "fu-roll-enhancements.autoTarget.options.targetType.types.alliesAndSelf": "Alliés et Soi-même",
     "fu-roll-enhancements.autoTarget.options.targetType.types.all": "Tous",
     "fu-roll-enhancements.autoTarget.options.maxTargets.label": "Cibles max",
-    "fu-roll-enhancements.autoTarget.results.title": "Cible automatique : {targetType}",
+    "fu-roll-enhancements.autoTarget.results.title": "Cible automatique : {label}",
     "fu-roll-enhancements.autoTarget.results.noTargets": "Aucune cible valide",
     "fu-roll-enhancements.autoTarget.errors.forcedTargetInvalid": "Tentative de forcer une cible pour {roller} à cause de {effect}, mais la cible est invalide.",
     "fu-roll-enhancements.autoSpend.dialog.title": "Dépenses automatiquse",

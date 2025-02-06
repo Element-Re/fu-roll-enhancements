@@ -1,4 +1,3 @@
-import { FORCE_TARGET_EFFECTS, TARGET_TYPES } from './rolls.mjs';
 import { MODULE } from './settings.mjs';
 import { TEMPLATES } from './templates.mjs';
 
@@ -33,7 +32,30 @@ class TargetStrategy {
    * Gets targets for the given item.
    */
   getTargetCandidates() {
-    throw new Error('Not implemented: ', this.getTargetCandidates);
+    throw new Error('Not implemented: getTargetCandidates');
+  }
+
+
+  get label() {
+    throw new Error('Not implemented: get label');
+  }
+
+  /**
+   * @returns {boolean} True if the strategy can force targets for its item, otherwise false;
+   */
+  get canForceTargets() {
+    return false;
+  }
+
+  get canRepeatTargets() {
+    return false;
+  }
+
+  /**
+   * @returns {boolean} The maximum number of targets, for this strategy's item.
+   */
+  get maxTargets() {
+    return null;
   }
 
   /**
@@ -77,7 +99,7 @@ class TargetStrategy {
 }
 
 /**
- * A strategy for getting targets for an item representing an attack.
+ * A strategy for getting targets for an item representing an attack or weapon.
  */
 class AttackTargetStrategy extends TargetStrategy {
   /**
@@ -90,40 +112,106 @@ class AttackTargetStrategy extends TargetStrategy {
   }
   
   getTargetCandidates() {
+    const roller = this.getRoller();
+    const rollerDisposition = this.getRollerDispositionFor(roller);
+
+    const basicFilter = (t) => !t.document.hidden &&
+          t.document.disposition === -rollerDisposition && 
+          !actorHasStatus(t.actor, ...UNTARGETABLE_ALL_EFFECTS);
+    const filters = [basicFilter];
     if(this.item.system.type.value === 'melee') {
-      // TODO
-    } else if (this.item.system.type.value == 'ranged') {
-      // TODO
-    } else return [];
+      if (actorHasStatus(this.item.actor, 'flying')) {
+        filters.push((t) => actorHasStatus(t.actor, ...UNTARGETABLE_MELEE_FLYING_EFFECTS));
+      }
+      else {
+        filters.push((t) => actorHasStatus(t.actor, ...UNTARGETABLE_MELEE_EFFECTS));
+      } 
+    }
+    let targetCandidates = [...game.canvas.tokens.placeables];
+    filters.forEach(f => targetCandidates = targetCandidates.filter(f));
+    return targetCandidates;
+  }
+
+  get maxTargets() {
+    // Attacks always default to one target. Anything needs a custom strategy.
+    return 1;
+  }
+
+  get label() {
+    if(this.item.system.type.value === 'melee') {
+      if (actorHasStatus(this.item.actor, 'flying')) {
+        return game.i18n.localize(TARGET_TYPES.ENEMIES_MELEE_FLYING);
+      }
+      else {
+        return game.i18n.localize(TARGET_TYPES.ENEMIES_MELEE);
+      } 
+
+    } else {
+      return game.i18n.localize(TARGET_TYPES.ENEMIES);
+    }
   }
 }
 /**
- * A strategy for getting targets for an item representing a spell.
+ * A strategy for getting targets for an item representing an item with a target rule.
  */
-class SpellTargetStrategy extends TargetStrategy {
+class TargetRuleTargetStrategy extends TargetStrategy {
   /**
    * Checks whether or not this strategy is valid for a given item.
    * @param {FUItem} item The item to check the validity of this TargetStrategy for.
    * @returns {boolean} Whether or not this TargetStrategy is valid for the given item.
    */
   static isValidFor(item) {
-    return item.type === 'spell';
+    return typeof item.system.targeting?.rule === 'string' && ['single', 'multiple'].includes(item.system.targeting.rule) && item.system.isOffensive.value;
+  }
+
+  getTargetCandidates() {
+    const roller = this.getRoller();
+    const rollerDisposition = this.getRollerDispositionFor(roller);
+    const rule = this.item.system.targeting?.rule;
+    if (rule === 'self') {
+      return this.item.actor.getActiveTokens();
+    }
+    else return game.canvas.tokens.placeables.filter(t => !t.document.hidden &&
+      t.document.disposition === -rollerDisposition && 
+      !actorHasStatus(t.actor, ...UNTARGETABLE_ALL_EFFECTS));
+  }
+
+  get maxTargets() {
+    return this.item.system.targeting?.rule === 'single' ? 1 : this.item.system.targeting?.max;
+  }
+
+  get canForceTargets() {
+    return true;
+  }
+
+  get label() {
+    return game.i18n.localize(TARGET_TYPES.ENEMIES);
   }
 }
 
 /**
- * A strategy based on custom rules set by a user on an item itself.
+ * A strategy based on custom rules set by a user on an item itself, or passed in explictly to the strategy.
  */
 class CustomTargetStrategy extends TargetStrategy {
   
+  constructor (item, options) {
+    super(item);
+    this._options = options;
+  }
+
+  get options() {
+    return this._options || AutoTarget.getOptionsFor(this.item);
+  }
+
   /**
    * Checks whether or not this strategy is valid for a given item
    * @param {FUItem} item The item to check the validity of this TargetStrategy for.
    * @returns {boolean} Whether or not this TargetStrategy is valid for the given item.
-   * True if the item has custom autoTarget configuration options set, or false otherwise.
+   * True if the item has custom autoTarget configuration options set and enabled, or false otherwise.
    */
   static isValidFor(item) {
-    return Boolean(AutoTarget.getOptionsFor(item));
+    const options = AutoTarget.getOptionsFor(item);
+    return options?.enable;
   }
 
   /**
@@ -134,32 +222,46 @@ class CustomTargetStrategy extends TargetStrategy {
     const roller = this.getRoller();
     const rollerDisposition = this.getRollerDispositionFor(roller);
     let targetFilter;
-    const options = AutoTarget.getOptionsFor(this.item);
-      if (options.targetType === 'ALLIES') {
-        targetFilter = t => t.document.disposition === rollerDisposition && t.actor.id !== this.item.actor.id && t.id !== roller.id;
-      } else if (options.targetType === 'ALLIES_AND_SELF') {
-        targetFilter = t => t.document.disposition === rollerDisposition;
-      } else if (options.targetType === 'ALL') {
-        targetFilter = t => [CONST.TOKEN_DISPOSITIONS.FRIENDLY, CONST.TOKEN_DISPOSITIONS.HOSTILE].includes(t.document.disposition);
-      } else {
-        // ENEMIES, ENEMIES_MELEE, ENEMIES_MELEE_FLYING
-        targetFilter = t => {
-          return !t.document.hidden &&
-            t.document.disposition === -rollerDisposition && 
-            !actorHasStatus(t.actor, ...UNTARGETABLE_ALL_EFFECTS) && 
-            !(
-              ('ENEMIES_MELEE' === options.targetType && !actorHasStatus(this.item.actor, 'flying') && actorHasStatus(t.actor, ...UNTARGETABLE_MELEE_EFFECTS))
-              || 
-              (
-                ('ENEMIES_MELEE_FLYING' === options.targetType || ('ENEMIES_MELEE' === options.targetType && actorHasStatus(this.item.actor, 'flying'))) && 
-                actorHasStatus(t.actor, ...UNTARGETABLE_MELEE_FLYING_EFFECTS)
-              )
-            );
-        };
-    }
+    const options = this.options;
+    if (options.targetType === 'ALLIES') {
+      targetFilter = t => t.document.disposition === rollerDisposition && t.actor.id !== this.item.actor.id && t.id !== roller.id;
+    } else if (options.targetType === 'ALLIES_AND_SELF') {
+      targetFilter = t => t.document.disposition === rollerDisposition;
+    } else if (options.targetType === 'ALL') {
+      targetFilter = t => [CONST.TOKEN_DISPOSITIONS.FRIENDLY, CONST.TOKEN_DISPOSITIONS.HOSTILE].includes(t.document.disposition);
+    } else if (['ENEMIES', 'ENEMIES_MELEE', 'ENEMIES_MELEE_FLYING'].includes(options.targetType)) {
+      targetFilter = t => {
+        return !t.document.hidden &&
+          t.document.disposition === -rollerDisposition && 
+          !actorHasStatus(t.actor, ...UNTARGETABLE_ALL_EFFECTS) && 
+          !(
+            ('ENEMIES_MELEE' === options.targetType && !actorHasStatus(this.item.actor, 'flying') && actorHasStatus(t.actor, ...UNTARGETABLE_MELEE_EFFECTS))
+            || 
+            (
+              ('ENEMIES_MELEE_FLYING' === options.targetType || ('ENEMIES_MELEE' === options.targetType && actorHasStatus(this.item.actor, 'flying'))) && 
+              actorHasStatus(t.actor, ...UNTARGETABLE_MELEE_FLYING_EFFECTS)
+            )
+          );
+      };
+    } else return null;
     return game.canvas.tokens.placeables.filter(targetFilter);
   }
   
+  get canForceTargets() {
+    return ['ENEMIES', 'ENEMIES_MELEE', 'ENEMIES_MELEE_FLYING'].includes(this.options.targetType);
+  }
+  
+  get canRepeatTargets() {
+    return Boolean(this.options.repeat);
+  }
+
+  get maxTargets() {
+    return this.options.maxTargets;
+  }
+
+  get label() {
+    return game.i18n.localize(TARGET_TYPES[this.options.targetType]);
+  }
 }
 
 /**
@@ -172,16 +274,26 @@ function actorHasStatus(actor, ...statuses) {
 	return actor.statuses.some(s => statuses.includes(s));
 }
 
+const TARGET_TYPES = Object.freeze ({
+	ENEMIES: `${MODULE}.autoTarget.options.targetType.types.enemies`,
+	ENEMIES_MELEE: `${MODULE}.autoTarget.options.targetType.types.enemiesMelee`,
+	ENEMIES_MELEE_FLYING: `${MODULE}.autoTarget.options.targetType.types.enemiesMeleeFlying`,
+	ALLIES: `${MODULE}.autoTarget.options.targetType.types.allies`,
+	SELF: `${MODULE}.autoTarget.options.targetType.types.self`,
+	ALLIES_AND_SELF: `${MODULE}.autoTarget.options.targetType.types.alliesAndSelf`,
+	ALL: `${MODULE}.autoTarget.options.targetType.types.all`
+});
+
 const UNTARGETABLE_MELEE_EFFECTS = ['flying', 'cover'];
 
 const UNTARGETABLE_MELEE_FLYING_EFFECTS = ['cover'];
 
 const UNTARGETABLE_ALL_EFFECTS = ['ko', 'untargetable'];
 
-//const FORCE_TARGET_EFFECTS = ['provoked', 'force-target'];
+const FORCE_TARGET_EFFECTS = ['provoked', 'force-target'];
 
 export class AutoTarget {
-  static #strategies = [CustomTargetStrategy, AttackTargetStrategy, SpellTargetStrategy];
+  static #strategies = [CustomTargetStrategy, AttackTargetStrategy, TargetRuleTargetStrategy];
   static #getStrategyFor(item) {
     if(typeof item !== 'object' || item.documentName !== 'Item') {
       throw new Error('Not an item: ', item);
@@ -193,30 +305,46 @@ export class AutoTarget {
     }
     throw new Error('No target strategy found for: ', item);
   }
-  static async execute(options, item) {
-    if (!options || !item) return;
+  static async execute(item, options) {
+    if (!item) return;
     // Default targetType to 'ENEMIES'
-    options = foundry.utils.deepClone(options);
-    options.targetType = options.targetType || 'ENEMIES';
+    if (options) {
+      options = foundry.utils.deepClone(options);
+      options.targetType = options.targetType || 'ENEMIES';
+    }
     const targetList = new Map();
-    if (options.targetType === 'SELF') {
+    let strategy;
+    // Special case, self only, don't use a strategy.
+    if (options?.targetType === 'SELF') {
       item.actor.getActiveTokens().forEach(t => targetList.set(t, { count: 1 }));
     } else {
-      let targetCandidates = AutoTarget.#getStrategyFor(item).getTargetCandidates();
-  
-      if (typeof options.maxTargets === 'number' && options.maxTargets > 0) {
+      if (options) {
+        // Use a unique CustomTargetStrategy if we have specific options to use.
+        strategy = new CustomTargetStrategy(item, options);
+      } 
+      else {
+        strategy = AutoTarget.#getStrategyFor(item);
+      }
+      let targetCandidates = strategy.getTargetCandidates();
+      if (!Array.isArray(targetCandidates)) {
+        // Bail if our strategy didn't give us a proper array.
+        return;
+      }
+      const maxTargets = strategy.maxTargets;
+
+      if (typeof maxTargets === 'number' && maxTargets > 0) {
   
         const forcedTargetsMap = new Map();
   
         // Force targets only for rolls targeting enemies.
-        if (['ENEMIES', 'ENEMIES_MELEE', 'ENEMIES_MELEE_FLYING'].includes(options.targetType)) {
+        if (strategy.canForceTargets) {
           [...item.actor.appliedEffects].forEach(e => {
             const effectStatuses = [...e.statuses];
             if (e.origin && effectStatuses.some(s => FORCE_TARGET_EFFECTS.includes(s))) {
               const origin = fromUuidSync(e.origin);
               const forcedTargetIndex = targetCandidates.findIndex(t => t.document.actor.uuid === (origin.actor || origin)?.uuid);
               if (forcedTargetIndex >= 0) {
-                const forcedTarget = options.repeat ? targetCandidates[forcedTargetIndex] : targetCandidates.splice(forcedTargetIndex, 1)[0];
+                const forcedTarget = strategy.repeat ? targetCandidates[forcedTargetIndex] : targetCandidates.splice(forcedTargetIndex, 1)[0];
                 forcedTargetsMap.set(forcedTarget, e);
               } else {
                 ui.notifications.warn(game.i18n.format(`${MODULE}.autoTarget.errors.forcedTargetInvalid`, { effect: e.name, roller: (item.actor.token || item.actor.prototypeToken).name }));
@@ -229,11 +357,11 @@ export class AutoTarget {
         const forcedTargets = [...forcedTargetsMap.keys()];
   
         let i = 0;
-        while (i < options.maxTargets && (forcedTargets.length > 0 || targetCandidates.length > 0)) {
+        while (i < strategy.maxTargets && (forcedTargets.length > 0 || targetCandidates.length > 0)) {
           const forced = forcedTargets.length > 0;
           let drawPile = forced ? forcedTargets : targetCandidates;
           var start = Math.floor(Math.random() * (drawPile.length));
-          const target = options.repeat && drawPile === targetCandidates ? drawPile[start] : drawPile.splice(start, 1)[0];
+          const target = strategy.canRepeatTargets && drawPile === targetCandidates ? drawPile[start] : drawPile.splice(start, 1)[0];
           targetList.set(target, (targetList.has(target) ? foundry.utils.mergeObject(targetList.get(target), { count: targetList.get(target).count + 1 }) : { count: 1, forcedBy: forcedTargetsMap.get(target) }));
           i++;
         }
@@ -247,7 +375,7 @@ export class AutoTarget {
   
         const templateData = {
           results: [...targetList.keys()].map(t => foundry.utils.mergeObject(targetList.get(t), { target: t })),
-          targetType: game.i18n.localize(TARGET_TYPES[options.targetType])
+          label: strategy.label
         };
         ChatMessage.create({
           content: await renderTemplate(TEMPLATES.AUTO_TARGET_RESULTS, templateData),
@@ -269,6 +397,15 @@ export class AutoTarget {
    */
   static getOptionsFor(item) {
     return item.getFlag(MODULE, 'autoTarget');
+  }
+
+  static hasDefaultStrategyFor(item) {
+    for(const strategy of this.#strategies.filter(s => !(s instanceof CustomTargetStrategy))) {
+      if(strategy.isValidFor(item)) {
+        return true;
+      }
+    }
+    return false;
   }
 }
 

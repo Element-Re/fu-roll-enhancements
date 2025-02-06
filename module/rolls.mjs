@@ -216,6 +216,7 @@ async function autoTargetWorkflow(item, showDialog) {
 			item: item,
 			targetTypes: TARGET_TYPES,
 			displayData: getItemDisplayData(item),
+			hasDefaultTargetStrategy: AutoTarget.hasDefaultStrategyFor(item)
 		};
 		const targetDialogContent = await renderTemplate(TEMPLATES.AUTO_TARGET_DIALOG, templateData);
 		return Dialog.wait({
@@ -227,7 +228,7 @@ async function autoTargetWorkflow(item, showDialog) {
 					label: game.i18n.localize(`${MODULE}.autoTarget.dialog.buttons.target`),
 					callback: async (html) => {
 						const formInput = getFormInput(html);
-						return await AutoTarget.execute(formInput.flags[MODULE].autoTarget, item);
+						return await AutoTarget.execute(item, formInput.flags[MODULE].autoTarget);
 					}
 				},
 				updateAndTarget: {
@@ -241,7 +242,7 @@ async function autoTargetWorkflow(item, showDialog) {
 							foundry.utils.expandObject({[`flags.${MODULE}.autoTarget.enable`]: true})
 						);
 						await item.update(updateData);
-						return await AutoTarget.execute(autoTargetOptions, item);
+						return await AutoTarget.execute(item, autoTargetOptions);
 					}
 				},
 				skip: {
@@ -267,10 +268,8 @@ async function autoTargetWorkflow(item, showDialog) {
 						.css('cursor', 'help');
 			}
 		}, {id: 'auto-target-dialog'}); 
-	} else if (item.getFlag(MODULE, 'autoTarget')?.enable) {
-		const options = item.getFlag(MODULE, 'autoTarget');
-		return await AutoTarget.execute(options, item);
 	}
+	else return await AutoTarget.execute(item);
 }
 
 function getFormInput(html) {

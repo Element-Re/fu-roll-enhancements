@@ -7,8 +7,14 @@
   </legend>
   <div class="item-settings">
     <label class="checkbox resource-label-m">
-      <span>{{localize "fu-roll-enhancements.autoTarget.options.enable.label"}}</span><input
-        name="flags.fu-roll-enhancements.autoTarget.enable" type="checkbox"
+      <span>
+        {{#if hasDefaultTargetStrategy}}
+        {{localize "fu-roll-enhancements.autoTarget.options.override.label"}}
+        {{else}}
+        {{localize "fu-roll-enhancements.autoTarget.options.enable.label"}}
+        {{/if}}
+      </span>
+      <input name="flags.fu-roll-enhancements.autoTarget.enable" type="checkbox"
         {{checked item.flags.fu-roll-enhancements.autoTarget.enable}}>
     </label>
     <label class="checkbox resource-label-m">
@@ -23,6 +29,9 @@
         {{localize "fu-roll-enhancements.autoTarget.options.targetType.label"}}
       </label>
       <select name="flags.fu-roll-enhancements.autoTarget.targetType" class="resource-inputs select-dropdown-full">
+        {{#if hasDefaultTargetStrategy}}
+        <option value="">{{localize "fu-roll-enhancements.autoTarget.options.targetType.types.none"}}</option>
+        {{/if}}
         {{selectOptions targetTypes selected=item.flags.fu-roll-enhancements.autoTarget.targetType localize=true}}
       </select>
     </div>
