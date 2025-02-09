@@ -165,7 +165,7 @@ class TargetRuleTargetStrategy extends TargetStrategy {
     return typeof item.system.targeting?.rule === 'string' && 
     (
       ['self', 'single', 'multiple'].includes(item.system.targeting.rule) && 
-      item.system.isOffensive.value
+      (!item.system.isOffensive || item.system.isOffensive.value)
     ) || 
     item.system.targeting.rule === 'self';
   }
