@@ -109,7 +109,8 @@ class AttackTargetStrategy extends TargetStrategy {
    * @returns {boolean} Whether or not this TargetStrategy is valid for the given item.
    */
   static isValidFor(item) {
-    return item.type === 'basic' || item.type === 'weapon';
+    return ['attacksAndSpells', 'all'].includes(game.settings.get(MODULE, 'defaultAutoTargetBehavior')) && 
+    (item.type === 'basic' || item.type === 'weapon');
   }
   
   getTargetCandidates() {
@@ -162,15 +163,29 @@ class TargetRuleTargetStrategy extends TargetStrategy {
    * @returns {boolean} Whether or not this TargetStrategy is valid for the given item.
    */
   static isValidFor(item) {
+    const behavior = game.settings.get(MODULE, 'defaultAutoTargetBehavior');
     return typeof item.system.targeting?.rule === 'string' && 
-    (
-      ['self', 'single', 'multiple'].includes(item.system.targeting.rule) && 
-      (!item.system.isOffensive || item.system.isOffensive.value)
-    ) || 
-    item.system.targeting.rule === 'self';
+      behavior === 'all' ||
+      (behavior === 'attacksAndSpells' && item.type === 'spell');
   }
 
   getTargetCandidates() {
+
+    // Only proceed for single/multiple offensive spells or misc abilities, or items marked 'self'
+    if (
+      !(
+        // Offensive spells or items without an isOffensive property marked as single/multiple 
+        (
+          ['single', 'multiple'].includes(this.item.system.targeting.rule) &&
+          (!this.item.system.isOffensive || this.item.system.isOffensive?.value)
+        ) ||
+        // Items marked 'self'
+        this.item.system.targeting.rule === 'self'
+      )
+    ) {
+      return;
+    }
+
     const roller = this.getRoller();
     const rollerDisposition = this.getRollerDispositionFor(roller);
     const rule = this.item.system.targeting?.rule;
@@ -313,7 +328,7 @@ export class AutoTarget {
     }
   }
   static async execute(item, options) {
-    if (!item) return;
+    if (!item || !game.settings.get(MODULE, 'enableAutoTarget')) return;
     // Default targetType to 'ENEMIES'
     if (options) {
       options = foundry.utils.deepClone(options);

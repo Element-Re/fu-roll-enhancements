@@ -17,6 +17,16 @@ export const registerSettings = () => {
 		default: true
 	});
 
+	game.settings.register(MODULE, 'enableAutoTarget', {
+		name: `${MODULE}.settings.enableAutoTarget.name`,
+		hint: `${MODULE}.settings.enableAutoTarget.hint`,
+		scope: 'client',
+		config: true,
+		requiresReload: false,
+		type: Boolean,
+		default: true
+	});
+
 	game.settings.register(MODULE, 'allowPlayerAutoTarget', {
 		name: `${MODULE}.settings.allowPlayerAutoTarget.name`,
 		hint: `${MODULE}.settings.allowPlayerAutoTarget.hint`,
@@ -25,6 +35,21 @@ export const registerSettings = () => {
 		requiresReload: true,
 		type: Boolean,
 		default: false
+	});
+
+	game.settings.register(MODULE, 'defaultAutoTargetBehavior', {
+		name: `${MODULE}.settings.defaultAutoTargetBehavior.name`,
+		hint: `${MODULE}.settings.defaultAutoTargetBehavior.hint`,
+		scope: 'client',
+		config: true,
+		requiresReload: false,
+		type: String,
+		default: 'all',
+		choices: {
+			'none': `${MODULE}.settings.defaultAutoTargetBehavior.options.none`,
+			'attacksAndSpells': `${MODULE}.settings.defaultAutoTargetBehavior.options.attacksAndSpells`,
+			'all': `${MODULE}.settings.defaultAutoTargetBehavior.options.all`
+		}
 	});
 
 	game.settings.register(MODULE, 'preRollItemMacro', {
