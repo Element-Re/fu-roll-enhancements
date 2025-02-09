@@ -29,13 +29,14 @@ class TargetStrategy {
     this.item = item;
   }
   /**
-   * Gets targets for the given item.
+   * Gets possible targets based on the rules of the target strategy and the item assigned to the strategy.
+   * @returns {Target[]} All possible target candidates identified by the strategy.
    */
   getTargetCandidates() {
     throw new Error('Not implemented: getTargetCandidates');
   }
 
-
+  
   get label() {
     throw new Error('Not implemented: get label');
   }
@@ -121,10 +122,10 @@ class AttackTargetStrategy extends TargetStrategy {
     const filters = [basicFilter];
     if(this.item.system.type.value === 'melee') {
       if (actorHasStatus(this.item.actor, 'flying')) {
-        filters.push((t) => actorHasStatus(t.actor, ...UNTARGETABLE_MELEE_FLYING_EFFECTS));
+        filters.push((t) => !actorHasStatus(t.actor, ...UNTARGETABLE_MELEE_FLYING_EFFECTS));
       }
       else {
-        filters.push((t) => actorHasStatus(t.actor, ...UNTARGETABLE_MELEE_EFFECTS));
+        filters.push((t) => !actorHasStatus(t.actor, ...UNTARGETABLE_MELEE_EFFECTS));
       } 
     }
     let targetCandidates = [...game.canvas.tokens.placeables];
@@ -161,7 +162,12 @@ class TargetRuleTargetStrategy extends TargetStrategy {
    * @returns {boolean} Whether or not this TargetStrategy is valid for the given item.
    */
   static isValidFor(item) {
-    return typeof item.system.targeting?.rule === 'string' && ['single', 'multiple'].includes(item.system.targeting.rule) && item.system.isOffensive.value;
+    return typeof item.system.targeting?.rule === 'string' && 
+    (
+      ['self', 'single', 'multiple'].includes(item.system.targeting.rule) && 
+      item.system.isOffensive.value
+    ) || 
+    item.system.targeting.rule === 'self';
   }
 
   getTargetCandidates() {
@@ -177,15 +183,17 @@ class TargetRuleTargetStrategy extends TargetStrategy {
   }
 
   get maxTargets() {
-    return this.item.system.targeting?.rule === 'single' ? 1 : this.item.system.targeting?.max;
+    return ['self', 'single'].includes(this.item.system.targeting?.rule) ? 1 : this.item.system.targeting?.max;
   }
 
   get canForceTargets() {
-    return true;
+    return this.item.system.targeting?.rule !== 'self';
   }
 
   get label() {
-    return game.i18n.localize(TARGET_TYPES.ENEMIES);
+    return this.item.system.targeting?.rule !== 'self' ? 
+      game.i18n.localize(TARGET_TYPES.ENEMIES) : 
+      game.i18n.localize(TARGET_TYPES.SELF);
   }
 }
 
@@ -296,14 +304,13 @@ export class AutoTarget {
   static #strategies = [CustomTargetStrategy, AttackTargetStrategy, TargetRuleTargetStrategy];
   static #getStrategyFor(item) {
     if(typeof item !== 'object' || item.documentName !== 'Item') {
-      throw new Error('Not an item: ', item);
+      console.warn('Not an item: ', item);
     } 
     for(const strategy of this.#strategies) {
       if(strategy.isValidFor(item)) {
         return new strategy(item);
       }
     }
-    throw new Error('No target strategy found for: ', item);
   }
   static async execute(item, options) {
     if (!item) return;
@@ -318,13 +325,17 @@ export class AutoTarget {
     if (options?.targetType === 'SELF') {
       item.actor.getActiveTokens().forEach(t => targetList.set(t, { count: 1 }));
     } else {
+
       if (options) {
-        // Use a unique CustomTargetStrategy if we have specific options to use.
+        // Use a unique CustomTargetStrategy if we have specific options to use
+        // i.e. passed in from the AutoTarget dialog.
         strategy = new CustomTargetStrategy(item, options);
       } 
       else {
         strategy = AutoTarget.#getStrategyFor(item);
       }
+      // No strategy was found. Exit without making a fuss.
+      if (!strategy) return;
       let targetCandidates = strategy.getTargetCandidates();
       if (!Array.isArray(targetCandidates)) {
         // Bail if our strategy didn't give us a proper array.

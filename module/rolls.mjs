@@ -252,7 +252,13 @@ async function autoTargetWorkflow(item, showDialog) {
 				disable: {
 					icon: '<i class="fas fa-ban"></i>',
 					label: game.i18n.localize(`${MODULE}.autoTarget.dialog.buttons.disable`),
-					callback: () => item.setFlag(MODULE, 'autoTarget.enable', false)
+					callback: () => {
+						if (AutoTarget.hasDefaultStrategyFor(item)) {
+							item.update({[`flags.${MODULE}.autoTarget`]: {enable: true, targetType: null, 'maxTargets': null}});
+						} else {
+							item.setFlag(MODULE, 'autoSpend.enable', false);
+					  }
+					}
 				},
 			},
 			close: () => {
