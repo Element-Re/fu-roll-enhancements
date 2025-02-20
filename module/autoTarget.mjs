@@ -110,7 +110,8 @@ class AttackTargetStrategy extends TargetStrategy {
    */
   static isValidFor(item) {
     return ['attacksAndSpells', 'all'].includes(game.settings.get(MODULE, 'defaultAutoTargetBehavior')) && 
-    (item.type === 'basic' || item.type === 'weapon');
+    (item.type === 'basic' || item.type === 'weapon') &&
+    item.parent?.type !== 'character'; // Don't ever perform default behavior for PCs.
   }
   
   getTargetCandidates() {
@@ -164,9 +165,12 @@ class TargetRuleTargetStrategy extends TargetStrategy {
    */
   static isValidFor(item) {
     const behavior = game.settings.get(MODULE, 'defaultAutoTargetBehavior');
-    return typeof item.system.targeting?.rule === 'string' && 
+    return (
+      typeof item.system.targeting?.rule === 'string' && 
       behavior === 'all' ||
-      (behavior === 'attacksAndSpells' && item.type === 'spell');
+      (behavior === 'attacksAndSpells' && item.type === 'spell')
+    ) && 
+    item.parent?.type !== 'character'; // Don't ever perform default behavior for PCs;
   }
 
   getTargetCandidates() {
