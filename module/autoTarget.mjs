@@ -1,7 +1,19 @@
 import { MODULE } from './settings.mjs';
 import { TEMPLATES } from './templates.mjs';
 
+function activeEffectHandler(actor, effect) {
+  const newValue = String(effect.value);
+  if(effect.key === 'flags.fu-roll-enhancements.autoTarget.prioritize' && newValue) {
+    const prioritize = actor.getFlag('fu-roll-enhancements', 'autoTarget.prioritize');
+    const prioritizeCopy = prioritize ? Array.from(prioritize) : [];
+    prioritizeCopy.push(newValue);
+    actor.flags = foundry.utils.mergeObject(actor.flags, {'fu-roll-enhancements.autoTarget.prioritize': prioritizeCopy});
+  }
+}
 
+export function registerAutoTargetHooks() {
+  Hooks.on('applyActiveEffect', activeEffectHandler);
+}
 
 /**
  * An abstract class representing a strategy for selecting targets based on a given Item.
