@@ -15,7 +15,7 @@ export async function rollEnhancements (wrapped, ...args) {
 	console.log(`${MODULE} | done spending costs`);
 	// Item macro 'pre' event
 	if (game.settings.get(MODULE, 'preRollItemMacro') && item.hasMacro && item.hasMacro())
-		await item.executeMacro('pre');
+		await item.executeMacro({event: 'pre'});
 	if (autoTargetResults?.finalize)
 		await autoTargetResults.finalize();
 	console.log(`${MODULE} | done finalizing targets`);
@@ -23,7 +23,7 @@ export async function rollEnhancements (wrapped, ...args) {
 	const rollResults = await wrapped(...args);
 	// Item macro 'post' event
 	if (game.settings.get(MODULE, 'postRollItemMacro') && item.hasMacro && item.hasMacro())
-		await item.executeMacro('post', rollResults);
+		await item.executeMacro({event: 'post'}, rollResults);
 	return rollResults;
 }
 
@@ -182,7 +182,7 @@ async function autoSpend(item, options, targetCount) {
 	const currentValue = foundry.utils.getProperty(item.actor, resourceType.model);
 	const newValue = Math.max(currentValue - finalCost, 0);
 	const resultsData = {
-		actor: item.actor.name,
+		actor: item.actor.token?.name ?? item.actor.protoTypeToken?.name ?? item.actor.name,
 		amount: finalCost,
 		resource: game.i18n.localize(resourceType.label),
 		from: item.name,
