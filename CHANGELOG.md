@@ -4,7 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [unreleased]
+## [1.0.0]
+### Breaking Changes
+* Item macros should now check the event (`pre`/`post`) with `item.event` instead of `item.args[2]`, due to changes in the Item Macro module
+
+### Changes
+* Removed most item display data from Auto Target and Auto Spend dialogs due to upcoming changes in the system hiding this information from modules.
+
+### Fixed
+* Various minor bug fixes
 
 ## [0.1.3]
 
