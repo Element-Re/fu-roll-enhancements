@@ -2,7 +2,7 @@
     "fu-roll-enhancements.settings.preRollItemMacro.name": "(Expérimental) Item Macro: \"pre\" Événement",
     "fu-roll-enhancements.settings.preRollItemMacro.hint": "Nécessite le module Item Macro. Exécute Item Macro sur un Objet avant le jet, passant par l'événement \"pre\".",
     "fu-roll-enhancements.settings.postRollItemMacro.name": "(Expérimental) Item Macro: \"post\" Événement",
-    "fu-roll-enhancements.settings.postRollItemMacro.hint": "Nécessite le module Item Macro. Exécute Item Macro sur un Objet après le jet, passant par l'événement \"post\". Si vous activez ceci et l'événement \"pre\" d'Item Macro, assurez-vous de vérifier l'événement (args[0]) dans vos macros Item afin d'éviter d'exécuter le même code deux fois.",
+    "fu-roll-enhancements.settings.postRollItemMacro.hint": "Nécessite le module Item Macro. Exécute Item Macro sur un Objet après le jet, passant par l'événement \"post\". Si vous activez ceci et l'événement \"pre\" d'Item Macro, assurez-vous de vérifier l'événement (args.event) dans vos macros Item afin d'éviter d'exécuter le même code deux fois.",
     "fu-roll-enhancements.settings.allowPlayerAutoTarget.name": "Ciblage automatique : Autoriser aux joueurs ?",
     "fu-roll-enhancements.settings.allowPlayerAutoTarget.hint": "Permettre aux joueurs d'utiliser la fonctionnalité de ciblage automatique.",
     "fu-roll-enhancements.settings.enableAutoSpend.name": "Dépenses automatiques : Activer ?",

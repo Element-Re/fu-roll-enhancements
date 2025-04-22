@@ -2,7 +2,7 @@
     "fu-roll-enhancements.settings.preRollItemMacro.name": "(Experimental) Item Macro: \"pre\" Event",
     "fu-roll-enhancements.settings.preRollItemMacro.hint": "Requires Item Macro module. Execute Item Macro on an Item before it is rolled, passing the \"pre\" event.",
     "fu-roll-enhancements.settings.postRollItemMacro.name": "(Experimental) Item Macro: \"post\" Event",
-    "fu-roll-enhancements.settings.postRollItemMacro.hint": "Requires Item Macro module. Execute Item Macro on an Item after it is rolled, passing the \"post\" event. If you enable both this and the Item Macro \"pre\" event, be sure to check the event (args[0]) in your Item macros to avoid executing the same code twice.",
+    "fu-roll-enhancements.settings.postRollItemMacro.hint": "Requires Item Macro module. Execute Item Macro on an Item after it is rolled, passing the \"post\" event. If you enable both this and the Item Macro \"pre\" event, be sure to check the event (args.event) in your Item macros to avoid executing the same code twice.",
     "fu-roll-enhancements.settings.allowPlayerAutoTarget.name": "Auto Target: Allow Players?",
     "fu-roll-enhancements.settings.allowPlayerAutoTarget.hint": "Allow players to use Auto Target functionality.",
     "fu-roll-enhancements.settings.enableAutoSpend.name": "Auto Spend: Enable?",

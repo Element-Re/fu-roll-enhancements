@@ -147,6 +147,10 @@ class AttackTargetStrategy extends TargetStrategy {
     return targetCandidates;
   }
 
+  get canForceTargets() {
+    return true;
+  }
+
   get maxTargets() {
     // Attacks always default to one target. Anything needs a custom strategy.
     return 1;
@@ -262,7 +266,9 @@ class CustomTargetStrategy extends TargetStrategy {
     const rollerDisposition = this.getRollerDispositionFor(roller);
     let targetFilter;
     const options = this.options;
-    if (options.targetType === 'ALLIES') {
+    if (options.targetType === 'SELF') {
+      return [roller.actor.getActiveTokens()[0]];
+    } else if (options.targetType === 'ALLIES') {
       targetFilter = t => t.document.disposition === rollerDisposition && t.actor.id !== this.item.actor.id && t.id !== roller.id;
     } else if (options.targetType === 'ALLIES_AND_SELF') {
       targetFilter = t => t.document.disposition === rollerDisposition;
@@ -382,8 +388,8 @@ export class AutoTarget {
         if (strategy.canForceTargets) {
           [...item.actor.appliedEffects].forEach(e => {
             const effectStatuses = [...e.statuses];
-            if (e.origin && effectStatuses.some(s => FORCE_TARGET_EFFECTS.includes(s))) {
-              const origin = fromUuidSync(e.origin);
+            if (e.source && effectStatuses.some(s => FORCE_TARGET_EFFECTS.includes(s))) {
+              const origin = fromUuidSync(e.source.itemUuid ?? e.source.actorUuid);
               const forcedTargetIndex = targetCandidates.findIndex(t => t.document.actor.uuid === (origin.actor || origin)?.uuid);
               if (forcedTargetIndex >= 0) {
                 const forcedTarget = strategy.repeat ? targetCandidates[forcedTargetIndex] : targetCandidates.splice(forcedTargetIndex, 1)[0];
