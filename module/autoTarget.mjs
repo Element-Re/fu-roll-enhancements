@@ -425,14 +425,15 @@ export class AutoTarget {
           results: [...targetList.keys()].map(t => foundry.utils.mergeObject(targetList.get(t), { target: t })),
           label: strategy.label
         };
-        ChatMessage.create({
+        const messageData = ChatMessage.applyRollMode({
           content: await renderTemplate(TEMPLATES.AUTO_TARGET_RESULTS, templateData),
           speaker: {
             actor: item.actor,
             token: item.actor.token
           },
           flavor: `${item.name}`
-        });
+        }, game.settings.get('core', 'rollMode'));
+        ChatMessage.create(messageData);
       }
     };
   

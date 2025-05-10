@@ -198,13 +198,14 @@ async function autoSpend(item, options, targetCount) {
 	}
 	const updates = {[resourceType.model]: newValue};
 	item.actor.update(updates);
-	ChatMessage.create({
+	const messageData = ChatMessage.applyRollMode({
 		speaker: ChatMessage.getSpeaker( item.actor ),
 		flavor: game.i18n.format(`${MODULE}.autoSpend.results.flavor`, {item: item.name}),
 		content: await renderTemplate(TEMPLATES.SIMPLE_CHAT_MESSAGE, {
 			message: game.i18n.format(`${MODULE}.autoSpend.results.chatMessage`, resultsData)
 		}),
-	});
+	}, game.settings.get('core', 'rollMode'));
+	ChatMessage.create(messageData);
 }
 
 async function autoTargetWorkflow(item, showDialog) {
