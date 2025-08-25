@@ -316,7 +316,7 @@ class CustomTargetStrategy extends TargetStrategy {
  * @returns {boolean} True if the actor has at least one status in the set of given statuses.
  */
 function actorHasStatus(actor, ...statuses) {
-	return actor.statuses.some(s => statuses.includes(s));
+	return actor && !actor.statuses.isDisjointFrom(new Set(statuses));
 }
 
 const TARGET_TYPES = Object.freeze ({
@@ -419,7 +419,7 @@ export class AutoTarget {
     return {
       count: [...targetList.keys()].reduce((count, t) => targetList.get(t).count + count, 0),
       finalize: async () => {
-        game.user.updateTokenTargets([...targetList.keys()].map(t => t.id));
+        game.canvas.tokens.setTargets([...targetList.keys()].map(t => t.id));
   
         const templateData = {
           results: [...targetList.keys()].map(t => foundry.utils.mergeObject(targetList.get(t), { target: t })),
