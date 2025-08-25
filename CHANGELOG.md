@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Breaking Changes
 * Minimum compatible Foundry version set to v13.
 
+## [1.0.1]
+### New
+* Added a "Untargetable" active effect which completely excludes an actor from Auto Targeting. You can find it in the "Assign Status Effects" token menu, or by creating a custom Active Effect and giving it the **Untargetable** status.
+### Changed
+* Generated chat messages now respect the user roll mode (i.e. if the item chat card is private, any associated Auto Target and Auto Spend messages will be as well.)
+
 ## [1.0.0]
 ### Breaking Changes
 * Item macros should now check the event (`pre`/`post`) with `item.event` instead of `item.args[2]`, due to changes in the Item Macro module
