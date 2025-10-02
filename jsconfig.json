@@ -4,7 +4,13 @@
     "target": "ES6"
   },
   "exclude": ["node_modules", "**/node_modules/*"],
-  "include": ["fu-roll-enhancements.mjs", "projectfu/**/*.mjs", "foundry/**/*.js"],
+  "include": [
+    "fu-roll-enhancements.mjs",
+    "../../../App/resources/app/common/primitives/global.d.mts",
+    "../../../App/resources/app/client/global.d.mts",
+    "../../../App/resources/app/client/**/*.mjs",
+    "../../../App/resources/app/setup/**/*.mjs"
+  ],
   "typeAcquisition": {
     "include": ["jquery"]
   }

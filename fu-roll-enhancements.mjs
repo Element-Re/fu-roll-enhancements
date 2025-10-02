@@ -1,8 +1,9 @@
 import { rollEnhancements } from './module/rolls.mjs';
 import { registerKeyBindings, registerSettings } from './module/settings.mjs';
-import { renderItemSheetHandler, initializeTemplates } from './module/templates.mjs';
+import { initializeTemplates } from './module/templates.mjs';
 import { registerAutoTargetHooks } from './module/autoTarget.mjs';
 import { initializeActiveEffects } from './module/effects.js';
+import {getHeaderControlsItemSheetV2} from './module/documents/RollConfiguration.js';
 
 Hooks.once('init', () => {
 	registerSettings();
@@ -13,8 +14,8 @@ Hooks.once('init', () => {
 });
 
 Hooks.once('ready', () => {
-		libWrapper.register('fu-roll-enhancements', 'CONFIG.Item.documentClass.prototype.roll', rollEnhancements);
+	libWrapper.register('fu-roll-enhancements', 'CONFIG.Item.documentClass.prototype.roll', rollEnhancements);
 });
 
-Hooks.on('renderFUItemSheet', renderItemSheetHandler);
+Hooks.on('getHeaderControlsItemSheetV2', getHeaderControlsItemSheetV2);
 

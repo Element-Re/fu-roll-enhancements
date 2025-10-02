@@ -8,7 +8,10 @@ export default [
     languageOptions: { 
       globals: {
         CONST: 'readonly',
+        CONFIG: 'readonly',
         foundry: 'readonly',
+        ApplicationV2: 'readonly',
+        ItemSheetV2: 'readonly',
         game: 'readonly',
         Hooks: 'readonly',
         Dialog: 'readonly',

@@ -1,41 +1,23 @@
-<div class="projectfu">
-  <div class="items-list">
-    <div class="item">
-      <div class="flexrow">
-        <div class="item-name">
-          <div class="item-image">
-            <img src="{{item.img}}">
-          </div>
-          <h4 class="resource-content">
-            <span class="resource-text-sm gap-3">
-              {{item.name}}
-              {{#if item.system.isOffensive.value}}
-              <span class="is-offensive"></span>
-              {{/if}}
-              {{#if item.system.isMartial.value}}
-              <span class="is-martial"></span>
-              {{/if}}
-            </span>
-            {{#if displayData.attackString}}
-            <span class="resource-text-sm">
-              ⬥ {{displayData.attackString}}
-              {{#if displayData.damageString}}
-              ⬥ {{displayData.damageString}}
-              {{/if}}
-            </span>
-            {{/if}}
-          </h4>
-        </div>
-      </div>
-      {{#if displayData.qualityString}}
-      <div class="item-quality align-left">
-        {{#if (eq item.system.quality.value displayData.qualityString)}}
-        <strong>{{localize "FU.Quality"}}:</strong>
+<section class="item-details">
+    <h4>
+    <img src="{{item.img}}" class="item-image" />
+    <span>
+      {{item.name}}
+        {{#if item.system.isOffensive.value}}
+            <span class="is-offensive"></span>
         {{/if}}
-        {{{displayData.qualityString}}}
-      </div>
-      {{/if}}
-    </div>
-  </div>
-  {{> @partial-block }}
-</div>
+        {{#if item.system.isMartial.value}}
+            <span class="is-martial"></span>
+        {{/if}}
+    </span>
+        {{#if displayData.attackString}}
+            <span>
+      ⬥ {{displayData.attackString}}
+                {{#if displayData.damageString}}
+                    ⬥ {{displayData.damageString}}
+                {{/if}}
+    </span>
+        {{/if}}
+    </h4>
+</section>
+{{> @partial-block }}

@@ -1,12 +1,12 @@
-<fieldset class="title-fieldset desc resource-content">
-  <legend class="resource-label-full">
-    <label class="resource-label-m">
+<fieldset>
+  <legend>
+    <label>
       <i class="fas fa-crosshairs icon"></i>
       {{localize "fu-roll-enhancements.autoTarget.options.title"}}
     </label>
   </legend>
-  <div class="item-settings">
-    <label class="checkbox resource-label-m">
+  <div class="roll-options">
+    <label class="checkbox">
       <span>
         {{#if hasDefaultTargetStrategy}}
         {{localize "fu-roll-enhancements.autoTarget.options.override.label"}}
@@ -17,29 +17,29 @@
       <input name="flags.fu-roll-enhancements.autoTarget.enable" type="checkbox"
         {{checked item.flags.fu-roll-enhancements.autoTarget.enable}}>
     </label>
-    <label class="checkbox resource-label-m">
+    <label class="checkbox">
       <span>{{localize "fu-roll-enhancements.autoTarget.options.repeat.label"}}</span><input
         name="flags.fu-roll-enhancements.autoTarget.repeat" type="checkbox"
         {{checked item.flags.fu-roll-enhancements.autoTarget.repeat}}>
     </label>
   </div>
-  <div class="grid grid-3col gap-5">
-    <div class="resource-content flexcol grid-span-2 flex-group-center">
-      <label for="flags.fu-roll-enhancements.autoTarget.targetType" class="resource-label-m">
+  <div class="grid grid-3col gap-10">
+    <div class="flexcol flex-group-center grid-span-2">
+      <label for="flags.fu-roll-enhancements.autoTarget.targetType">
         {{localize "fu-roll-enhancements.autoTarget.options.targetType.label"}}
       </label>
-      <select name="flags.fu-roll-enhancements.autoTarget.targetType" class="resource-inputs select-dropdown-full">
+      <select name="flags.fu-roll-enhancements.autoTarget.targetType">
         {{#if hasDefaultTargetStrategy}}
         <option value="">{{localize "fu-roll-enhancements.autoTarget.options.targetType.types.none"}}</option>
         {{/if}}
         {{selectOptions targetTypes selected=item.flags.fu-roll-enhancements.autoTarget.targetType localize=true}}
       </select>
     </div>
-    <div class="resource-content flexcol flex-group-center">
-      <label for="flags.fu-roll-enhancements.autoTarget.maxTargets" class="resource-label-m">
+    <div class="flexcol flex-group-center">
+      <label for="flags.fu-roll-enhancements.autoTarget.maxTargets">
         {{localize "fu-roll-enhancements.autoTarget.options.maxTargets.label"}}
       </label>
-      <input type="number" step="1" min="0" name="flags.fu-roll-enhancements.autoTarget.maxTargets" class="resource-inputs"
+      <input type="number" step="1" min="0" name="flags.fu-roll-enhancements.autoTarget.maxTargets"
         value="{{item.flags.fu-roll-enhancements.autoTarget.maxTargets}}">
     </div>
   </div>

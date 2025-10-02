@@ -1,20 +1,18 @@
-<div class="projectfu auto-target">
-  <fieldset class="title-fieldset">
-    <legend class="resource-text-sm">{{localize "fu-roll-enhancements.autoTarget.results.title" label=label}}</legend>
+<fieldset class="auto-target-results">
+    <legend>{{localize "fu-roll-enhancements.autoTarget.results.title" label=label}}</legend>
     {{#if results}}
-      <ol>
-      {{#each results}}
-      <li class="target">
-        {{target.document.actor.link}}
-        {{#if (gt count 1)}}x{{count}}{{/if}}
-        {{#if forcedBy}}({{forcedBy.name}}){{/if}}
-      </li>
-      {{/each}}
-      </ol>
-      {{else}}
-      <ul>
-        <li>{{localize "fu-roll-enhancements.autoTarget.results.noTargets"}}</li>
-      <ul>
+        <ol>
+            {{#each results}}
+                <li class="target">
+                    {{target.document.actor.link}}
+                    {{#if (gt count 1)}}x{{count}}{{/if}}
+                    {{#if forcedBy}}({{forcedBy.name}}){{/if}}
+                </li>
+            {{/each}}
+        </ol>
+    {{else}}
+        <ul>
+            <li>{{localize "fu-roll-enhancements.autoTarget.results.noTargets"}}</li>
+        </ul>
     {{/if}}
-  </fieldset>
-</div>
+</fieldset>

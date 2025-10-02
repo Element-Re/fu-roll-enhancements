@@ -1,5 +1,5 @@
-import { MODULE } from './settings.mjs';
 import { TEMPLATES } from './templates.mjs';
+import {MODULE} from './helpers/module-utils.mjs';
 
 function activeEffectHandler(actor, effect) {
   const newValue = String(effect.value);
@@ -22,13 +22,13 @@ export function registerAutoTargetHooks() {
 class TargetStrategy {
 
   /**
-   * Checks whether or not this strategy is valid for a given item.
+   * Checks whether this strategy is valid for a given item.
    * @abstract
    * @param {FUItem} _item The item to check the validity of this TargetStrategy for.
    * @returns {boolean} Whether or not this TargetStrategy is valid for the given item.
    */
   static isValidFor(_item) {
-    throw new Error('Not implemented: ', this.isValidFor);
+    throw new Error('Not implemented');
   }
   /**
    * Constructs a new TargetStrategy.
@@ -36,21 +36,23 @@ class TargetStrategy {
    */
   constructor (item) {
     if(typeof item !== 'object' || item.documentName !== 'Item') {
-      throw new Error('Not an item: ', item);
+      throw new Error(`Not an item: ${item}`);
     }
     this.item = item;
   }
   /**
    * Gets possible targets based on the rules of the target strategy and the item assigned to the strategy.
-   * @returns {Target[]} All possible target candidates identified by the strategy.
+   * @returns {Token[]} All possible target candidates identified by the strategy.
    */
   getTargetCandidates() {
-    throw new Error('Not implemented: getTargetCandidates');
+    throw new Error('Not implemented');
   }
 
-  
+  /**
+   * @returns {string} A label describing the kind of adversaries selected by this strategy.
+   */
   get label() {
-    throw new Error('Not implemented: get label');
+    throw new Error('Not implemented');
   }
 
   /**
@@ -65,15 +67,15 @@ class TargetStrategy {
   }
 
   /**
-   * @returns {boolean} The maximum number of targets, for this strategy's item.
+   * @returns {number} The maximum number of targets, for this strategy's item.
    */
   get maxTargets() {
-    return null;
+    throw new Error('Not implemented');
   }
 
   /**
    * Gets a roller for this strategy, which is a token representing the the item's actor of this strategy.
-   * @returns {Token} The roller for this strategy, which either a scene token for the item's owner, or their prototype token.
+   * @returns {TokenDocument} The roller for this strategy, which either a scene token for the item's owner, or their prototype token.
    */
   getRoller() {
     return this.getRollerFor(this.item);
@@ -82,10 +84,10 @@ class TargetStrategy {
   /**
    * Gets a roller for a given item, which is a token representing the item's actor.
    * @param {FUItem} item The item for get a roller for.
-   * @returns {Token} The roller for this strategy, which either a scene token for the item's owner, or their prototype token.
+   * @returns { TokenDocument | PrototypeTokenData } The roller for this strategy, which either a scene token for the item's owner, or their prototype token.
    */
   getRollerFor(item) {
-    return item.actor.token ?? item.actor.prototypeToken;
+    return item.actor.token || item.actor.prototypeToken;
   }
 
   /**
@@ -94,15 +96,15 @@ class TargetStrategy {
    * NEUTRAL is treated as FRIENDLY and SECRET is treated as HOSTILE for the sake of rolling.
    */
   getRollerDisposition() {
-    return this.getRollerDispositionFor(this.getRoller());
+    return TargetStrategy.getRollerDispositionFor(this.getRoller());
   }
   /**
    * Get an effective disposition of a given roller.
-   * @param {Token} roller A token representing the item's roller.
+   * @param {TokenDocument} roller A token representing the item's roller.
    * @returns {number} Either CONST.TOKEN_DISPOSITIONS.FRIENDLY or CONST.TOKEN_DISPOSITIONS.HOSTILE.
    * NEUTRAL is treated as FRIENDLY and SECRET is treated as HOSTILE for the sake of rolling.
    */
-  getRollerDispositionFor(roller) {
+  static getRollerDispositionFor(roller) {
     // Treat neutral rolls as friendly and secret rolls as hostile for the sake of targetting.
 		return roller.disposition === CONST.TOKEN_DISPOSITIONS.NEUTRAL ? CONST.TOKEN_DISPOSITIONS.FRIENDLY : 
 			roller.disposition === CONST.TOKEN_DISPOSITIONS.SECRET ? CONST.TOKEN_DISPOSITIONS.HOSTILE : 
@@ -127,8 +129,7 @@ class AttackTargetStrategy extends TargetStrategy {
   }
   
   getTargetCandidates() {
-    const roller = this.getRoller();
-    const rollerDisposition = this.getRollerDispositionFor(roller);
+    const rollerDisposition = this.getRollerDisposition();
 
     const basicFilter = (t) => !t.document.hidden &&
           t.document.disposition === -rollerDisposition && 
@@ -206,8 +207,7 @@ class TargetRuleTargetStrategy extends TargetStrategy {
       return;
     }
 
-    const roller = this.getRoller();
-    const rollerDisposition = this.getRollerDispositionFor(roller);
+    const rollerDisposition = this.getRollerDisposition();
     const rule = this.item.system.targeting?.rule;
     if (rule === 'self') {
       return this.item.actor.getActiveTokens();
@@ -233,7 +233,7 @@ class TargetRuleTargetStrategy extends TargetStrategy {
 }
 
 /**
- * A strategy based on custom rules set by a user on an item itself, or passed in explictly to the strategy.
+ * A strategy based on custom rules set by a user on an item itself, or passed in explicitly to the strategy.
  */
 class CustomTargetStrategy extends TargetStrategy {
   
@@ -247,9 +247,9 @@ class CustomTargetStrategy extends TargetStrategy {
   }
 
   /**
-   * Checks whether or not this strategy is valid for a given item
+   * Checks whether this strategy is valid for a given item
    * @param {FUItem} item The item to check the validity of this TargetStrategy for.
-   * @returns {boolean} Whether or not this TargetStrategy is valid for the given item.
+   * @returns {boolean} Whether this TargetStrategy is valid for the given item.
    * True if the item has custom autoTarget configuration options set and enabled, or false otherwise.
    */
   static isValidFor(item) {
@@ -263,7 +263,7 @@ class CustomTargetStrategy extends TargetStrategy {
    */
   getTargetCandidates() {
     const roller = this.getRoller();
-    const rollerDisposition = this.getRollerDispositionFor(roller);
+    const rollerDisposition = this.getRollerDisposition();
     let targetFilter;
     const options = this.options;
     if (options.targetType === 'SELF') {

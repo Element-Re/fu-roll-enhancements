@@ -1,4 +1,4 @@
-export const MODULE = 'fu-roll-enhancements';
+import {MODULE} from './helpers/module-utils.mjs';
 
 export const keyBinds = { 
 	autoTargetDialog: false, 
