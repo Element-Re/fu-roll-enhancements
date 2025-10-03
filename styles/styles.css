@@ -1,14 +1,14 @@
-:is(#auto-spend-dialog, #auto-target-dialog) img.item-image {
+.application.roll-enhancements img.item-image {
   float: left;
   margin-right: 0.2em;
   height: var(--font-h4-size);
 }
 
-:is(#auto-spend-dialog, #auto-target-dialog) .form-footer > button {
+.application.roll-enhancements .form-footer > button {
   flex-basis: calc(50% - 0.5rem);
 }
 
-:is(#auto-spend-dialog, #auto-target-dialog, #roll-configuration) .roll-options {
+.application.roll-enhancements .roll-options {
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
@@ -29,39 +29,37 @@
   row-gap: 0.5em;
 }
 
-.auto-target .item-info {
-  display: flex;
+.chat-message .roll-enhancements {
+  & header {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+
+    & i.fas {
+      flex: 0 1 auto;
+    }
+    & h2 {
+      flex: 1 0 auto;
+      font-size: var(--font-size-20);
+      border-bottom: none;
+      font-variant-caps: small-caps;
+    }
+
+    & h1, h2, h3, h4, h5, h6 {
+      --font-primary: "PT Sans Narrow", sans-serif;
+      font-family: var(--font-primary);
+      line-height: 1;
+    }
+  }
+
 }
 
-.auto-target .item-info img {
-  width: 50px;
-  height: 50px;
-  margin-right: 1em;
-}
-
-.chat-message .projectfu.auto-target {
-  font-family: "PT Sans Narrow", sans-serif;
-}
-
-.chat-message .projectfu.auto-target .target:not(:last-child) {
-  margin-bottom: 0.5em;
-}
-
-:is(#auto-target-dialog, #auto-spend-dialog) .dialog-buttons .dialog-button {
+.application.roll-enhancements .dialog-buttons .dialog-button {
   flex-basis: 50%;
 }
 
-:is(#auto-target-dialog, #auto-spend-dialog) .dialog-buttons button {
+.application.roll-enhancements .dialog-buttons button {
   margin: 0;
-}
-
-:is(#auto-target-dialog, #auto-spend-dialog) .projectfu .items-list .item h4.resource-content > * {
-  align-items: center;
-}
-
-:is(#auto-target-dialog, #auto-spend-dialog) .projectfu .items-list .item {
-  background: transparent;
-  border: 2px solid transparent;
-  transition: inherit;
-  -webkit-transition: inherit;
 }

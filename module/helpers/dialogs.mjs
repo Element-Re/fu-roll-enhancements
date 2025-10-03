@@ -34,6 +34,7 @@ export async function showAutoSpendDialog(item, targetCount) {
 
     return DialogV2.wait({
         id: 'auto-spend-dialog',
+        classes: ['roll-enhancements', 'auto-spend-dialog'],
         rejectClose: true,
         closeOnSubmit: true,
         window: { title: game.i18n.localize(`${MODULE}.autoSpend.dialog.title`)},
@@ -118,8 +119,8 @@ export async function showAutoTargetDialog(item) {
     enableLabel.setAttribute('data-tooltip', game.i18n.localize(`${MODULE}.autoTarget.options.enable.locked.enableDisableHint`));
 
     return DialogV2.wait({
-
         id: 'auto-target-dialog',
+        classes: ['roll-enhancements', 'auto-target-dialog'],
         rejectClose: true,
         closeOnSubmit: true,
         window: {title: game.i18n.localize(`${MODULE}.autoTarget.dialog.title`)},

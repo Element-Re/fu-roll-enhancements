@@ -1,18 +1,22 @@
-<fieldset class="auto-target-results">
-    <legend>{{localize "fu-roll-enhancements.autoTarget.results.title" label=label}}</legend>
-    {{#if results}}
-        <ol>
-            {{#each results}}
-                <li class="target">
-                    {{target.document.actor.link}}
-                    {{#if (gt count 1)}}x{{count}}{{/if}}
-                    {{#if forcedBy}}({{forcedBy.name}}){{/if}}
-                </li>
-            {{/each}}
-        </ol>
-    {{else}}
-        <ul>
-            <li>{{localize "fu-roll-enhancements.autoTarget.results.noTargets"}}</li>
-        </ul>
-    {{/if}}
-</fieldset>
+<div class="roll-enhancements">
+    <header>
+        <i class="fas fa-crosshairs"></i><h2>{{localize "fu-roll-enhancements.autoTarget.results.title" label=label}}</h2>
+    </header>
+    <section class="auto-target-results">
+        {{#if results}}
+            <ol>
+                {{#each results}}
+                    <li class="target">
+                        {{target.document.actor.link}}
+                        {{#if (gt count 1)}}x{{count}}{{/if}}
+                        {{#if forcedBy}}({{forcedBy.name}}){{/if}}
+                    </li>
+                {{/each}}
+            </ol>
+        {{else}}
+            <ul>
+                <li>{{localize "fu-roll-enhancements.autoTarget.results.noTargets"}}</li>
+            </ul>
+        {{/if}}
+    </section>
+</div>
