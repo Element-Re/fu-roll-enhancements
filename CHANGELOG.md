@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.1.1]
+### Changes
+* Fixes issue with adding Untargetable effect to system status effects.
+
 ## [2.1.0]
 ### Changes
 * Item roll automation configuration can now be accessed as a separate standalone application instead of on a tab in the item sheet. This will ensure that every item type can access the roll config regardless of the sheet content. For now, you can access an item's roll configuration via the item sheet header controls. A way to access the roll config straight from the Actor sheet item list is still in the works.
