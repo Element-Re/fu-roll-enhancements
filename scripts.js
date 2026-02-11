@@ -11,6 +11,7 @@ const modulePath = path.join(__dirname, 'module');
 const langPath = path.join(__dirname, 'lang');
 const templatesPath = path.join(__dirname, 'templates');
 const stylesPath = path.join(__dirname, 'styles');
+const assetsPath = path.join(__dirname, 'assets');
 const filesToCopy = ['module.json', 'CHANGELOG.MD', 'README.MD', 'fu-roll-enhancements.mjs', 'fu-roll-enhancements.lock'];
 
 const copyFolder = (source, destination) => {
@@ -46,6 +47,7 @@ const build = async () => {
     await copyFolder(langPath, path.join(distPath, 'lang'));
     await copyFolder(templatesPath, path.join(distPath, 'templates'));
     await copyFolder(stylesPath, path.join(distPath, 'styles'));
+    await copyFolder(assetsPath, path.join(distPath, 'assets'));
 
     // Standalone files
     for (const file of filesToCopy) {

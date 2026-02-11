@@ -9,11 +9,11 @@ Hooks.once('init', () => {
     registerSettings();
     registerKeyBindings();
     initializeTemplates();
-    initializeActiveEffects();
     registerAutoTargetHooks();
 });
 
 Hooks.once('ready', () => {
+    initializeActiveEffects();
     libWrapper.register('fu-roll-enhancements', 'CONFIG.Item.documentClass.prototype.roll', rollEnhancements);
 });
 
