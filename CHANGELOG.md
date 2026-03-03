@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.2.0]
+### Changes
+* Fixes issue with Auto Target not respecting **Provoked** and other `force-target` effects due to changes to the PFU system Active Effect data model in version `4.5.0` and above.
+* Updates minimum PFU version to `4.5.0`
+
 ## [2.1.1]
 ### Changes
 * Fixes issue with adding Untargetable effect to system status effects.

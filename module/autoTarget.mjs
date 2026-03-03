@@ -388,8 +388,8 @@ export class AutoTarget {
         if (strategy.canForceTargets) {
           [...item.actor.appliedEffects].forEach(e => {
             const effectStatuses = [...e.statuses];
-            if (e.source && effectStatuses.some(s => FORCE_TARGET_EFFECTS.includes(s))) {
-              const origin = fromUuidSync(e.source.itemUuid ?? e.source.actorUuid);
+            if (e.sourceInfo && effectStatuses.some(s => FORCE_TARGET_EFFECTS.includes(s))) {
+              const origin = fromUuidSync(e.sourceInfo.itemUuid ?? e.sourceInfo.actorUuid);
               const forcedTargetIndex = targetCandidates.findIndex(t => t.document.actor.uuid === (origin.actor || origin)?.uuid);
               if (forcedTargetIndex >= 0) {
                 const forcedTarget = strategy.repeat ? targetCandidates[forcedTargetIndex] : targetCandidates.splice(forcedTargetIndex, 1)[0];

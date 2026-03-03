@@ -11,7 +11,9 @@
 			{
 				"id": "projectfu",
 				"type": "system",
-				"compatibility": {}
+				"compatibility": {
+					"minimum": "4.5.0"
+				}
 			}
 		],
 		"requires": [
