@@ -1,22 +1,27 @@
 <div class="roll-enhancements">
     <header>
-        <i class="fas fa-crosshairs"></i><h2>{{localize "fu-roll-enhancements.autoTarget.results.title" label=label}}</h2>
+        <i class="fas fa-crosshairs"></i>
+        <h2>
+            {{~#if label~}}
+                {{~localize "fu-roll-enhancements.autoTarget.results.title.label" label=label~}}
+            {{~else~}}
+                {{~localize "fu-roll-enhancements.autoTarget.results.title.noLabel"~}}
+            {{~/if~}}
+        </h2>
     </header>
-    <section class="auto-target-results">
+    <section class="target-results targets">
         {{#if results}}
-            <ol>
-                {{#each results}}
-                    <li class="target">
-                        {{target.document.actor.link}}
-                        {{#if (gt count 1)}}x{{count}}{{/if}}
-                        {{#if forcedBy}}({{forcedBy.name}}){{/if}}
-                    </li>
-                {{/each}}
-            </ol>
+            {{#each results}}
+                <a class="target total default" data-token-id="{{token.id}}" data-action="pingToken">
+                    <label>{{token.name}} <span>{{#if (gt count 1)}}(x{{count}}){{/if}}</span></label>
+                    <span>{{#if forcedBy}}({{forcedBy.name}}){{/if}}</span>
+                    <i class="fas fa-crosshairs"></i>
+                </a>
+            {{/each}}
         {{else}}
-            <ul>
-                <li>{{localize "fu-roll-enhancements.autoTarget.results.noTargets"}}</li>
-            </ul>
+            <section class="detail-desc">
+                <p>{{localize "fu-roll-enhancements.autoTarget.results.noTargets"}}</p>
+            </section>
         {{/if}}
     </section>
 </div>

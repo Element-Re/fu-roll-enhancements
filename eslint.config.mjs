@@ -10,6 +10,7 @@ export default [
         CONST: 'readonly',
         CONFIG: 'readonly',
         foundry: 'readonly',
+        canvas: 'readonly',
         ApplicationV2: 'readonly',
         ItemSheetV2: 'readonly',
         game: 'readonly',

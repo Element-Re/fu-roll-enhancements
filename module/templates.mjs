@@ -1,7 +1,7 @@
-import {MODULE} from './helpers/module-utils.mjs';
+import {MODULE} from './helpers/utils.mjs';
 
 export const initializeTemplates = () => {
-  return foundry.applications.handlebars.loadTemplates(Object.values(TEMPLATES));
+  return foundry.applications.handlebars.loadTemplates([...Object.values(TEMPLATES), ...partials]);
 };
 
 export const TEMPLATES = Object.freeze({
@@ -14,3 +14,8 @@ export const TEMPLATES = Object.freeze({
   SIMPLE_CHAT_MESSAGE: `modules/${MODULE}/templates/simple-chat-message.hbs`,
   ROLL_CONFIGURATION: `modules/${MODULE}/templates/roll-configuration.hbs`,
 });
+
+export const partials = [
+  `modules/${MODULE}/templates/partials/target-entry.hbs`,
+  `modules/${MODULE}/templates/partials/target-entry-simple.hbs`
+];
