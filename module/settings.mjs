@@ -5,6 +5,14 @@ export const keyBinds = {
 	autoSpendDialog: false 
 };
 
+export function getTargetMode() {
+	return game.settings.get(MODULE, 'autoTargetMode');
+}
+
+export function isAutoTargetEnabled() {
+	return ['auto', 'guided'].includes(getTargetMode());
+}
+
 export const registerSettings = () => {
 
 	game.settings.register(MODULE, 'enableAutoSpend', {
@@ -17,14 +25,19 @@ export const registerSettings = () => {
 		default: true
 	});
 
-	game.settings.register(MODULE, 'enableAutoTarget', {
-		name: `${MODULE}.settings.enableAutoTarget.name`,
-		hint: `${MODULE}.settings.enableAutoTarget.hint`,
+	game.settings.register(MODULE, 'autoTargetMode', {
+		name: `${MODULE}.settings.autoTargetMode.name`,
+		hint: `${MODULE}.settings.autoTargetMode.hint`,
 		scope: 'client',
 		config: true,
 		requiresReload: false,
-		type: Boolean,
-		default: true
+		type: String,
+		default: 'guided',
+		choices: {
+			'disabled': `${MODULE}.settings.autoTargetMode.options.disabled`,
+			'guided': `${MODULE}.settings.autoTargetMode.options.guided`,
+			'auto': `${MODULE}.settings.autoTargetMode.options.auto`
+		}
 	});
 
 	game.settings.register(MODULE, 'allowPlayerAutoTarget', {

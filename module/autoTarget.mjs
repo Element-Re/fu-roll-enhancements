@@ -1,5 +1,6 @@
 import { TEMPLATES } from './templates.mjs';
 import {MODULE} from './helpers/module-utils.mjs';
+import {getTargetMode, isAutoTargetEnabled} from './settings.mjs';
 
 function activeEffectHandler(actor, effect) {
   const newValue = String(effect.value);
@@ -78,7 +79,7 @@ class TargetStrategy {
    * @returns {TokenDocument} The roller for this strategy, which either a scene token for the item's owner, or their prototype token.
    */
   getRoller() {
-    return this.getRollerFor(this.item);
+    return TargetStrategy.getRollerFor(this.item);
   }
 
   /**
@@ -86,7 +87,7 @@ class TargetStrategy {
    * @param {FUItem} item The item for get a roller for.
    * @returns { TokenDocument | PrototypeTokenData } The roller for this strategy, which either a scene token for the item's owner, or their prototype token.
    */
-  getRollerFor(item) {
+  static getRollerFor(item) {
     return item.actor.token || item.actor.prototypeToken;
   }
 
@@ -118,9 +119,9 @@ class TargetStrategy {
  */
 class AttackTargetStrategy extends TargetStrategy {
   /**
-   * Checks whether or not this strategy is valid for a given item.
+   * Checks whether this strategy is valid for a given item.
    * @param {FUItem} item The item to check the validity of this TargetStrategy for.
-   * @returns {boolean} Whether or not this TargetStrategy is valid for the given item.
+   * @returns {boolean} Whether this TargetStrategy is valid for the given item.
    */
   static isValidFor(item) {
     return ['attacksAndSpells', 'all'].includes(game.settings.get(MODULE, 'defaultAutoTargetBehavior')) && 
@@ -176,9 +177,9 @@ class AttackTargetStrategy extends TargetStrategy {
  */
 class TargetRuleTargetStrategy extends TargetStrategy {
   /**
-   * Checks whether or not this strategy is valid for a given item.
+   * Checks whether this strategy is valid for a given item.
    * @param {FUItem} item The item to check the validity of this TargetStrategy for.
-   * @returns {boolean} Whether or not this TargetStrategy is valid for the given item.
+   * @returns {boolean} Whether this TargetStrategy is valid for the given item.
    */
   static isValidFor(item) {
     const behavior = game.settings.get(MODULE, 'defaultAutoTargetBehavior');
@@ -212,9 +213,8 @@ class TargetRuleTargetStrategy extends TargetStrategy {
     if (rule === 'self') {
       return this.item.actor.getActiveTokens();
     }
-    else return game.canvas.tokens.placeables.filter(t => !t.document.hidden &&
-      t.document.disposition === -rollerDisposition && 
-      !actorHasStatus(t.actor, ...UNTARGETABLE_ALL_EFFECTS));
+    else return game.canvas.tokens.placeables.filter(t => isValidTarget(t) &&
+      t.document.disposition === -rollerDisposition);
   }
 
   get maxTargets() {
@@ -276,9 +276,8 @@ class CustomTargetStrategy extends TargetStrategy {
       targetFilter = t => [CONST.TOKEN_DISPOSITIONS.FRIENDLY, CONST.TOKEN_DISPOSITIONS.HOSTILE].includes(t.document.disposition);
     } else if (['ENEMIES', 'ENEMIES_MELEE', 'ENEMIES_MELEE_FLYING'].includes(options.targetType)) {
       targetFilter = t => {
-        return !t.document.hidden &&
+        return isValidTarget(t) &&
           t.document.disposition === -rollerDisposition && 
-          !actorHasStatus(t.actor, ...UNTARGETABLE_ALL_EFFECTS) && 
           !(
             ('ENEMIES_MELEE' === options.targetType && !actorHasStatus(this.item.actor, 'flying') && actorHasStatus(t.actor, ...UNTARGETABLE_MELEE_EFFECTS))
             || 
@@ -307,6 +306,12 @@ class CustomTargetStrategy extends TargetStrategy {
   get label() {
     return game.i18n.localize(TARGET_TYPES[this.options.targetType]);
   }
+}
+
+function isValidTarget(token) {
+  return !token.document.hidden &&
+      !actorHasStatus(token.actor, ...UNTARGETABLE_ALL_EFFECTS) &&
+      [CONST.TOKEN_DISPOSITIONS.FRIENDLY, CONST.TOKEN_DISPOSITIONS.HOSTILE].includes(token.document.disposition);
 }
 
 /**
@@ -350,17 +355,17 @@ export class AutoTarget {
     }
   }
   static async execute(item, options) {
-    if (!item || !game.settings.get(MODULE, 'enableAutoTarget')) return;
+    if (!item || !isAutoTargetEnabled()) return;
     // Default targetType to 'ENEMIES'
     if (options) {
       options = foundry.utils.deepClone(options);
       options.targetType = options.targetType || 'ENEMIES';
     }
-    const targetList = new Map();
+    let targetList = new Map();
     let strategy;
     // Special case, self only, don't use a strategy.
     if (options?.targetType === 'SELF') {
-      item.actor.getActiveTokens().forEach(t => targetList.set(t, { count: 1 }));
+      item.actor.getActiveTokens().forEach(t => targetList.set(t.id, { count: 1, target: t }));
     } else {
 
       if (options) {
@@ -410,19 +415,23 @@ export class AutoTarget {
           let drawPile = forced ? forcedTargets : targetCandidates;
           var start = Math.floor(Math.random() * (drawPile.length));
           const target = strategy.canRepeatTargets && drawPile === targetCandidates ? drawPile[start] : drawPile.splice(start, 1)[0];
-          targetList.set(target, (targetList.has(target) ? foundry.utils.mergeObject(targetList.get(target), { count: targetList.get(target).count + 1 }) : { count: 1, forcedBy: forcedTargetsMap.get(target) }));
+          targetList.set(target.id, (targetList.has(target.id) ? foundry.utils.mergeObject(targetList.get(target.id), { count: targetList.get(target.id).count + 1, target }) : { count: 1, target, forcedBy: forcedTargetsMap.get(target) }));
           i++;
         }
-      } else targetCandidates.forEach(t => targetList.set(t, { count: 1 }));
+      } else targetCandidates.forEach(target => targetList.set(target.id, { count: 1, target }));
     }
-  
+
+    if (getTargetMode() === 'guided') {
+      targetList = (await this.getGuidedTargets(targetList, strategy.maxTargets, TargetStrategy.getRollerFor(item))) ?? targetList;
+    }
+
     return {
-      count: [...targetList.keys()].reduce((count, t) => targetList.get(t).count + count, 0),
+      count: [...targetList.keys()].reduce((count, id) => targetList.get(id).count + count, 0),
       finalize: async () => {
         game.canvas.tokens.setTargets([...targetList.keys()].map(t => t.id));
   
         const templateData = {
-          results: [...targetList.keys()].map(t => foundry.utils.mergeObject(targetList.get(t), { target: t })),
+          results: [...targetList.keys()].map(id => targetList.get(id)),
           label: strategy.label
         };
         const messageData = ChatMessage.applyRollMode({
@@ -456,5 +465,120 @@ export class AutoTarget {
     }
     return false;
   }
-}
+  /**
+   * Gets final targets based on guided input from the user. This could be completely different from the initially
+   * selected targets, including potentially breaking rules for what constitutes a valid target.
+   *
+   * @param initialTargets Map<Token, number> Tokens to present to the user as the initially selected auto-targets.
+   * @param maxTargets number The maximum number of targets the roll should initially have.
+   * @param roller TokenDocument The token performing this roll, if any.
+   * @returns Map<Token, number> The final targets after user-guided intervention.
+   */
+  static async getGuidedTargets(initialTargets, maxTargets, roller) {
+    let validTargets;
+    if (TargetStrategy.getRollerDispositionFor(roller) === CONST.TOKEN_DISPOSITIONS.HOSTILE) {
+      validTargets = {
+        enemies: game.canvas.tokens.placeables
+            .filter(isValidTarget)
+            .filter(t => t.document.disposition === CONST.TOKEN_DISPOSITIONS.FRIENDLY),
+        allies: game.canvas.tokens.placeables
+            .filter(isValidTarget)
+            .filter(t => t.document.disposition === CONST.TOKEN_DISPOSITIONS.HOSTILE)
+      };
 
+    } else {
+      validTargets = {
+        enemies: game.canvas.tokens.placeables
+            .filter(isValidTarget)
+            .filter(t => t.document.disposition === CONST.TOKEN_DISPOSITIONS.HOSTILE),
+        allies: game.canvas.tokens.placeables
+            .filter(isValidTarget)
+            .filter(t => t.document.disposition === CONST.TOKEN_DISPOSITIONS.HOSTILE)
+      };
+    }
+
+    if (roller) {
+      validTargets.allies = validTargets.allies.filter(t => t.document !== roller);
+      validTargets.self = [roller];
+    }
+
+    const content = await foundry.applications.handlebars.renderTemplate(TEMPLATES.GUIDED_TARGET_DIALOG, {
+      initialTargets: Object.fromEntries(initialTargets),
+      validTargets,
+      maxTargets
+    });
+    const buttons = [
+      {
+        label: 'Auto Target',
+        action: 'autoTarget',
+        callback: function(_event, _target, _dialog) {
+          /*
+            TODO: Returning null just results in the dialog returning the action identifier.
+                  Some other approach is required.
+           */
+          return null;
+        }
+      },
+      {
+        label: 'Guided Targets',
+        action: 'guidedTargets',
+        callback: function(_event, _target, _dialog) {
+          return null;
+        }
+      },
+      {
+        label: 'Skip',
+        action: 'skip',
+        callback: function(_event, _target, _dialog) {
+          return null;
+        }
+      }
+    ];
+    const guidedTargets = await foundry.applications.api.DialogV2.wait({
+      title: game.i18n.localize('fu-roll-enhancements.guidedTargeting.dialog.title'),
+      content,
+      buttons,
+      rejectClose: true,
+      render: AutoTarget._onGuidedTargetDialogRender
+    });
+    return initialTargets;
+  }
+
+  /**
+   *
+   * @param _event Event
+   * @param dialog DialogV2
+   * @private
+   */
+  static _onGuidedTargetDialogRender(_event, dialog) {
+    const targetInputs = dialog.element.querySelectorAll('label[data-token-id]');
+    for (const targetInput of targetInputs) {
+      targetInput.addEventListener('mouseover', AutoTarget._onTargetFormGroupHoverIn);
+      targetInput.addEventListener('mouseout', AutoTarget._onTargetFormGroupHoverOut);
+    }
+  }
+
+  /**
+   * @param event Event
+   * @private
+   */
+  static _onTargetFormGroupHoverIn(event) {
+    const tokenId = event.target.dataset.tokenId;
+    const token = game.canvas.tokens.placeables.find(t => t.id === tokenId);
+    if ( token && token._canHover(game.user, event) && token.visible ) {
+      token._onHoverIn(event, {hoverOutOthers: true});
+    }
+  }
+
+  /**
+   * @param event Event
+   * @private
+   */
+  static _onTargetFormGroupHoverOut(event) {
+    const tokenId = event.target.dataset.tokenId;
+    const token = game.canvas.tokens.placeables.find(t => t.id === tokenId);
+    if ( token && token._canHover(game.user, event) && token.visible ) {
+      token._onHoverOut(event);
+    }
+  }
+}
