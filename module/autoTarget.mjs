@@ -1,6 +1,7 @@
 import { TEMPLATES } from './templates.mjs';
 import {MODULE} from './helpers/module-utils.mjs';
 import {getTargetMode, isAutoTargetEnabled} from './settings.mjs';
+import {getTokenThumbnail} from './helpers/media.mjs';
 
 function activeEffectHandler(actor, effect) {
   const newValue = String(effect.value);
@@ -422,7 +423,7 @@ export class AutoTarget {
     }
 
     if (getTargetMode() === 'guided') {
-      targetList = (await this.getGuidedTargets(targetList, strategy.maxTargets, TargetStrategy.getRollerFor(item))) ?? targetList;
+      targetList = (await this.getGuidedTargets(targetList, strategy.maxTargets, item)) ?? targetList;
     }
 
     return {
@@ -469,37 +470,44 @@ export class AutoTarget {
    * Gets final targets based on guided input from the user. This could be completely different from the initially
    * selected targets, including potentially breaking rules for what constitutes a valid target.
    *
-   * @param initialTargets Map<Token, number> Tokens to present to the user as the initially selected auto-targets.
+   * @param initialTargets Map<string, Object> Tokens to present to the user as the initially selected auto-targets.
    * @param maxTargets number The maximum number of targets the roll should initially have.
-   * @param roller TokenDocument The token performing this roll, if any.
+   * @param item Item The token performing this roll, if any.
    * @returns Map<Token, number> The final targets after user-guided intervention.
    */
-  static async getGuidedTargets(initialTargets, maxTargets, roller) {
+  static async getGuidedTargets(initialTargets, maxTargets, item) {
+    const roller = TargetStrategy.getRollerFor(item);
     let validTargets;
+
+    initialTargets.values().forEach(o => foundry.utils.mergeObject(o, {thumbnail: getTokenThumbnail(o.target)}));
     if (TargetStrategy.getRollerDispositionFor(roller) === CONST.TOKEN_DISPOSITIONS.HOSTILE) {
       validTargets = {
         enemies: game.canvas.tokens.placeables
             .filter(isValidTarget)
-            .filter(t => t.document.disposition === CONST.TOKEN_DISPOSITIONS.FRIENDLY),
+            .filter(t => t.document.disposition === CONST.TOKEN_DISPOSITIONS.FRIENDLY)
+            .map(AutoTarget._mergeTokenThumbnail),
         allies: game.canvas.tokens.placeables
             .filter(isValidTarget)
             .filter(t => t.document.disposition === CONST.TOKEN_DISPOSITIONS.HOSTILE)
+            .map(AutoTarget._mergeTokenThumbnail)
       };
 
     } else {
       validTargets = {
         enemies: game.canvas.tokens.placeables
             .filter(isValidTarget)
-            .filter(t => t.document.disposition === CONST.TOKEN_DISPOSITIONS.HOSTILE),
+            .filter(t => t.document.disposition === CONST.TOKEN_DISPOSITIONS.HOSTILE)
+            .map(AutoTarget._mergeTokenThumbnail),
         allies: game.canvas.tokens.placeables
             .filter(isValidTarget)
             .filter(t => t.document.disposition === CONST.TOKEN_DISPOSITIONS.HOSTILE)
+            .map(AutoTarget._mergeTokenThumbnail)
       };
     }
 
     if (roller) {
       validTargets.allies = validTargets.allies.filter(t => t.document !== roller);
-      validTargets.self = [roller];
+      validTargets.self = [roller.object].map(AutoTarget._mergeTokenThumbnail);
     }
 
     const content = await foundry.applications.handlebars.renderTemplate(TEMPLATES.GUIDED_TARGET_DIALOG, {
@@ -535,9 +543,12 @@ export class AutoTarget {
       }
     ];
     const guidedTargets = await foundry.applications.api.DialogV2.wait({
-      title: game.i18n.localize('fu-roll-enhancements.guidedTargeting.dialog.title'),
+      window: {
+        title: `${game.i18n.localize('fu-roll-enhancements.guidedTargeting.dialog.title')}: ${item.name}`,
+      },
       content,
       buttons,
+      classes: ['guided-target-dialog'],
       rejectClose: true,
       render: AutoTarget._onGuidedTargetDialogRender
     });
@@ -580,5 +591,13 @@ export class AutoTarget {
     if ( token && token._canHover(game.user, event) && token.visible ) {
       token._onHoverOut(event);
     }
+  }
+
+  /**
+   * @param token Token
+   * @private
+   */
+  static _mergeTokenThumbnail(token) {
+    return {token: token, thumbnail: getTokenThumbnail(token) };
   }
 }

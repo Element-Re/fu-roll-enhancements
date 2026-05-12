@@ -63,3 +63,47 @@
 .application.roll-enhancements .dialog-buttons button {
   margin: 0;
 }
+
+
+.dialog.guided-target-dialog {
+
+  .dialog-content {
+    overflow-y: scroll;
+  }
+
+  .targeted-list {
+
+    display: flex;
+    flex-direction: row;
+    place-content: center;
+
+    .targeted-entries {
+      max-width: 8rem;
+      text-wrap: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      .target {
+        display: flex;
+        flex-direction: column;
+        place-items: center;
+      }
+    }
+  }
+
+  .target-pool {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr auto;
+
+    .enemies-list {
+      grid-row: span 2;
+    }
+  }
+
+  img.thumbnail {
+    max-height: 64px;
+    max-width: 64px;
+  }
+}

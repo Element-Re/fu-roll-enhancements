@@ -1,4 +1,4 @@
 <div class="form-group">
-    <label for="target.{{id}}" data-token-id="{{id}}">{{name}}</label>
-    <input type="checkbox" name="target.{{id}}" {{#if (lookup ../initialTargets id)}}checked {{/if}}id="target.{{id}}">
+    <img src="{{thumbnail}}" class="thumbnail" alt="{{token.name}}" >
+    <label for="target.{{token.id}}" data-token-id="{{token.id}}">{{token.name}}</label>
 </div>

@@ -1,15 +1,35 @@
-<h5>{{localize "fu-roll-enhancements.guidedTargeting.dialog.enemies.label"}}</h5>
-{{#each validTargets.enemies}}
-    {{> "modules/fu-roll-enhancements/templates/partials/target-form-group.hbs"}}
-{{/each}}
-<h5>{{localize "fu-roll-enhancements.guidedTargeting.dialog.allies.label"}}</h5>
-{{#each validTargets.allies}}
-    {{> "modules/fu-roll-enhancements/templates/partials/target-form-group.hbs"}}
-{{/each}}
+<fieldset class="targeted-list">
+    <legend>{{localize "fu-roll-enhancements.guidedTargeting.dialog.targeted.label"}}</legend>
+    <div class="targeted-entries">
+    {{#each initialTargets}}
+        <div class="target">
+            <img class="thumbnail" src="{{thumbnail}}" alt="{{target.name}}" />
+            <span>{{target.name}}</span>
+        </div>
+    {{/each}}
+    </div>
+</fieldset>
+<section class="target-pool">
+    <fieldset class="enemies-list">
+        <legend>{{localize "fu-roll-enhancements.guidedTargeting.dialog.enemies.label"}}</legend>
+        {{#each validTargets.enemies}}
+            {{> "modules/fu-roll-enhancements/templates/partials/target-form-group.hbs"}}
+        {{/each}}
+    </fieldset>
 
-{{#if validTargets.self}}
-<h5>{{localize "fu-roll-enhancements.guidedTargeting.dialog.self.label"}}</h5>
-{{#each validTargets.self}}
-    {{> "modules/fu-roll-enhancements/templates/partials/target-form-group.hbs"}}
-{{/each}}
-{{/if}}
+    <fieldset class="allies-list">
+        <legend>{{localize "fu-roll-enhancements.guidedTargeting.dialog.allies.label"}}</legend>
+        {{#each validTargets.allies}}
+            {{> "modules/fu-roll-enhancements/templates/partials/target-form-group.hbs"}}
+        {{/each}}
+    </fieldset>
+
+    {{#if validTargets.self}}
+        <fieldset class="self-list">
+            <legend>{{localize "fu-roll-enhancements.guidedTargeting.dialog.self.label"}}</legend>
+            {{#each validTargets.self}}
+                {{> "modules/fu-roll-enhancements/templates/partials/target-form-group.hbs"}}
+            {{/each}}
+        </fieldset>
+    {{/if}}
+</section>
