@@ -1,26 +1,25 @@
-<fieldset class="targeted-list">
-    <legend>{{localize "fu-roll-enhancements.guidedTargeting.dialog.targeted.label"}}</legend>
-    <div class="targeted-entries">
-    {{#each initialTargets}}
-        <div class="target">
-            <img class="thumbnail" src="{{thumbnail}}" alt="{{target.name}}" />
-            <span>{{target.name}}</span>
-        </div>
-    {{/each}}
-    </div>
-</fieldset>
 <section class="target-pool">
+
+    <fieldset class="pending-target-list">
+        <legend>{{localize "fu-roll-enhancements.guidedTargeting.dialog.pendingTargets.label"}}</legend>
+        <div class="pending-target-entries">
+            {{#each initialTargets}}
+                {{> "modules/fu-roll-enhancements/templates/partials/target-entry.hbs"}}
+            {{/each}}
+        </div>
+    </fieldset>
+
     <fieldset class="enemies-list">
         <legend>{{localize "fu-roll-enhancements.guidedTargeting.dialog.enemies.label"}}</legend>
         {{#each validTargets.enemies}}
-            {{> "modules/fu-roll-enhancements/templates/partials/target-form-group.hbs"}}
+            {{> "modules/fu-roll-enhancements/templates/partials/target-entry.hbs"}}
         {{/each}}
     </fieldset>
 
     <fieldset class="allies-list">
         <legend>{{localize "fu-roll-enhancements.guidedTargeting.dialog.allies.label"}}</legend>
         {{#each validTargets.allies}}
-            {{> "modules/fu-roll-enhancements/templates/partials/target-form-group.hbs"}}
+            {{> "modules/fu-roll-enhancements/templates/partials/target-entry.hbs"}}
         {{/each}}
     </fieldset>
 
@@ -28,7 +27,7 @@
         <fieldset class="self-list">
             <legend>{{localize "fu-roll-enhancements.guidedTargeting.dialog.self.label"}}</legend>
             {{#each validTargets.self}}
-                {{> "modules/fu-roll-enhancements/templates/partials/target-form-group.hbs"}}
+                {{> "modules/fu-roll-enhancements/templates/partials/target-entry.hbs"}}
             {{/each}}
         </fieldset>
     {{/if}}

@@ -17,5 +17,5 @@ export const TEMPLATES = Object.freeze({
 });
 
 export const partials = [
-    `modules/${MODULE}/templates/partials/target-form-group.hbs`
+    `modules/${MODULE}/templates/partials/target-entry.hbs`
 ];

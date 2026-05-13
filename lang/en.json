@@ -46,7 +46,7 @@
     "fu-roll-enhancements.autoTarget.results.noTargets": "No valid targets",
     "fu-roll-enhancements.autoTarget.errors.forcedTargetInvalid": "Tried to force a target for {roller} due to {effect}, but the target was invalid.",
     "fu-roll-enhancements.guidedTargeting.dialog.title": "Guided Targeting",
-    "fu-roll-enhancements.guidedTargeting.dialog.targeted.label": "Targeted",
+    "fu-roll-enhancements.guidedTargeting.dialog.pendingTargets.label": "Pending Targets",
     "fu-roll-enhancements.guidedTargeting.dialog.enemies.label": "Enemies",
     "fu-roll-enhancements.guidedTargeting.dialog.allies.label": "Allies",
     "fu-roll-enhancements.guidedTargeting.dialog.self.label": "Self",

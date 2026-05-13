@@ -71,39 +71,75 @@
     overflow-y: scroll;
   }
 
-  .targeted-list {
-
+  .target {
     display: flex;
     flex-direction: row;
-    place-content: center;
+    place-items: center;
 
-    .targeted-entries {
-      max-width: 8rem;
-      text-wrap: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-
-      .target {
-        display: flex;
-        flex-direction: column;
-        place-items: center;
-      }
+    img.thumbnail {
+      flex: 0 0 32px;
+      border-radius: 4px;
+      max-height: 32px;
+      max-width: 32px;
     }
+
+    span {
+      padding: 4px;
+      flex: 1 0 auto;
+      white-space: nowrap;
+      overflow: hidden;
+      max-width: 16ch;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .targeted-list {
+
+  }
+
+  fieldset {
+    display: flex;
+    gap: 4px;
+    flex-direction: column;
   }
 
   .target-pool {
     display: grid;
     gap: 0.5rem;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     grid-template-rows: 1fr auto;
+
+    .pending-target-list {
+      border: none;
+      grid-row: span 2;
+      counter-reset: targets;
+
+      .pending-target-entries {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .target {
+        border-radius: 4px;
+        background-color: var(--color-tertiary-bg);
+
+        span {
+          max-width: 18ch;
+        }
+
+        span::before {
+          counter-increment: targets;
+          content: counter(targets) ". ";
+        }
+
+      }
+    }
 
     .enemies-list {
       grid-row: span 2;
     }
   }
 
-  img.thumbnail {
-    max-height: 64px;
-    max-width: 64px;
-  }
+
 }

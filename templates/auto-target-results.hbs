@@ -7,7 +7,7 @@
             <ol>
                 {{#each results}}
                     <li class="target">
-                        {{target.document.actor.link}}
+                        {{token.document.actor.link}}
                         {{#if (gt count 1)}}x{{count}}{{/if}}
                         {{#if forcedBy}}({{forcedBy.name}}){{/if}}
                     </li>

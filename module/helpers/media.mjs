@@ -1,5 +1,5 @@
 const thumbnailCache = new Map();
-const THUMBNAIL_SIZE = 64;
+const THUMBNAIL_SIZE = 32;
 
 /**
  * @param token Token

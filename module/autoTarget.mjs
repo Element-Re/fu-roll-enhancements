@@ -1,4 +1,4 @@
-import { TEMPLATES } from './templates.mjs';
+import {TEMPLATES} from './templates.mjs';
 import {MODULE} from './helpers/module-utils.mjs';
 import {getTargetMode, isAutoTargetEnabled} from './settings.mjs';
 import {getTokenThumbnail} from './helpers/media.mjs';
@@ -46,7 +46,7 @@ class TargetStrategy {
    * Gets possible targets based on the rules of the target strategy and the item assigned to the strategy.
    * @returns {Token[]} All possible target candidates identified by the strategy.
    */
-  getTargetCandidates() {
+  getTargetCandidates(targetPool = []) {
     throw new Error('Not implemented');
   }
 
@@ -129,8 +129,8 @@ class AttackTargetStrategy extends TargetStrategy {
     (item.type === 'basic' || item.type === 'weapon') &&
     item.parent?.type !== 'character'; // Don't ever perform default behavior for PCs.
   }
-  
-  getTargetCandidates() {
+
+  getTargetCandidates(targetPool = []) {
     const rollerDisposition = this.getRollerDisposition();
 
     const basicFilter = (t) => !t.document.hidden &&
@@ -192,7 +192,7 @@ class TargetRuleTargetStrategy extends TargetStrategy {
     item.parent?.type !== 'character'; // Don't ever perform default behavior for PCs;
   }
 
-  getTargetCandidates() {
+  getTargetCandidates(targetPool = []) {
 
     // Only proceed for single/multiple offensive spells or misc abilities, or items marked 'self'
     if (
@@ -262,7 +262,7 @@ class CustomTargetStrategy extends TargetStrategy {
    * Gets an array of possible target candidates based on the custom rules set on an item.
    * @returns {Token[]}
    */
-  getTargetCandidates() {
+  getTargetCandidates(targetPool = []) {
     const roller = this.getRoller();
     const rollerDisposition = this.getRollerDisposition();
     let targetFilter;
@@ -366,7 +366,7 @@ export class AutoTarget {
     let strategy;
     // Special case, self only, don't use a strategy.
     if (options?.targetType === 'SELF') {
-      item.actor.getActiveTokens().forEach(t => targetList.set(t.id, { count: 1, target: t }));
+      item.actor.getActiveTokens().forEach(t => targetList.set(t.id, { count: 1, token: t }));
     } else {
 
       if (options) {
@@ -380,10 +380,9 @@ export class AutoTarget {
       // No strategy was found. Exit without making a fuss.
       if (!strategy) return;
       let targetCandidates = strategy.getTargetCandidates();
-      if (!Array.isArray(targetCandidates)) {
-        // Bail if our strategy didn't give us a proper array.
-        return;
-      }
+      // Bail if our strategy didn't give us a proper array.
+      if (!Array.isArray(targetCandidates)) return;
+
       const maxTargets = strategy.maxTargets;
 
       if (typeof maxTargets === 'number' && maxTargets > 0) {
@@ -416,10 +415,10 @@ export class AutoTarget {
           let drawPile = forced ? forcedTargets : targetCandidates;
           var start = Math.floor(Math.random() * (drawPile.length));
           const target = strategy.canRepeatTargets && drawPile === targetCandidates ? drawPile[start] : drawPile.splice(start, 1)[0];
-          targetList.set(target.id, (targetList.has(target.id) ? foundry.utils.mergeObject(targetList.get(target.id), { count: targetList.get(target.id).count + 1, target }) : { count: 1, target, forcedBy: forcedTargetsMap.get(target) }));
+          targetList.set(target.id, (targetList.has(target.id) ? foundry.utils.mergeObject(targetList.get(target.id), { count: targetList.get(target.id).count + 1, token: target }) : { count: 1, token: target, forcedBy: forcedTargetsMap.get(target) }));
           i++;
         }
-      } else targetCandidates.forEach(target => targetList.set(target.id, { count: 1, target }));
+      } else targetCandidates.forEach(target => targetList.set(target.id, { count: 1, token: target }));
     }
 
     if (getTargetMode() === 'guided') {
@@ -429,7 +428,7 @@ export class AutoTarget {
     return {
       count: [...targetList.keys()].reduce((count, id) => targetList.get(id).count + count, 0),
       finalize: async () => {
-        game.canvas.tokens.setTargets([...targetList.keys()].map(t => t.id));
+        game.canvas.tokens.setTargets([...targetList.keys()]);
   
         const templateData = {
           results: [...targetList.keys()].map(id => targetList.get(id)),
@@ -479,7 +478,7 @@ export class AutoTarget {
     const roller = TargetStrategy.getRollerFor(item);
     let validTargets;
 
-    initialTargets.values().forEach(o => foundry.utils.mergeObject(o, {thumbnail: getTokenThumbnail(o.target)}));
+    initialTargets.values().forEach(o => foundry.utils.mergeObject(o, {thumbnail: getTokenThumbnail(o.token)}));
     if (TargetStrategy.getRollerDispositionFor(roller) === CONST.TOKEN_DISPOSITIONS.HOSTILE) {
       validTargets = {
         enemies: game.canvas.tokens.placeables
@@ -592,6 +591,8 @@ export class AutoTarget {
       token._onHoverOut(event);
     }
   }
+
+
 
   /**
    * @param token Token
