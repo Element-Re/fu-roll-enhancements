@@ -44,9 +44,12 @@ class TargetStrategy {
   }
   /**
    * Gets possible targets based on the rules of the target strategy and the item assigned to the strategy.
-   * @returns {Token[]} All possible target candidates identified by the strategy.
+   * @param targetPool {Set<Token>} The entire pool of targets to find target candidates from.
+   * @returns {Set<Token>|null} All possible target candidates identified by the strategy, or null if the strategy
+   * failed.
    */
-  getTargetCandidates(targetPool = []) {
+  // eslint-disable-next-line no-unused-vars
+  getTargetCandidates(targetPool) {
     throw new Error('Not implemented');
   }
 
@@ -130,7 +133,11 @@ class AttackTargetStrategy extends TargetStrategy {
     item.parent?.type !== 'character'; // Don't ever perform default behavior for PCs.
   }
 
-  getTargetCandidates(targetPool = []) {
+  /**
+   * @param targetPool {Set<Token>}
+   * @returns {Set<Token>}
+   */
+  getTargetCandidates(targetPool = new Set()) {
     const rollerDisposition = this.getRollerDisposition();
 
     const basicFilter = (t) => !t.document.hidden &&
@@ -145,9 +152,9 @@ class AttackTargetStrategy extends TargetStrategy {
         filters.push((t) => !actorHasStatus(t.actor, ...UNTARGETABLE_MELEE_EFFECTS));
       } 
     }
-    let targetCandidates = [...game.canvas.tokens.placeables];
+    let targetCandidates = new Set(targetPool);
     filters.forEach(f => targetCandidates = targetCandidates.filter(f));
-    return targetCandidates;
+    return new Set(targetCandidates);
   }
 
   get canForceTargets() {
@@ -155,7 +162,7 @@ class AttackTargetStrategy extends TargetStrategy {
   }
 
   get maxTargets() {
-    // Attacks always default to one target. Anything needs a custom strategy.
+    // Attacks always default to one target. Anything else needs a custom strategy.
     return 1;
   }
 
@@ -192,7 +199,11 @@ class TargetRuleTargetStrategy extends TargetStrategy {
     item.parent?.type !== 'character'; // Don't ever perform default behavior for PCs;
   }
 
-  getTargetCandidates(targetPool = []) {
+  /**
+   * @param targetPool {Set<Token>}
+   * @returns {Set<Token>|null}
+   */
+  getTargetCandidates(targetPool = new Set()) {
 
     // Only proceed for single/multiple offensive spells or misc abilities, or items marked 'self'
     if (
@@ -206,16 +217,20 @@ class TargetRuleTargetStrategy extends TargetStrategy {
         this.item.system.targeting.rule === 'self'
       )
     ) {
-      return;
+      return null;
     }
 
     const rollerDisposition = this.getRollerDisposition();
     const rule = this.item.system.targeting?.rule;
+    let targetCandidates;
     if (rule === 'self') {
-      return this.item.actor.getActiveTokens();
+       targetCandidates = new Set(this.item.actor.getActiveTokens());
     }
-    else return game.canvas.tokens.placeables.filter(t => isValidTarget(t) &&
-      t.document.disposition === -rollerDisposition);
+    else {
+      targetCandidates = new Set(targetPool.filter(t => isValidTarget(t) &&
+        t.document.disposition === -rollerDisposition));
+    }
+    return targetCandidates;
   }
 
   get maxTargets() {
@@ -259,10 +274,10 @@ class CustomTargetStrategy extends TargetStrategy {
   }
 
   /**
-   * Gets an array of possible target candidates based on the custom rules set on an item.
-   * @returns {Token[]}
+   * @param targetPool {Set<Token>}
+   * @returns {Set<Token>|null}
    */
-  getTargetCandidates(targetPool = []) {
+  getTargetCandidates(targetPool = new Set()) {
     const roller = this.getRoller();
     const rollerDisposition = this.getRollerDisposition();
     let targetFilter;
@@ -289,7 +304,7 @@ class CustomTargetStrategy extends TargetStrategy {
           );
       };
     } else return null;
-    return game.canvas.tokens.placeables.filter(targetFilter);
+    return new Set(targetPool.filter(targetFilter));
   }
   
   get canForceTargets() {
@@ -362,10 +377,14 @@ export class AutoTarget {
       options = foundry.utils.deepClone(options);
       options.targetType = options.targetType || 'ENEMIES';
     }
-    let targetList = new Map();
+
+      const targetPool = new Set(game.canvas.tokens.placeables.filter(isValidTarget));
+    const evaluation = new TargetingEvaluation({actor: item.actor, item, targetPool});
+
     let strategy;
     // Special case, self only, don't use a strategy.
     if (options?.targetType === 'SELF') {
+      // TODO: Needs a real strategy now (Self Target Strategy? Target Rule Target strategy?)
       item.actor.getActiveTokens().forEach(t => targetList.set(t.id, { count: 1, token: t }));
     } else {
 
@@ -373,79 +392,79 @@ export class AutoTarget {
         // Use a unique CustomTargetStrategy if we have specific options to use
         // i.e. passed in from the AutoTarget dialog.
         strategy = new CustomTargetStrategy(item, options);
-      } 
+      }
       else {
         strategy = AutoTarget.#getStrategyFor(item);
       }
       // No strategy was found. Exit without making a fuss.
       if (!strategy) return;
-      let targetCandidates = strategy.getTargetCandidates();
-      // Bail if our strategy didn't give us a proper array.
-      if (!Array.isArray(targetCandidates)) return;
+
+      evaluation.info(game.i18n.format(`${MODULE}.autoTarget.evaluation.info.usingStrategy`), {name: strategy.label});
+      evaluation.setStrategy(strategy);
+
+      // TODO: Use TargetEvaluation
+      const targetCandidates = strategy.getTargetCandidates(targetPool);
+      // Bail if our strategy didn't give us a proper Set.
+      if (!(targetCandidates instanceof Set)) return;
+      for (const candidate of targetCandidates) {
+        evaluation.getTargetData(candidate.id);
+        evaluation.getTargetData(candidate.id).validate();
+      }
 
       const maxTargets = strategy.maxTargets;
 
       if (typeof maxTargets === 'number' && maxTargets > 0) {
-  
-        const forcedTargetsMap = new Map();
-  
+
         // Force targets only for rolls targeting enemies.
         if (strategy.canForceTargets) {
           [...item.actor.appliedEffects].forEach(e => {
             const effectStatuses = [...e.statuses];
             if (e.sourceInfo && effectStatuses.some(s => FORCE_TARGET_EFFECTS.includes(s))) {
+
+              evaluation.info(game.i18n.format(`${MODULE}.autoTarget.evaluation.info.priorityTargetEffectFound`), {name: e.name});
               const origin = fromUuidSync(e.sourceInfo.itemUuid ?? e.sourceInfo.actorUuid);
               const forcedTargetIndex = targetCandidates.findIndex(t => t.document.actor.uuid === (origin.actor || origin)?.uuid);
               if (forcedTargetIndex >= 0) {
                 const forcedTarget = strategy.repeat ? targetCandidates[forcedTargetIndex] : targetCandidates.splice(forcedTargetIndex, 1)[0];
-                forcedTargetsMap.set(forcedTarget, e);
+                evaluation.info(game.i18n.format(`${MODULE}.autoTarget.evaluation.info.priorityTargetFound`));
+                evaluation.getTargetData(forcedTarget.id).markPriority(e.name);
               } else {
-                ui.notifications.warn(game.i18n.format(`${MODULE}.autoTarget.errors.forcedTargetInvalid`, { effect: e.name, roller: (item.actor.token || item.actor.prototypeToken).name }));
+                const message = game.i18n.format(`${MODULE}.autoTarget.errors.forcedTargetInvalid`, {
+                  effect: e.name,
+                  roller: (item.actor.token || item.actor.prototypeToken).name });
+                evaluation.warn(message);
+                ui.notifications.warn(message);
                 return false;
               }
             }
           });
         }
   
-        const forcedTargets = [...forcedTargetsMap.keys()];
-  
+        const priorityTargetsPool = [...evaluation.priorityTargets];
+        const validTargetsPool = [...evaluation.validTargets];
+
+
         let i = 0;
-        while (i < strategy.maxTargets && (forcedTargets.length > 0 || targetCandidates.length > 0)) {
-          const forced = forcedTargets.length > 0;
-          let drawPile = forced ? forcedTargets : targetCandidates;
-          var start = Math.floor(Math.random() * (drawPile.length));
-          const target = strategy.canRepeatTargets && drawPile === targetCandidates ? drawPile[start] : drawPile.splice(start, 1)[0];
-          targetList.set(target.id, (targetList.has(target.id) ? foundry.utils.mergeObject(targetList.get(target.id), { count: targetList.get(target.id).count + 1, token: target }) : { count: 1, token: target, forcedBy: forcedTargetsMap.get(target) }));
+        while (i < maxTargets && (priorityTargetsPool.length > 0 || validTargetsPool.length > 0)) {
+          const forced = priorityTargetsPool.length > 0;
+          // TODO: Use TargetEvaluation
+          const drawPile = forced ? priorityTargetsPool : validTargetsPool;
+          const start = Math.floor(Math.random() * (drawPile.length));
+          const target = strategy.canRepeatTargets && drawPile === validTargetsPool ? drawPile[start] : drawPile.splice(start, 1)[0];
+          evaluation.getTargetData(target.id).markRecommended(i + 1);
           i++;
         }
-      } else targetCandidates.forEach(target => targetList.set(target.id, { count: 1, token: target }));
+      } else targetCandidates.forEach(target => {
+        evaluation.getTargetData(target.id).markRecommended(evaluation.recommendedTargets.push(target));
+      });
     }
 
     if (getTargetMode() === 'guided') {
-      targetList = (await this.getGuidedTargets(targetList, strategy.maxTargets, item)) ?? targetList;
+      const finalTargets = (await this.getGuidedTargets(evaluation.recommendedTargets, strategy.maxTargets, item)) ??
+          evaluation.recommendedTargets;
+      evaluation.setFinalTargets(finalTargets);
     }
-
-    return {
-      count: [...targetList.keys()].reduce((count, id) => targetList.get(id).count + count, 0),
-      finalize: async () => {
-        game.canvas.tokens.setTargets([...targetList.keys()]);
-  
-        const templateData = {
-          results: [...targetList.keys()].map(id => targetList.get(id)),
-          label: strategy.label
-        };
-        const messageData = ChatMessage.applyRollMode({
-          content: await renderTemplate(TEMPLATES.AUTO_TARGET_RESULTS, templateData),
-          speaker: {
-            actor: item.actor,
-            token: item.actor.token
-          },
-          flavor: `${item.name}`
-        }, game.settings.get('core', 'rollMode'));
-        ChatMessage.create(messageData);
-      }
-    };
-  
+    return evaluation;
   }
 
   /**
@@ -505,12 +524,12 @@ export class AutoTarget {
     }
 
     if (roller) {
-      validTargets.allies = validTargets.allies.filter(t => t.document !== roller);
+      validTargets.allies = validTargets.allies.filter(t => t.token.document !== roller);
       validTargets.self = [roller.object].map(AutoTarget._mergeTokenThumbnail);
     }
 
     const content = await foundry.applications.handlebars.renderTemplate(TEMPLATES.GUIDED_TARGET_DIALOG, {
-      initialTargets: Object.fromEntries(initialTargets),
+      initialTargets: Object.fromEntries(initialTargets.map(t => [t.id, t])),
       validTargets,
       maxTargets
     });
@@ -600,5 +619,228 @@ export class AutoTarget {
    */
   static _mergeTokenThumbnail(token) {
     return {token: token, thumbnail: getTokenThumbnail(token) };
+  }
+}
+
+class TargetingEvaluation {
+
+  actor;
+  item;
+  strategy;
+
+  targets = new Map();
+
+  finalTargets = [];
+
+  selectionHistory = [];
+
+  log = [];
+
+  /**
+   * @param actor FUActor
+   * @param item FUItem
+   * @param strategy TargetStrategy
+   * @param targetPool Set<Target>
+   */
+  constructor({ actor, item, targetPool }) {
+    this.actor = actor;
+    this.item = item;
+
+    for(const target of targetPool) {
+      this.addTarget(new TargetData(target));
+    }
+  }
+
+  info(message) {
+    this.log.push({message, level:'info'});
+  }
+
+  warn(message) {
+    this.log.push({message, level:'warning'});
+  }
+
+  error(message) {
+    this.log.push({message, level:'error'});
+  }
+
+  setStrategy(strategy) {
+    this.strategy = strategy;
+  }
+
+  addTarget(targetState) {
+    this.targets.set(targetState.id, targetState);
+  }
+
+  getTargetData(id) {
+    return this.targets.get(id);
+  }
+
+  get allTargets() {
+    return [...this.targets.values()];
+  }
+
+  get validTargets() {
+    return this.allTargets.filter(t => t.valid);
+  }
+
+  get invalidTargets() {
+    return this.allTargets.filter(t => !t.valid);
+  }
+
+  get priorityTargets() {
+    return this.allTargets.filter(t => t.priority);
+  }
+
+  get priorityTargetsMap() {
+    return new Map(this.priorityTargets.map(t => [t.id, t]));
+  }
+
+  get maxTargets() {
+    return this.strategy.maxTargets;
+  }
+
+  get canRepeatTargets() {
+    return this.strategy.canRepeatTargets;
+  }
+
+  get canForceTargets() {
+    return this.strategy.canForceTargets;
+  }
+
+  get recommendedTargets() {
+    return this.allTargets
+        .filter(t => t.recommended)
+        .sort((a, b) =>
+            a.recommendationOrdering - b.recommendationOrdering
+        );
+  }
+
+  get finalTargetCount() {
+    return this.finalTargets.length;
+  }
+
+  addHistoryEntry(entry) {
+    this.selectionHistory.push(entry);
+  }
+
+  /**
+   * @param targets Token[]
+   */
+  setFinalTargets(targets) {
+    this.finalTargets = [...targets];
+  }
+
+  async applyFinalTargets() {
+    game.canvas.tokens.setTargets(this.finalTargets.map(t => t.id));
+
+    const templateData = {
+      results: this.finalTargets,
+      label: this.strategy.label
+    };
+    const messageData = ChatMessage.applyRollMode({
+      content: await renderTemplate(TEMPLATES.AUTO_TARGET_RESULTS, templateData),
+      speaker: {
+        actor: this.actor,
+        token: this.actor.token
+      },
+      flavor: `${this.item.name}`
+    }, game.settings.get('core', 'rollMode'));
+    await ChatMessage.create(messageData);
+  }
+}
+
+class TargetData {
+
+  token;
+
+  valid = false;
+  invalidReasons = [];
+
+  priority = false;
+  priorityReasons = [];
+
+  recommendationCount = 0;
+  recommendationOrdering = [];
+
+  finalSelectionCount = 0;
+
+  userModified = false;
+
+  log = [];
+
+  constructor(token) {
+    this.token = token;
+  }
+
+  get id() {
+    return this.token.id;
+  }
+
+  get recommended() {
+    return this.recommendationCount > 0;
+  }
+
+  get selected() {
+    return this.finalSelectionCount > 0;
+  }
+
+  validate() {
+    this.valid = true;
+  }
+
+  invalidate(reason) {
+    this.valid = false;
+
+    if (reason) {
+      this.invalidReasons.push(reason);
+    }
+  }
+
+  markPriority(reason) {
+    this.priority = true;
+
+    if (reason) {
+      this.priorityReasons.push(reason);
+    }
+  }
+
+  markRecommended(order) {
+    this.recommendationCount++;
+    this.recommendationOrdering.push(order);
+  }
+
+  setUserModified(modified = true) {
+    this.userModified = modified;
+  }
+
+}
+
+class SelectionHistoryEntry {
+  iteration;
+
+  // "priority" | "standard"
+  sourcePool;
+
+  // Snapshot of candidate IDs at selection time
+  candidateTargetIds = [];
+
+  // Chosen target
+  selectedTargetId = null;
+
+  // Optional metadata
+  metadata = {};
+
+  constructor({
+                iteration,
+                sourcePool,
+                candidateTargetIds,
+                selectedTargetId,
+                metadata = {}
+              }) {
+    this.iteration = iteration;
+    this.sourcePool = sourcePool;
+    this.candidateTargetIds = [...candidateTargetIds];
+    this.selectedTargetId = selectedTargetId;
+    this.metadata = metadata;
   }
 }

@@ -1,4 +1,5 @@
 <div data-token-id="{{token.id}}" class="target">
     <img src="{{thumbnail}}" class="thumbnail" alt="{{token.name}}" >
-    <span>{{token.name}}</span>
+    <label>{{token.name}}</label>
+    {{#if (gt recommendationCount 1)}}<span>(x{{recommendationCount}})</span>{{/if}}
 </div>

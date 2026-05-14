@@ -75,6 +75,8 @@
     display: flex;
     flex-direction: row;
     place-items: center;
+    gap: 4px;
+    padding-right: 4px;
 
     img.thumbnail {
       flex: 0 0 32px;
@@ -83,12 +85,11 @@
       max-width: 32px;
     }
 
-    span {
-      padding: 4px;
+    label {
       flex: 1 0 auto;
       white-space: nowrap;
       overflow: hidden;
-      max-width: 16ch;
+      max-width: 24ch;
       text-overflow: ellipsis;
     }
   }
@@ -124,11 +125,7 @@
         border-radius: 4px;
         background-color: var(--color-tertiary-bg);
 
-        span {
-          max-width: 18ch;
-        }
-
-        span::before {
+        label::before {
           counter-increment: targets;
           content: counter(targets) ". ";
         }

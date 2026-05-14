@@ -13,13 +13,13 @@ export async function rollEnhancements(wrapped, ...args) {
     autoTargetResults = await autoTargetWorkflow(item, rollKeys.autoTargetDialog);
     console.log(`${MODULE} | done getting targets`);
     // Auto Spend
-    await autoSpendWorkflow(item, autoTargetResults?.count || game.user.targets.size, rollKeys.autoSpendDialog);
+    await autoSpendWorkflow(item, autoTargetResults?.finalTargetCount || game.user.targets.size, rollKeys.autoSpendDialog);
     console.log(`${MODULE} | done spending costs`);
     // Item macro 'pre' event
     if (game.settings.get(MODULE, 'preRollItemMacro') && item.hasMacro && item.hasMacro())
         await item.executeMacro({event: 'pre'});
-    if (autoTargetResults?.finalize)
-        await autoTargetResults.finalize();
+    if (autoTargetResults?.applyFinalTargets)
+        await autoTargetResults.applyFinalTargets();
     console.log(`${MODULE} | done finalizing targets`);
     // Chain wrapped function(s)
     const rollResults = await wrapped(...args);
