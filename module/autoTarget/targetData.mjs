@@ -3,7 +3,7 @@ import {getTokenThumbnail} from '../helpers/media.mjs';
 export class TargetData {
 
     token;
-    evaluation;
+    context;
     thumbnail;
 
     randomSortWeight = Math.random();
@@ -23,10 +23,10 @@ export class TargetData {
 
     log = [];
 
-    constructor(token, evaluation) {
+    constructor(token, context) {
         this.token = token;
         this.thumbnail = getTokenThumbnail(token);
-        this.evaluation = evaluation;
+        this.context = context;
     }
 
     get id() {
@@ -48,7 +48,7 @@ export class TargetData {
     get isFriendly() {
         return (
             this.token.document.disposition ===
-            this.evaluation.roller.disposition
+            this.context.roller.disposition
         );
     }
 

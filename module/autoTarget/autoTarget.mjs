@@ -1,13 +1,13 @@
 import {TEMPLATES} from '../templates.mjs';
 import {MODULE} from '../helpers/utils.mjs';
 import {getTargetMode, isAutoTargetEnabled} from '../settings.mjs';
-import {getTokenThumbnail} from '../helpers/media.mjs';
-import {TargetingEvaluation} from './targetingEvaluation.mjs';
+import {TargetContext} from './targetContext.mjs';
 import {AttackTargetStrategy} from './strategies/attackTargetStrategy.mjs';
 import {TargetRuleTargetStrategy} from './strategies/targetRuleTargetStrategy.mjs';
 import {CustomTargetStrategy} from './strategies/customTargetStrategy.mjs';
 import {FORCE_TARGET_EFFECTS} from '../constants/autoTarget.mjs';
 import {isValidTarget} from '../helpers/target.mjs';
+import {TargetGuide} from '../applications/targetGuide.mjs';
 
 function activeEffectHandler(actor, effect) {
   const newValue = String(effect.value);
@@ -44,7 +44,7 @@ export class AutoTarget {
     }
 
     const targetPool = new Set(game.canvas.tokens.placeables.filter(isValidTarget));
-    const evaluation = new TargetingEvaluation({item, targetPool});
+    const context = new TargetContext({item, targetPool});
 
     let strategy;
 
@@ -59,15 +59,15 @@ export class AutoTarget {
     // No strategy was found. Exit without making a fuss.
     if (!strategy) return;
 
-    evaluation.info(game.i18n.format(`${MODULE}.autoTarget.evaluation.info.usingStrategy`), {name: strategy.label});
-    evaluation.setStrategy(strategy);
+    context.info(game.i18n.format(`${MODULE}.autoTarget.context.info.usingStrategy`), {name: strategy.label});
+    context.setStrategy(strategy);
 
     const targetCandidates = strategy.getTargetCandidates(targetPool);
     // Bail if our strategy didn't give us a proper Set.
     if (!(targetCandidates instanceof Set)) return;
     for (const candidate of targetCandidates) {
-      evaluation.getTargetData(candidate.id);
-      evaluation.getTargetData(candidate.id).validate();
+      context.getTargetData(candidate.id);
+      context.getTargetData(candidate.id).validate();
     }
 
     const maxTargets = strategy.maxTargets;
@@ -80,19 +80,19 @@ export class AutoTarget {
           const effectStatuses = [...e.statuses];
           if (e.sourceInfo && effectStatuses.some(s => FORCE_TARGET_EFFECTS.includes(s))) {
 
-            evaluation.info(game.i18n.format(`${MODULE}.autoTarget.evaluation.info.priorityTargetEffectFound`), {name: e.name});
+            context.info(game.i18n.format(`${MODULE}.autoTarget.context.info.priorityTargetEffectFound`), {name: e.name});
             const origin = fromUuidSync(e.sourceInfo.itemUuid ?? e.sourceInfo.actorUuid);
-            const forcedTarget = evaluation.validTargets.find(t => t.actor.uuid === (origin.actor || origin)?.uuid);
+            const forcedTarget = context.validTargets.find(t => t.actor.uuid === (origin.actor || origin)?.uuid);
             // TODO: I have a gut feeling but no evidence that something was lost in translation here
-            //  in the transition to TargetingEvaluation. Keep an eye out for possible bugs.
+            //  in the transition to TargetContext. Keep an eye out for possible bugs.
             if (forcedTarget) {
-              evaluation.info(game.i18n.format(`${MODULE}.autoTarget.evaluation.info.priorityTargetFound`), {name: forcedTarget.token.name});
-              forcedTarget.markPriority(e.name);
+              context.info(game.i18n.format(`${MODULE}.autoTarget.context.info.priorityTargetFound`), {name: forcedTarget.token.name});
+              forcedTarget.markPriority({reason: e.name, icon: e.img});
             } else {
               const message = game.i18n.format(`${MODULE}.autoTarget.errors.forcedTargetInvalid`, {
                 effect: e.name,
                 roller: (item.actor.token || item.actor.prototypeToken).name });
-              evaluation.warn(message);
+              context.warn(message);
               ui.notifications.warn(message);
               return false;
             }
@@ -100,8 +100,8 @@ export class AutoTarget {
         });
       }
 
-      const priorityTargetsPool = [...evaluation.priorityTargets];
-      const validTargetsPool = [...evaluation.validTargets];
+      const priorityTargetsPool = [...context.priorityTargets];
+      const validTargetsPool = [...context.validTargets];
 
 
       let i = 0;
@@ -109,22 +109,28 @@ export class AutoTarget {
         const forced = priorityTargetsPool.length > 0;
         const drawPile = forced ? priorityTargetsPool : validTargetsPool;
         const start = Math.floor(Math.random() * (drawPile.length));
-        const target = evaluation.canRepeatTargets && drawPile === validTargetsPool ? drawPile[start] : drawPile.splice(start, 1)[0];
-        evaluation.getTargetData(target.id).markRecommended(i + 1);
+        const target = context.canRepeatTargets && drawPile === validTargetsPool ? drawPile[start] : drawPile.splice(start, 1)[0];
+        context.getTargetData(target.id).markRecommended(i + 1);
         i++;
       }
     } else targetCandidates.forEach(target => {
-      evaluation.getTargetData(target.id).markRecommended(evaluation.recommendedTargets.push(target));
+      context.getTargetData(target.id).markRecommended(context.recommendedTargets.push(target));
     });
 
     if (getTargetMode() === 'guided') {
-      const finalTargets = (await this.getGuidedTargets(evaluation)) ??
-          evaluation.recommendedTargets;
-      evaluation.setFinalTargets(finalTargets);
+      /*
+      const finalTargets = (await this.getGuidedTargets(context)) ??
+          context.recommendedTargets;
+
+     */
+
+      const targetGuide = new TargetGuide(context).render(true);
+
+      context.setFinalTargets(context.recommendedTargets);
     } else {
-      evaluation.setFinalTargets(evaluation.recommendedTargets);
+      context.setFinalTargets(context.recommendedTargets);
     }
-    return evaluation;
+    return context;
   }
 
   /**
@@ -148,20 +154,20 @@ export class AutoTarget {
    * Gets final targets based on guided input from the user. This could be completely different from the initially
    * selected targets, including potentially breaking rules for what constitutes a valid target.
    *
-   * @param evaluation TargetingEvaluation Evaluation for this round of targeting.
+   * @param context TargetContext Context for this round of targeting.
    * @returns Map<Token, number> The final targets after user-guided intervention.
    */
-  static async getGuidedTargets(evaluation) {
+  static async getGuidedTargets(context) {
     const validTargets = {
-      enemies: evaluation.enemyTargets,
-      allies: evaluation.allyTargets,
-      self: evaluation.rollerTargets
+      enemies: context.enemyTargets,
+      allies: context.allyTargets,
+      self: context.rollerTargets
     };
 
     const content = await foundry.applications.handlebars.renderTemplate(TEMPLATES.GUIDED_TARGET_DIALOG, {
-      initialTargets: evaluation.recommendedTargets,
+      initialTargets: context.recommendedTargets,
       validTargets,
-      maxTargets: evaluation.maxTargets
+      maxTargets: context.maxTargets
     });
     const buttons = [
       {
@@ -192,7 +198,7 @@ export class AutoTarget {
     ];
     const guidedTargets = await foundry.applications.api.DialogV2.wait({
       window: {
-        title: `${game.i18n.localize('fu-roll-enhancements.guidedTargeting.dialog.title')}: ${evaluation.item.name}`,
+        title: `${game.i18n.localize('fu-roll-enhancements.guidedTargeting.dialog.title')}: ${context.item.name}`,
       },
       content,
       buttons,
@@ -200,7 +206,7 @@ export class AutoTarget {
       rejectClose: true,
       render: AutoTarget._onGuidedTargetDialogRender
     });
-    return initialTargets;
+    return context.recommendedTargets;
   }
 
   /**

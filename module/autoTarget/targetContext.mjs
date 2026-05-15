@@ -2,7 +2,7 @@ import {TargetData} from './targetData.mjs';
 import {TEMPLATES} from '../templates.mjs';
 import {TargetStrategy} from './targetStrategy.mjs';
 
-export class TargetingEvaluation {
+export class TargetContext {
 
     actor;
     item;
