@@ -2,21 +2,20 @@
     <header>
         <i class="fas fa-crosshairs"></i><h2>{{localize "fu-roll-enhancements.autoTarget.results.title" label=label}}</h2>
     </header>
-    <section class="auto-target-results">
+    <section class="target-results targets">
         {{#if results}}
-            <ol>
-                {{#each results}}
-                    <li class="target">
-                        {{token.document.actor.link}}
-                        {{#if (gt count 1)}}x{{count}}{{/if}}
-                        {{#if forcedBy}}({{forcedBy.name}}){{/if}}
-                    </li>
-                {{/each}}
-            </ol>
+            {{#each results}}
+                <div class="target total default" data-token-id="{{token.id}}">
+                    <label>{{token.name}}</label>
+                    <span>{{#if (gt count 1)}}x{{count}}{{/if}}</span>
+                    <span>{{#if forcedBy}}({{forcedBy.name}}){{/if}}</span>
+                    <a class="inline-control icon fa-solid fa-bullseye-arrow" data-action="pingToken" data-token-id="{{token.id}}"></a>
+                </div>
+            {{/each}}
         {{else}}
-            <ul>
-                <li>{{localize "fu-roll-enhancements.autoTarget.results.noTargets"}}</li>
-            </ul>
+            <section class="detail-desc">
+                <p>{{localize "fu-roll-enhancements.autoTarget.results.noTargets"}}</p>
+            </section>
         {{/if}}
     </section>
 </div>

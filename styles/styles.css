@@ -243,5 +243,20 @@
       }
     }
   }
+}
 
+.chat-message .target-results {
+  .target {
+    display: flex;
+    flex-direction: row;
+    padding: 4px;
+  }
+
+  label {
+    flex: 1 0 auto;
+  }
+
+  a {
+    place-self: center;
+  }
 }
