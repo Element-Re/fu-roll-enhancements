@@ -47,82 +47,75 @@ export class AutoTarget {
     const evaluation = new TargetingEvaluation({item, targetPool});
 
     let strategy;
-    // Special case, self only, don't use a strategy.
-    if (options?.targetType === 'SELF') {
-      // TODO: Needs a real strategy now (Self Target Strategy? Target Rule Target strategy?)
-      item.actor.getActiveTokens().forEach(t => targetList.set(t.id, { count: 1, token: t }));
-    } else {
 
-      if (options) {
-        // Use a unique CustomTargetStrategy if we have specific options to use
-        // i.e. passed in from the AutoTarget dialog.
-        strategy = new CustomTargetStrategy(item, options);
-      }
-      else {
-        strategy = AutoTarget.#getStrategyFor(item);
-      }
-      // No strategy was found. Exit without making a fuss.
-      if (!strategy) return;
-
-      evaluation.info(game.i18n.format(`${MODULE}.autoTarget.evaluation.info.usingStrategy`), {name: strategy.label});
-      evaluation.setStrategy(strategy);
-
-      // TODO: Use TargetEvaluation
-      const targetCandidates = strategy.getTargetCandidates(targetPool);
-      // Bail if our strategy didn't give us a proper Set.
-      if (!(targetCandidates instanceof Set)) return;
-      for (const candidate of targetCandidates) {
-        evaluation.getTargetData(candidate.id);
-        evaluation.getTargetData(candidate.id).validate();
-      }
-
-      const maxTargets = strategy.maxTargets;
-
-      if (typeof maxTargets === 'number' && maxTargets > 0) {
-
-        // Force targets only for rolls targeting enemies.
-        if (strategy.canForceTargets) {
-          [...item.actor.appliedEffects].forEach(e => {
-            const effectStatuses = [...e.statuses];
-            if (e.sourceInfo && effectStatuses.some(s => FORCE_TARGET_EFFECTS.includes(s))) {
-
-              evaluation.info(game.i18n.format(`${MODULE}.autoTarget.evaluation.info.priorityTargetEffectFound`), {name: e.name});
-              const origin = fromUuidSync(e.sourceInfo.itemUuid ?? e.sourceInfo.actorUuid);
-              const forcedTargetIndex = targetCandidates.findIndex(t => t.document.actor.uuid === (origin.actor || origin)?.uuid);
-              if (forcedTargetIndex >= 0) {
-                const forcedTarget = strategy.repeat ? targetCandidates[forcedTargetIndex] : targetCandidates.splice(forcedTargetIndex, 1)[0];
-                evaluation.info(game.i18n.format(`${MODULE}.autoTarget.evaluation.info.priorityTargetFound`));
-                evaluation.getTargetData(forcedTarget.id).markPriority(e.name);
-              } else {
-                const message = game.i18n.format(`${MODULE}.autoTarget.errors.forcedTargetInvalid`, {
-                  effect: e.name,
-                  roller: (item.actor.token || item.actor.prototypeToken).name });
-                evaluation.warn(message);
-                ui.notifications.warn(message);
-                return false;
-              }
-            }
-          });
-        }
-  
-        const priorityTargetsPool = [...evaluation.priorityTargets];
-        const validTargetsPool = [...evaluation.validTargets];
-
-
-        let i = 0;
-        while (i < maxTargets && (priorityTargetsPool.length > 0 || validTargetsPool.length > 0)) {
-          const forced = priorityTargetsPool.length > 0;
-          // TODO: Use TargetEvaluation
-          const drawPile = forced ? priorityTargetsPool : validTargetsPool;
-          const start = Math.floor(Math.random() * (drawPile.length));
-          const target = strategy.canRepeatTargets && drawPile === validTargetsPool ? drawPile[start] : drawPile.splice(start, 1)[0];
-          evaluation.getTargetData(target.id).markRecommended(i + 1);
-          i++;
-        }
-      } else targetCandidates.forEach(target => {
-        evaluation.getTargetData(target.id).markRecommended(evaluation.recommendedTargets.push(target));
-      });
+    if (options) {
+      // Use a unique CustomTargetStrategy if we have specific options to use
+      // i.e. passed in from the AutoTarget dialog.
+      strategy = new CustomTargetStrategy(item, options);
     }
+    else {
+      strategy = AutoTarget.#getStrategyFor(item);
+    }
+    // No strategy was found. Exit without making a fuss.
+    if (!strategy) return;
+
+    evaluation.info(game.i18n.format(`${MODULE}.autoTarget.evaluation.info.usingStrategy`), {name: strategy.label});
+    evaluation.setStrategy(strategy);
+
+    const targetCandidates = strategy.getTargetCandidates(targetPool);
+    // Bail if our strategy didn't give us a proper Set.
+    if (!(targetCandidates instanceof Set)) return;
+    for (const candidate of targetCandidates) {
+      evaluation.getTargetData(candidate.id);
+      evaluation.getTargetData(candidate.id).validate();
+    }
+
+    const maxTargets = strategy.maxTargets;
+
+    if (typeof maxTargets === 'number' && maxTargets > 0) {
+
+      // Force targets only for rolls targeting enemies.
+      if (strategy.canForceTargets) {
+        [...item.actor.appliedEffects].forEach(e => {
+          const effectStatuses = [...e.statuses];
+          if (e.sourceInfo && effectStatuses.some(s => FORCE_TARGET_EFFECTS.includes(s))) {
+
+            evaluation.info(game.i18n.format(`${MODULE}.autoTarget.evaluation.info.priorityTargetEffectFound`), {name: e.name});
+            const origin = fromUuidSync(e.sourceInfo.itemUuid ?? e.sourceInfo.actorUuid);
+            const forcedTarget = evaluation.validTargets.find(t => t.actor.uuid === (origin.actor || origin)?.uuid);
+            // TODO: I have a gut feeling but no evidence that something was lost in translation here
+            //  in the transition to TargetingEvaluation. Keep an eye out for possible bugs.
+            if (forcedTarget) {
+              evaluation.info(game.i18n.format(`${MODULE}.autoTarget.evaluation.info.priorityTargetFound`), {name: forcedTarget.token.name});
+              forcedTarget.markPriority(e.name);
+            } else {
+              const message = game.i18n.format(`${MODULE}.autoTarget.errors.forcedTargetInvalid`, {
+                effect: e.name,
+                roller: (item.actor.token || item.actor.prototypeToken).name });
+              evaluation.warn(message);
+              ui.notifications.warn(message);
+              return false;
+            }
+          }
+        });
+      }
+
+      const priorityTargetsPool = [...evaluation.priorityTargets];
+      const validTargetsPool = [...evaluation.validTargets];
+
+
+      let i = 0;
+      while (i < maxTargets && (priorityTargetsPool.length > 0 || validTargetsPool.length > 0)) {
+        const forced = priorityTargetsPool.length > 0;
+        const drawPile = forced ? priorityTargetsPool : validTargetsPool;
+        const start = Math.floor(Math.random() * (drawPile.length));
+        const target = evaluation.canRepeatTargets && drawPile === validTargetsPool ? drawPile[start] : drawPile.splice(start, 1)[0];
+        evaluation.getTargetData(target.id).markRecommended(i + 1);
+        i++;
+      }
+    } else targetCandidates.forEach(target => {
+      evaluation.getTargetData(target.id).markRecommended(evaluation.recommendedTargets.push(target));
+    });
 
     if (getTargetMode() === 'guided') {
       const finalTargets = (await this.getGuidedTargets(evaluation)) ??
@@ -172,8 +165,8 @@ export class AutoTarget {
     });
     const buttons = [
       {
-        label: 'Auto Target',
-        action: 'autoTarget',
+        label: game.i18n.localize('fu-roll-enhancements.guidedTargeting.dialog.useRecommendedTargets.label'),
+        action: 'useRecommendedTargets',
         callback: function(_event, _target, _dialog) {
           /*
             TODO: Returning null just results in the dialog returning the action identifier.
@@ -183,14 +176,14 @@ export class AutoTarget {
         }
       },
       {
-        label: 'Guided Targets',
-        action: 'guidedTargets',
+        label: game.i18n.localize('fu-roll-enhancements.guidedTargeting.dialog.finalizeGuidedTargets.label'),
+        action: 'finalizeGuidedTargets',
         callback: function(_event, _target, _dialog) {
           return null;
         }
       },
       {
-        label: 'Skip',
+        label: game.i18n.localize('fu-roll-enhancements.guidedTargeting.dialog.skip.label'),
         action: 'skip',
         callback: function(_event, _target, _dialog) {
           return null;
@@ -217,10 +210,10 @@ export class AutoTarget {
    * @private
    */
   static _onGuidedTargetDialogRender(_event, dialog) {
-    const targetInputs = dialog.element.querySelectorAll('label[data-token-id]');
-    for (const targetInput of targetInputs) {
-      targetInput.addEventListener('mouseover', AutoTarget._onTargetFormGroupHoverIn);
-      targetInput.addEventListener('mouseout', AutoTarget._onTargetFormGroupHoverOut);
+    const targetEntries = dialog.element.querySelectorAll('.target[data-token-id]');
+    for (const targetEntry of targetEntries) {
+      targetEntry.addEventListener('mouseenter', AutoTarget._onTargetHoverIn);
+      targetEntry.addEventListener('mouseleave', AutoTarget._onTargetHoverOut);
     }
   }
 
@@ -228,7 +221,7 @@ export class AutoTarget {
    * @param event Event
    * @private
    */
-  static _onTargetFormGroupHoverIn(event) {
+  static _onTargetHoverIn(event) {
     const tokenId = event.target.dataset.tokenId;
     const token = game.canvas.tokens.placeables.find(t => t.id === tokenId);
     if ( token && token._canHover(game.user, event) && token.visible ) {
@@ -240,7 +233,7 @@ export class AutoTarget {
    * @param event Event
    * @private
    */
-  static _onTargetFormGroupHoverOut(event) {
+  static _onTargetHoverOut(event) {
     const tokenId = event.target.dataset.tokenId;
     const token = game.canvas.tokens.placeables.find(t => t.id === tokenId);
     if ( token && token._canHover(game.user, event) && token.visible ) {

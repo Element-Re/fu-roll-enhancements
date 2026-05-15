@@ -33,6 +33,10 @@ export class TargetData {
         return this.token.id;
     }
 
+    get actor() {
+        return this.token.actor;
+    }
+
     get recommended() {
         return this.recommendationCount > 0;
     }

@@ -18,9 +18,7 @@ export class TargetingEvaluation {
     log = [];
 
     /**
-     * @param actor FUActor
      * @param item FUItem
-     * @param strategy TargetStrategy
      * @param targetPool Set<Target>
      */
     constructor({item, targetPool}) {

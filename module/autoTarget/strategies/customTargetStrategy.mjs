@@ -43,7 +43,7 @@ export class CustomTargetStrategy extends TargetStrategy {
         let targetFilter;
         const options = this.options;
         if (options.targetType === 'SELF') {
-            return [roller.actor.getActiveTokens()[0]];
+            targetFilter = t => t.actor.id === roller.actorId;
         } else if (options.targetType === 'ALLIES') {
             targetFilter = t => t.document.disposition === rollerDisposition && t.actor.id !== this.item.actor.id && t.id !== roller.id;
         } else if (options.targetType === 'ALLIES_AND_SELF') {
