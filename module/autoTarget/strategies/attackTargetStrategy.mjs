@@ -1,7 +1,6 @@
 import {TargetStrategy} from '../targetStrategy.mjs';
 import {actorHasStatus, MODULE} from '../../helpers/utils.mjs';
 import {
-    TARGET_TYPES,
     UNTARGETABLE_ALL_EFFECTS,
     UNTARGETABLE_MELEE_EFFECTS,
     UNTARGETABLE_MELEE_FLYING_EFFECTS

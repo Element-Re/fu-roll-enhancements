@@ -1,0 +1,8 @@
+<fieldset class="pending-targets">
+    <legend>{{localize "fu-roll-enhancements.targetGuide.pendingTargets.label"}}</legend>
+    <div class="pending-target-entries">
+        {{#each pendingTargets}}
+            {{> "modules/fu-roll-enhancements/templates/partials/target-entry-simple.hbs"}}
+        {{/each}}
+    </div>
+</fieldset>

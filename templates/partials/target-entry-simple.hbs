@@ -1,4 +1,4 @@
-<div data-token-id="{{token.id}}" class="target">
+<a data-token-id="{{token.id}}" data-action="updateTarget" data-update="decrement" class="button target">
     <img src="{{thumbnail}}" class="thumbnail" alt="{{token.name}}" >
-    <label>{{token.name}}{{#if (gt recommendationCount 1)}} <span>(x{{recommendationCount}})</span>{{/if}}</label>
-</div>
+    <label>{{token.name}} <span class="count">{{#if (gt count 1)}}(x{{count}}){{/if}}</span></label>
+</a>

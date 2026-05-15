@@ -1,4 +1,3 @@
-import {TEMPLATES} from '../templates.mjs';
 import {MODULE} from '../helpers/utils.mjs';
 import {getTargetMode, isAutoTargetEnabled} from '../settings.mjs';
 import {TargetContext} from './targetContext.mjs';
@@ -118,15 +117,10 @@ export class AutoTarget {
     });
 
     if (getTargetMode() === 'guided') {
-      /*
-      const finalTargets = (await this.getGuidedTargets(context)) ??
-          context.recommendedTargets;
 
-     */
+      const finalTargets = await TargetGuide.wait(context);
 
-      const targetGuide = new TargetGuide(context).render(true);
-
-      context.setFinalTargets(context.recommendedTargets);
+      context.setFinalTargets(finalTargets ?? context.recommendedTargets);
     } else {
       context.setFinalTargets(context.recommendedTargets);
     }
@@ -149,102 +143,6 @@ export class AutoTarget {
       }
     }
     return false;
-  }
-  /**
-   * Gets final targets based on guided input from the user. This could be completely different from the initially
-   * selected targets, including potentially breaking rules for what constitutes a valid target.
-   *
-   * @param context TargetContext Context for this round of targeting.
-   * @returns Map<Token, number> The final targets after user-guided intervention.
-   */
-  static async getGuidedTargets(context) {
-    const validTargets = {
-      enemies: context.enemyTargets,
-      allies: context.allyTargets,
-      self: context.rollerTargets
-    };
-
-    const content = await foundry.applications.handlebars.renderTemplate(TEMPLATES.GUIDED_TARGET_DIALOG, {
-      initialTargets: context.recommendedTargets,
-      validTargets,
-      maxTargets: context.maxTargets
-    });
-    const buttons = [
-      {
-        label: game.i18n.localize('fu-roll-enhancements.guidedTargeting.dialog.useRecommendedTargets.label'),
-        action: 'useRecommendedTargets',
-        callback: function(_event, _target, _dialog) {
-          /*
-            TODO: Returning null just results in the dialog returning the action identifier.
-                  Some other approach is required.
-           */
-          return null;
-        }
-      },
-      {
-        label: game.i18n.localize('fu-roll-enhancements.guidedTargeting.dialog.finalizeGuidedTargets.label'),
-        action: 'finalizeGuidedTargets',
-        callback: function(_event, _target, _dialog) {
-          return null;
-        }
-      },
-      {
-        label: game.i18n.localize('fu-roll-enhancements.guidedTargeting.dialog.skip.label'),
-        action: 'skip',
-        callback: function(_event, _target, _dialog) {
-          return null;
-        }
-      }
-    ];
-    const guidedTargets = await foundry.applications.api.DialogV2.wait({
-      window: {
-        title: `${game.i18n.localize('fu-roll-enhancements.guidedTargeting.dialog.title')}: ${context.item.name}`,
-      },
-      content,
-      buttons,
-      classes: ['guided-target-dialog'],
-      rejectClose: true,
-      render: AutoTarget._onGuidedTargetDialogRender
-    });
-    return context.recommendedTargets;
-  }
-
-  /**
-   *
-   * @param _event Event
-   * @param dialog DialogV2
-   * @private
-   */
-  static _onGuidedTargetDialogRender(_event, dialog) {
-    const targetEntries = dialog.element.querySelectorAll('.target[data-token-id]');
-    for (const targetEntry of targetEntries) {
-      targetEntry.addEventListener('mouseenter', AutoTarget._onTargetHoverIn);
-      targetEntry.addEventListener('mouseleave', AutoTarget._onTargetHoverOut);
-    }
-  }
-
-  /**
-   * @param event Event
-   * @private
-   */
-  static _onTargetHoverIn(event) {
-    const tokenId = event.target.dataset.tokenId;
-    const token = game.canvas.tokens.placeables.find(t => t.id === tokenId);
-    if ( token && token._canHover(game.user, event) && token.visible ) {
-      token._onHoverIn(event, {hoverOutOthers: true});
-    }
-  }
-
-  /**
-   * @param event Event
-   * @private
-   */
-  static _onTargetHoverOut(event) {
-    const tokenId = event.target.dataset.tokenId;
-    const token = game.canvas.tokens.placeables.find(t => t.id === tokenId);
-    if ( token && token._canHover(game.user, event) && token.visible ) {
-      token._onHoverOut(event);
-    }
   }
 }
 

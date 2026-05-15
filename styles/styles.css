@@ -64,36 +64,100 @@
   margin: 0;
 }
 
-
-.dialog.guided-target-dialog,
 .application.target-guide {
 
-  .dialog-content {
+  .window-content {
     overflow-y: scroll;
-  }
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr auto auto;
+    gap: 0.5rem;
 
-  .legend {
-    display: flex;
-    flex-direction: row;
-    gap: 1rem;
-    place-content: flex-end;
+    fieldset {
+      display: flex;
+      gap: 4px;
+      flex-direction: column;
+      counter-reset: targets;
+      border-radius: 8px;
 
-    span {
-      label::before {
-        content: '⬤';
-        margin-right: 0.2em;
+      .target label::before {
+        counter-increment: targets;
+        content: counter(targets) ". ";
       }
-      &.priority label::before {
-        color: var(--color-warning-border);
+    }
+
+    .pending-targets {
+      border: none;
+      grid-column: 1;
+      grid-row: 1 / span 2;
+
+      .pending-target-entries {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
       }
-      &.recommended label::before {
-        color: var(--color-success-border);
+    }
+
+    .target-pool {
+      display: grid;
+      grid-column: 2 / span 2;
+      grid-row: 1 / span 2;
+      grid-template-columns: subgrid;
+      grid-template-rows: subgrid;
+      gap: inherit;
+
+      .enemies-list {
+        grid-column: 1;
+        grid-row: 1 / span 2;
       }
-      &.valid label::before {
-        color: var(--color-info-border);
+
+      .allies-list {
+        grid-column: 2;
+        grid-row: 1;
       }
-      &.invalid label::before {
-        color: var(--color-error-border);
+
+      .self-list {
+        grid-column: 2;
+        grid-row: 2;
+      }
+    }
+
+    .target-legend {
+      display: flex;
+      flex-direction: row;
+      gap: 1rem;
+      place-content: flex-end;
+      grid-column: span 3;
+
+      span {
+        label::before {
+          content: '⬤';
+          margin-right: 0.2em;
+        }
+        &.priority label::before {
+          color: var(--color-warning-border);
+        }
+        &.recommended label::before {
+          color: var(--color-success-border);
+        }
+        &.valid label::before {
+          color: var(--color-info-border);
+        }
+        &.invalid label::before {
+          color: var(--color-error-border);
+        }
+      }
+    }
+
+    .footer {
+      width: 100%;
+      grid-column: 1 / span 3;
+      display: flex;
+      gap: 0.25rem;
+
+      button {
+        flex: 1 1 0;
+        padding: 1.5rem 0.5rem;
       }
     }
   }
@@ -104,8 +168,14 @@
     flex-direction: row;
     place-items: center;
     border-radius: 4px;
+    padding: 4px;
+    gap: 4px;
     cursor: pointer;
-    border: 1px solid transparent;
+    height: 32px;
+
+    &:not(.button) {
+      border: 1px solid transparent;
+    }
 
     &:hover {
       text-shadow: 0 0 1px var(--color-text-primary);
@@ -148,18 +218,17 @@
     }
 
     img.thumbnail {
-      flex: 0 0 32px;
-      border-radius: 4px;
-      max-height: 32px;
-      max-width: 32px;
-    }
-
-    img.priority-reason-icon {
       flex: 0 0 24px;
       border-radius: 4px;
       max-height: 24px;
       max-width: 24px;
-      margin: 4px;
+    }
+
+    img.icon {
+      flex: 0 0 24px;
+      border-radius: 4px;
+      max-height: 24px;
+      max-width: 24px;
     }
 
     label {
@@ -168,48 +237,11 @@
       overflow: hidden;
       max-width: 24ch;
       text-overflow: ellipsis;
-      margin: 4px;
-    }
-  }
-
-  .targeted-list {
-
-  }
-
-  fieldset {
-    display: flex;
-    gap: 4px;
-    flex-direction: column;
-    counter-reset: targets;
-
-    .target label::before {
-      counter-increment: targets;
-      content: counter(targets) ". ";
-    }
-  }
-
-  .target-pool {
-    display: grid;
-    gap: 0.5rem;
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: 1fr auto;
-
-    .pending-target-list {
-      border: none;
-      grid-row: span 2;
-
-
-      .pending-target-entries {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
+      .count {
+        display: inline-block;
+        width: 4ch;
       }
     }
-
-    .enemies-list {
-      grid-row: span 2;
-    }
   }
-
 
 }

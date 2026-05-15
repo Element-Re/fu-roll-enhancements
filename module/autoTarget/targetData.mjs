@@ -17,7 +17,7 @@ export class TargetData {
     recommendationCount = 0;
     recommendationOrdering = [];
 
-    finalSelectionCount = 0;
+    _finalSelectionCount;
 
     userModified = false;
 
@@ -25,7 +25,6 @@ export class TargetData {
 
     constructor(token, context) {
         this.token = token;
-        this.thumbnail = getTokenThumbnail(token);
         this.context = context;
     }
 
@@ -42,7 +41,7 @@ export class TargetData {
     }
 
     get selected() {
-        return this.finalSelectionCount > 0;
+        return this._finalSelectionCount > 0;
     }
 
     get isFriendly() {
@@ -71,6 +70,22 @@ export class TargetData {
         }
 
         return 3;
+    }
+
+    get finalSelectionCount() {
+        return this._finalSelectionCount ?? this.recommendationCount;
+    }
+
+    set finalSelectionCount(value) {
+        this._finalSelectionCount = value;
+    }
+
+    toPendingTarget(count = this.recommendationCount) {
+        return {token: this.token, count, data: this, thumbnail: this.thumbnail};
+    }
+
+    async init() {
+        this.thumbnail = await getTokenThumbnail(this.token);
     }
 
     validate() {
