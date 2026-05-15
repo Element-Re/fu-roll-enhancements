@@ -1,4 +1,4 @@
-import {MODULE} from './helpers/module-utils.mjs';
+import {MODULE} from './helpers/utils.mjs';
 
 export const initializeTemplates = () => {
   return foundry.applications.handlebars.loadTemplates([...Object.values(TEMPLATES), ...partials]);

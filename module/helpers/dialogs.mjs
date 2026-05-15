@@ -1,8 +1,8 @@
-import {MODULE} from './module-utils.mjs';
+import {MODULE} from './utils.mjs';
 import {getDefaultCost, getResourceTypes, hasDefaultCost, TARGET_TYPES} from '../rolls.mjs';
 import {TEMPLATES} from '../templates.mjs';
 import {autoSpend} from '../autoSpend.mjs';
-import {AutoTarget} from '../autoTarget.mjs';
+import {AutoTarget} from '../autoTarget/autoTarget.mjs';
 
 const { DialogV2 } = foundry.applications.api;
 const { FormDataExtended } = foundry.applications.ux;

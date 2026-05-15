@@ -1,6 +1,6 @@
 import {keyBinds} from './settings.mjs';
-import {AutoTarget} from './autoTarget.mjs';
-import {MODULE} from './helpers/module-utils.mjs';
+import {AutoTarget} from './autoTarget/autoTarget.mjs';
+import {MODULE} from './helpers/utils.mjs';
 import {showAutoSpendDialog, showAutoTargetDialog} from './helpers/dialogs.mjs';
 import {autoSpend} from './autoSpend.mjs';
 

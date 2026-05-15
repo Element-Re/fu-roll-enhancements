@@ -1,4 +1,4 @@
-import {MODULE} from './helpers/module-utils.mjs';
+import {MODULE} from './helpers/utils.mjs';
 import {getResourceTypes} from './rolls.mjs';
 import {ResourcePipeline, ResourceRequest} from '../../../../systems/projectfu/module/pipelines/resource-pipeline.mjs';
 import {InlineSourceInfo} from '../../../../systems/projectfu/module/helpers/inline-helper.mjs';

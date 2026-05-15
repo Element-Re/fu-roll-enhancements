@@ -1,6 +1,6 @@
-import { MODULE } from '../helpers/module-utils.mjs';
+import { MODULE } from '../helpers/utils.mjs';
 import { getResourceTypes, hasDefaultCost, TARGET_TYPES } from '../rolls.mjs';
-import { AutoTarget } from '../autoTarget.mjs';
+import { AutoTarget } from '../autoTarget/autoTarget.mjs';
 import { TEMPLATES } from '../templates.mjs';
 
 const { DocumentSheetV2, HandlebarsApplicationMixin } = foundry.applications.api;
