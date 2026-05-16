@@ -49,7 +49,7 @@
 
     & h1, h2, h3, h4, h5, h6 {
       --font-primary: "PT Sans Narrow", sans-serif;
-      font-family: var(--font-primary);
+      font-family: "PT Sans Narrow", sans-serif;
       line-height: 1;
     }
   }
@@ -64,14 +64,55 @@
   margin: 0;
 }
 
+
+.theme-dark {
+  .application.target-guide img.item-image {
+    filter: drop-shadow(0 0 4px var(--color-light-5));
+  }
+}
+
+.theme-light {
+  .application.target-guide img.item-image {
+    filter: drop-shadow(0 0 4px var(--color-dark-5));
+  }
+}
+
 .application.target-guide {
 
   .window-content {
     overflow-y: scroll;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: 1fr auto auto;
+    grid-template-rows: auto 1fr auto auto auto;
     gap: 0.5rem;
+
+
+    header {
+      display: flex;
+      grid-row: 1;
+      grid-column: 1 / span 3;
+      justify-content: space-between;
+      place-items: center;
+      margin-bottom: 1em;
+      font-family: var(--font-h4), serif;
+      font-size: var(--font-h4-size);
+
+      .item-label {
+        display: flex;
+        flex-direction: row;
+        gap: 0.5rem;
+        align-items: center;
+        margin: unset;
+        img.item-image {
+          border-radius: 4px;
+          height: 1.2lh;
+        }
+      }
+
+      .settings {
+
+      }
+    }
 
     fieldset {
       display: flex;
@@ -87,21 +128,25 @@
     }
 
     .pending-targets {
-      border: none;
       grid-column: 1;
-      grid-row: 1 / span 2;
+      grid-row: 2 / span 2;
 
       .pending-target-entries {
+        flex: 1 0 auto;
         display: flex;
         flex-direction: column;
         gap: 4px;
+      }
+
+      .total {
+        align-self: flex-end;
       }
     }
 
     .target-pool {
       display: grid;
       grid-column: 2 / span 2;
-      grid-row: 1 / span 2;
+      grid-row: 2 / span 2;
       grid-template-columns: subgrid;
       grid-template-rows: subgrid;
       gap: inherit;
@@ -122,12 +167,18 @@
       }
     }
 
+    .summary {
+      grid-column: 1;
+      grid-row: 4;
+    }
+
     .target-legend {
       display: flex;
       flex-direction: row;
       gap: 1rem;
       place-content: flex-end;
-      grid-column: span 3;
+      grid-column: 2 / span 2;
+      grid-row: 4;
 
       span {
         label::before {
@@ -149,10 +200,12 @@
       }
     }
 
-    .footer {
+    footer {
       width: 100%;
       grid-column: 1 / span 3;
+      grid-row: 5;
       display: flex;
+      flex-wrap: wrap;
       gap: 0.25rem;
 
       button {

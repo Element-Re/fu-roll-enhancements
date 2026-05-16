@@ -11,10 +11,20 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
     complete = false;
 
     pendingTargets;
+    settings = {
+        repeatTargets: false,
+    };
+
+    handlers = {
+        targetHoverIn: TargetGuide._onTargetHoverIn.bind(this),
+        targetHoverOut: TargetGuide._onTargetHoverOut.bind(this),
+        settingsCheckboxChange: TargetGuide._onSettingsCheckboxChange.bind(this)
+    };
 
     static DEFAULT_OPTIONS = {
         actions: {
             updateTarget: TargetGuide._updateTarget,
+            resetTargets: TargetGuide._resetTargets,
             recommendedTargets: TargetGuide._recommendedTargets,
             finalizeTargets: TargetGuide._finalizeTargets,
             skip: TargetGuide._skip
@@ -23,6 +33,9 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
     };
 
     static PARTS = {
+        header: {
+            template: `modules/${MODULE}/templates/applications/target-guide/header_part.hbs`
+        },
         pendingTargets: {
             template: `modules/${MODULE}/templates/applications/target-guide/pending-targets_part.hbs`
         },
@@ -37,39 +50,63 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
         }
     };
 
+    /**
+     * @override
+     */
     constructor(targetContext, callbacks) {
         super();
         this.targetContext = targetContext;
+        this.settings.repeatTargets = targetContext.canRepeatTargets;
         this.resolve = callbacks.resolve;
         this.reject = callbacks.reject;
     }
 
+    /**
+     * @override
+     */
     async _prepareContext() {
 
         await Promise.all(this.targetContext.targets.values().map(target => target.init()));
         if (!this.pendingTargets) {
-            this.pendingTargets = new Map([...this.targetContext.recommendedTargets].map(t => ([t.id, t.toPendingTarget()])));
+            this.pendingTargets = this._generatePendingTargets();
         }
 
         return {
+            item: this.targetContext.item,
             pendingTargets: this.pendingTargets.values(),
             validTargets: {
                 enemies: this.targetContext.enemyTargets,
                 allies: this.targetContext.allyTargets,
                 self: this.targetContext.rollerTargets
             },
-            maxTargets: this.targetContext.maxTargets
+            pendingTargetCount: this.pendingTargetCount,
+            recommendedMaxTargets: this.targetContext.recommendedMaxTargets,
+            repeatTargets: this.settings.repeatTargets
         };
     }
 
+    get pendingTargetCount() {
+        return this.pendingTargets.values().reduce((total, target) => { return total + target.count; }, 0);
+    }
+
+    /**
+     * @override
+     */
     _onRender(_context, _options) {
         const targetEntries = this.element.querySelectorAll('.target[data-token-id]');
         for (const targetEntry of targetEntries) {
-            targetEntry.addEventListener('mouseenter', TargetGuide._onTargetHoverIn.bind(this));
-            targetEntry.addEventListener('mouseleave', TargetGuide._onTargetHoverOut.bind(this));
+            targetEntry.addEventListener('mouseenter', this.handlers.targetHoverIn);
+            targetEntry.addEventListener('mouseleave', this.handlers.targetHoverOut);
+        }
+        const repeatTargetsField = this.element.querySelector('header .settings input[name="repeatTargets"]');
+        if (repeatTargetsField) {
+            repeatTargetsField.addEventListener('change', this.handlers.settingsCheckboxChange);
         }
     }
 
+    /**
+     * @override
+     */
     _onClose(options) {
         if (!this.complete) {
             this.complete = true;
@@ -79,6 +116,17 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
         return super._onClose(options);
     }
 
+    /**
+     * @private
+     */
+    _generatePendingTargets() {
+        return new Map([...this.targetContext.recommendedTargets].map(t => ([t.id, t.toPendingTarget()])));
+    }
+
+    /**
+     * @param targetContext TargetContext
+     * @returns {Promise<unknown>}
+     */
     static async wait(targetContext) {
 
         return new Promise((resolve, reject) => {
@@ -106,7 +154,7 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
             if (!pendingTarget) {
                 const target = this.targetContext.targets.get(id);
                 this.pendingTargets.set(id, target.toPendingTarget(1) );
-            } else {
+            } else if (this.settings.repeatTargets) {
                 pendingTarget.count++;
             }
         } else if (update === 'decrement') {
@@ -124,12 +172,21 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
     /**
      * @this {TargetGuide}
      */
+    static _resetTargets(_event, _target) {
+        this.pendingTargets = this._generatePendingTargets();
+
+        this.render({parts: ['pendingTargets']});
+    }
+
+    /**
+     * @this {TargetGuide}
+     */
     static _recommendedTargets(_event, _target) {
 
         if (!this.complete) {
             this.complete = true;
 
-            this.close().then(() => { this.resolve(); });
+            this.close().then(() => { this.resolve(this.targetContext.recommendedTargets.values()); });
         }
     }
 
@@ -144,6 +201,7 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
                 data.count = target.count;
                 return data;
             });
+            this.targetContext.clearLabel();
             this.close().then(() => this.resolve(finalTargets) );
         }
     }
@@ -164,6 +222,17 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
         options.window = {title: game.i18n.localize(`${MODULE}.targetGuide.title`)};
     }
 
+
+    /**
+     * @private
+     */
+    _onUpdateSetting() {
+        if (!this.settings.repeatTargets) {
+            this.pendingTargets.forEach(target => target.count = target.count > 1 ? 1 : target.count);
+        }
+        this.render({parts: ['pendingTargets', 'targetPool']});
+    }
+
     /**
      * @param event Event
      * @private
@@ -175,12 +244,6 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
         if ( token && token._canHover(game.user, event) && token.visible ) {
             token._onHoverIn(event, {hoverOutOthers: true});
         }
-        /*
-        const targetCounterpart = this.getTargetCounterpart(event.target);
-        if (targetCounterpart) {
-            this.simulateHover({hover: true, element: targetCounterpart});
-        }
-        */
     }
 
     /**
@@ -194,37 +257,19 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
         if ( token && token._canHover(game.user, event) && token.visible ) {
             token._onHoverOut(event);
         }
-        /*
-        const targetCounterpart = this.getTargetCounterpart(event.target);
-        if (targetCounterpart) {
-            this.simulateHover({hover: false, element: targetCounterpart});
+    }
+
+    /**
+     * @param event Event
+     * @private
+     * @this TargetGuide
+     */
+    static _onSettingsCheckboxChange(event) {
+        const checkbox = event.target;
+        if(checkbox) {
+            this.settings[checkbox.name] = event.target.checked;
         }
-         */
+        this._onUpdateSetting();
     }
 
-    /*
-    getTargetCounterpart(element) {
-        const tokenId = element?.dataset.tokenId;
-        if (!tokenId) return;
-
-        let counterpartContainer;
-        if (element.closest('.pending-targets')) {
-            counterpartContainer = '.target-pool';
-        } else if (element.closest('.target-pool')) {
-            counterpartContainer = '.pending-targets';
-        } else return;
-
-        const querySelector = `${counterpartContainer} .target[data-token-id="${tokenId}"]`;
-
-        return this.element.querySelector(querySelector);
-    }
-
-    simulateHover({hover, element}) {
-        if (hover) {
-            element.classList.add('hover');
-        } else {
-            element.classList.remove('hover');
-        }
-    }
-    */
 }

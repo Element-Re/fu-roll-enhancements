@@ -9,6 +9,7 @@ export class TargetContext {
     item;
     roller;
     strategy;
+    label;
 
     targets = new Map();
 
@@ -46,6 +47,11 @@ export class TargetContext {
 
     setStrategy(strategy) {
         this.strategy = strategy;
+        this.label = strategy.label;
+    }
+
+    clearLabel() {
+        this.label = undefined;
     }
 
     addTarget(targetState) {
@@ -101,6 +107,10 @@ export class TargetContext {
         return this.strategy.canForceTargets;
     }
 
+    get recommendedMaxTargets() {
+        return this.strategy.maxTargets;
+    }
+
     get recommendedTargets() {
         return this.allTargets
             .filter(t => t.recommended)
@@ -127,7 +137,7 @@ export class TargetContext {
 
         const templateData = {
             results: this.finalTargets,
-            label: this.strategy.label
+            label: this.label
         };
         const messageData = ChatMessage.applyRollMode({
             content: await renderTemplate(TEMPLATES.AUTO_TARGET_RESULTS, templateData),

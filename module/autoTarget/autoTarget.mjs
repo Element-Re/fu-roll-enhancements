@@ -78,8 +78,6 @@ export class AutoTarget {
             context.info(game.i18n.format(`${MODULE}.autoTarget.context.info.priorityTargetEffectFound`), {name: e.name});
             const origin = fromUuidSync(e.sourceInfo.itemUuid ?? e.sourceInfo.actorUuid);
             const forcedTarget = context.validTargets.find(t => t.actor.uuid === (origin.actor || origin)?.uuid);
-            // TODO: I have a gut feeling but no evidence that something was lost in translation here
-            //  in the transition to TargetContext. Keep an eye out for possible bugs.
             if (forcedTarget) {
               context.info(game.i18n.format(`${MODULE}.autoTarget.context.info.priorityTargetFound`), {name: forcedTarget.token.name});
               forcedTarget.markPriority({reason: e.name, icon: e.img});
@@ -118,8 +116,9 @@ export class AutoTarget {
     if (getTargetMode() === 'guided') {
 
       const finalTargets = await TargetGuide.wait(context);
+      if (!finalTargets) return null;
 
-      context.setFinalTargets(finalTargets ?? context.recommendedTargets);
+      context.setFinalTargets(finalTargets);
     } else {
       context.setFinalTargets(context.recommendedTargets);
     }

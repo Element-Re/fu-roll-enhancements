@@ -5,4 +5,7 @@
             {{> "modules/fu-roll-enhancements/templates/partials/target-entry-simple.hbs"}}
         {{/each}}
     </div>
+    <span class="total" data-tooltip="{{localize "fu-roll-enhancements.targetGuide.pendingTargetCount.hint"}}">
+        {{localize "fu-roll-enhancements.targetGuide.pendingTargetCount.label"}}: {{pendingTargetCount}} / {{recommendedMaxTargets}}
+    </span>
 </fieldset>

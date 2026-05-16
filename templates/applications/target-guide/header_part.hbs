@@ -1,0 +1,13 @@
+<header>
+    <section class="item-label">
+        <img src="{{item.img}}" class="item-image" alt="{{item.name}}" />
+        <span>{{item.name}}</span>
+    </section>
+    <section class="settings">
+        <label>
+            {{localize "fu-roll-enhancements.autoTarget.options.repeat.label"}}
+            <input type="checkbox" name="repeatTargets"{{#if repeatTargets}} checked{{/if}} />
+        </label>
+    </section>
+</header>
+
