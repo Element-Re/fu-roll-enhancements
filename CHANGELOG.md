@@ -13,8 +13,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 This new optional mode introduces a step in the Auto Target workflow which provides the user a chance to review and
 modify Auto Target results before finalizing and dispatching them. The intent of this feature is to support the many
-targeting edge cases that have been brought to my attention by admitting that the user is way smarter than I can ever
-make the Auto Target algorithm.
+targeting edge cases that have been brought to my attention, by admitting that the user is way smarter than I can ever
+make the Auto Target algorithm, while still providing enough guidance to help them make quick decisions.
 
 *Which is not to say that I wouldn't like to try to support some of the more common edge cases in the future, but this
 is hopefully an acceptable middle ground for now.*
