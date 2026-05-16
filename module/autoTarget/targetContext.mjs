@@ -1,6 +1,6 @@
 import {TargetData} from './targetData.mjs';
-import {TEMPLATES} from '../templates.mjs';
 import {TargetStrategy} from './targetStrategy.mjs';
+import {TEMPLATES} from '../templates.mjs';
 import {MODULE} from '../helpers/utils.mjs';
 
 export class TargetContext {
@@ -14,8 +14,6 @@ export class TargetContext {
     targets = new Map();
 
     finalTargets = [];
-
-    selectionHistory = [];
 
     log = [];
 
@@ -78,6 +76,9 @@ export class TargetContext {
         return this.allTargets.filter(t => t.priority);
     }
 
+    get modifiedTargets() {
+        return this.allTargets.filter(t => t.userModified);
+    }
 
     get sortedTargets() {
         return [...this.targets.values()]
@@ -119,10 +120,6 @@ export class TargetContext {
 
     get finalTargetCount() {
         return this.finalTargets.length;
-    }
-
-    addHistoryEntry(entry) {
-        this.selectionHistory.push(entry);
     }
 
     /**

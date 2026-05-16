@@ -196,11 +196,20 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
     static _finalizeTargets(_event, _target) {
         if (!this.complete) {
             this.complete = true;
+
             const finalTargets = this.pendingTargets.values().map(target => {
                 const data = target.data;
                 data.count = target.count;
+                data.setUserModified();
                 return data;
             });
+
+            const finalTargetIds = new Set(finalTargets.map(target => target.id));
+
+            this.targetContext.recommendedTargets
+                .filter(t => !finalTargetIds.has(t.id))
+                .forEach(t => t.setUserModified());
+
             this.targetContext.clearLabel();
             this.close().then(() => this.resolve(finalTargets) );
         }

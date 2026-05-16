@@ -124,12 +124,10 @@ export class TargetData {
      */
     static sort(a, b) {
 
-        // Primary:
         if (a.displayTier !== b.displayTier) {
             return a.displayTier - b.displayTier;
         }
 
-        // Priority/recommended ordering
         if (
             a.recommendationOrdering.length > 0 &&
             b.recommendationOrdering.length > 0
@@ -139,7 +137,6 @@ export class TargetData {
             if (a_order !== b_order) return a_order - b_order;
         }
 
-        // Stable randomized fallback
         return a.randomSortWeight - b.randomSortWeight;
     }
 
