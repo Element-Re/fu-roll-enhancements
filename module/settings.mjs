@@ -22,7 +22,7 @@ export const registerSettings = () => {
 		config: true,
 		requiresReload: false,
 		type: Boolean,
-		default: true
+		default: false
 	});
 
 	game.settings.register(MODULE, 'autoTargetMode', {
@@ -32,7 +32,7 @@ export const registerSettings = () => {
 		config: true,
 		requiresReload: false,
 		type: String,
-		default: 'guided',
+		default: 'auto',
 		choices: {
 			'disabled': `${MODULE}.settings.autoTargetMode.options.disabled`,
 			'guided': `${MODULE}.settings.autoTargetMode.options.guided`,
