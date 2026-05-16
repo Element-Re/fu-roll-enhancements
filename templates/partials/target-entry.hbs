@@ -1,0 +1,10 @@
+<a data-action="updateTarget" data-update="increment" data-token-id="{{token.id}}" class="target {{#if priority}}priority{{else if recommended}}recommended{{else if valid}}valid{{else}}invalid{{/if}}">
+    <img src="{{thumbnail}}" class="thumbnail" alt="{{token.name}}" >
+    <label>{{token.name}} <span class="count">{{#if @root.repeatTargets}}{{#if (gt recommendationCount 1)}}(x{{recommendationCount}}){{/if}}{{/if}}</span></label>
+    {{#each priorityReasons~}}
+        {{#if icon}}<img class="icon" src="{{icon}}" alt="{{reason}}" data-tooltip="{{reason}}">{{/if}}
+    {{~/each}}
+    {{#each invalidReasons~}}
+        {{#if icon}}<img class="icon" src="{{icon}}" alt="{{reason}}" data-tooltip="{{reason}}">{{/if}}
+    {{~/each}}
+</a>

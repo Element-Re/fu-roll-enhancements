@@ -1,15 +1,14 @@
 import {rollEnhancements} from './module/rolls.mjs';
 import {registerKeyBindings, registerSettings} from './module/settings.mjs';
 import {initializeTemplates} from './module/templates.mjs';
-import {registerAutoTargetHooks} from './module/autoTarget.mjs';
-import {initializeActiveEffects} from './module/effects.js';
-import {getHeaderControlsItemSheetV2} from './module/documents/RollConfiguration.js';
+import {initializeActiveEffects} from './module/effects.mjs';
+import {registerHooks} from './module/hooks.mjs';
 
 Hooks.once('init', () => {
     registerSettings();
     registerKeyBindings();
     initializeTemplates();
-    registerAutoTargetHooks();
+    registerHooks();
 });
 
 Hooks.once('ready', () => {
@@ -17,5 +16,5 @@ Hooks.once('ready', () => {
     libWrapper.register('fu-roll-enhancements', 'CONFIG.Item.documentClass.prototype.roll', rollEnhancements);
 });
 
-Hooks.on('getHeaderControlsItemSheetV2', getHeaderControlsItemSheetV2);
+
 
