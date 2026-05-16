@@ -17,7 +17,7 @@ export class TargetData {
     recommendationCount = 0;
     recommendationOrdering = [];
 
-    _finalSelectionCount;
+    _currentCount;
 
     userModified = false;
 
@@ -41,7 +41,7 @@ export class TargetData {
     }
 
     get selected() {
-        return this._finalSelectionCount > 0;
+        return this._count > 0;
     }
 
     get isFriendly() {
@@ -72,12 +72,12 @@ export class TargetData {
         return 3;
     }
 
-    get finalSelectionCount() {
-        return this._finalSelectionCount ?? this.recommendationCount;
+    get count() {
+        return this._currentCount ?? this.recommendationCount;
     }
 
-    set finalSelectionCount(value) {
-        this._finalSelectionCount = value;
+    set count(value) {
+        this._currentCount = value;
     }
 
     toPendingTarget(count = this.recommendationCount) {

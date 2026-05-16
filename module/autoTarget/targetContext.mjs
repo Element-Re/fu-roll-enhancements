@@ -1,6 +1,7 @@
 import {TargetData} from './targetData.mjs';
 import {TEMPLATES} from '../templates.mjs';
 import {TargetStrategy} from './targetStrategy.mjs';
+import {MODULE} from '../helpers/utils.mjs';
 
 export class TargetContext {
 
@@ -134,7 +135,9 @@ export class TargetContext {
                 actor: this.actor,
                 token: this.actor.token
             },
-            flavor: `${this.item.name}`
+            flavor: `${this.item.name}`,
+            [`flags.${MODULE}.context.type`]: 'auto-target-results'
+
         }, game.settings.get('core', 'rollMode'));
         await ChatMessage.create(messageData);
     }

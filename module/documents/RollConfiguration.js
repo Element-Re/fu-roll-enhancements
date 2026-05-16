@@ -43,7 +43,7 @@ export class RollConfiguration extends HandlebarsApplicationMixin(DocumentSheetV
     }
 }
 
-export function getHeaderControlsItemSheetV2(app, controls) {
+export function _getHeaderControlsItemSheetV2(app, controls) {
     if (app instanceof ItemSheetV2) {
         controls.unshift({
             label: game.i18n.localize(`${MODULE}.rollAutomation.configure.label`),

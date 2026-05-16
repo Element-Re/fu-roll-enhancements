@@ -1,18 +1,10 @@
 {
   "compilerOptions": {
-    "types": ["fvtt-types"],
-    "target": "esnext",
-    "moduleResolution": "bundler",
-    "strict": true
+    "module": "ES6",
+    "target": "ES6"
   },
   "exclude": ["node_modules", "**/node_modules/*"],
-  "include": [
-    "fu-roll-enhancements.mjs",
-    "../../../App/resources/app/common/primitives/global.d.mts",
-    "../../../App/resources/app/client/global.d.mts",
-    "../../../App/resources/app/client/**/*.mjs",
-    "../../../App/resources/app/setup/**/*.mjs"
-  ],
+  "include": ["fu-roll-enhancements.mjs"],
   "typeAcquisition": {
     "include": ["jquery"]
   }

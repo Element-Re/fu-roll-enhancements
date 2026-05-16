@@ -65,8 +65,8 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
     _onRender(_context, _options) {
         const targetEntries = this.element.querySelectorAll('.target[data-token-id]');
         for (const targetEntry of targetEntries) {
-            targetEntry.addEventListener('mouseenter', TargetGuide._onTargetHoverIn);
-            targetEntry.addEventListener('mouseleave', TargetGuide._onTargetHoverOut);
+            targetEntry.addEventListener('mouseenter', TargetGuide._onTargetHoverIn.bind(this));
+            targetEntry.addEventListener('mouseleave', TargetGuide._onTargetHoverOut.bind(this));
         }
     }
 
@@ -124,7 +124,7 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
     /**
      * @this {TargetGuide}
      */
-    static _recommendedTargets(event, target) {
+    static _recommendedTargets(_event, _target) {
 
         if (!this.complete) {
             this.complete = true;
@@ -136,12 +136,12 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
     /**
      * @this {TargetGuide}
      */
-    static _finalizeTargets(event, target) {
+    static _finalizeTargets(_event, _target) {
         if (!this.complete) {
             this.complete = true;
             const finalTargets = this.pendingTargets.values().map(target => {
                 const data = target.data;
-                data.finalSelectionCount = target.count;
+                data.count = target.count;
                 return data;
             });
             this.close().then(() => this.resolve(finalTargets) );
@@ -151,7 +151,7 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
     /**
      * @this {TargetGuide}
      */
-    static _skip(event, target) {
+    static _skip(_event, _target) {
         if (!this.complete) {
             this.complete = true;
             this.close().then(() => { this.resolve(); });
@@ -167,6 +167,7 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
     /**
      * @param event Event
      * @private
+     * @this TargetGuide
      */
     static _onTargetHoverIn(event) {
         const tokenId = event.target.dataset.tokenId;
@@ -174,11 +175,18 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
         if ( token && token._canHover(game.user, event) && token.visible ) {
             token._onHoverIn(event, {hoverOutOthers: true});
         }
+        /*
+        const targetCounterpart = this.getTargetCounterpart(event.target);
+        if (targetCounterpart) {
+            this.simulateHover({hover: true, element: targetCounterpart});
+        }
+        */
     }
 
     /**
      * @param event Event
      * @private
+     * @this TargetGuide
      */
     static _onTargetHoverOut(event) {
         const tokenId = event.target.dataset.tokenId;
@@ -186,5 +194,37 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
         if ( token && token._canHover(game.user, event) && token.visible ) {
             token._onHoverOut(event);
         }
+        /*
+        const targetCounterpart = this.getTargetCounterpart(event.target);
+        if (targetCounterpart) {
+            this.simulateHover({hover: false, element: targetCounterpart});
+        }
+         */
     }
+
+    /*
+    getTargetCounterpart(element) {
+        const tokenId = element?.dataset.tokenId;
+        if (!tokenId) return;
+
+        let counterpartContainer;
+        if (element.closest('.pending-targets')) {
+            counterpartContainer = '.target-pool';
+        } else if (element.closest('.target-pool')) {
+            counterpartContainer = '.pending-targets';
+        } else return;
+
+        const querySelector = `${counterpartContainer} .target[data-token-id="${tokenId}"]`;
+
+        return this.element.querySelector(querySelector);
+    }
+
+    simulateHover({hover, element}) {
+        if (hover) {
+            element.classList.add('hover');
+        } else {
+            element.classList.remove('hover');
+        }
+    }
+    */
 }

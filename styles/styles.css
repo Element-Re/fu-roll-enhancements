@@ -177,7 +177,11 @@
       border: 1px solid transparent;
     }
 
-    &:hover {
+    &.button.hover {
+      background-color: var(--button-hover-background-color);
+    }
+
+    &:hover, &.hover {
       text-shadow: 0 0 1px var(--color-text-primary);
 
       &.priority {

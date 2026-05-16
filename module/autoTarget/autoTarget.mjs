@@ -8,7 +8,7 @@ import {FORCE_TARGET_EFFECTS} from '../constants/autoTarget.mjs';
 import {isValidTarget} from '../helpers/target.mjs';
 import {TargetGuide} from '../applications/targetGuide.mjs';
 
-function activeEffectHandler(actor, effect) {
+export function _activeEffectHandler(actor, effect) {
   const newValue = String(effect.value);
   if(effect.key === 'flags.fu-roll-enhancements.autoTarget.prioritize' && newValue) {
     const prioritize = actor.getFlag('fu-roll-enhancements', 'autoTarget.prioritize');
@@ -16,10 +16,6 @@ function activeEffectHandler(actor, effect) {
     prioritizeCopy.push(newValue);
     actor.flags = foundry.utils.mergeObject(actor.flags, {'fu-roll-enhancements.autoTarget.prioritize': prioritizeCopy});
   }
-}
-
-export function registerAutoTargetHooks() {
-  Hooks.on('applyActiveEffect', activeEffectHandler);
 }
 
 export class AutoTarget {
@@ -100,15 +96,18 @@ export class AutoTarget {
       }
 
       const priorityTargetsPool = [...context.priorityTargets];
-      const validTargetsPool = [...context.validTargets];
+      const secondaryTargetsPool = context.canRepeatTargets ?
+          [...context.validTargets] :
+          context.validTargets.filter(t => !priorityTargetsPool.includes(t));
+
 
 
       let i = 0;
-      while (i < maxTargets && (priorityTargetsPool.length > 0 || validTargetsPool.length > 0)) {
-        const forced = priorityTargetsPool.length > 0;
-        const drawPile = forced ? priorityTargetsPool : validTargetsPool;
+      while (i < maxTargets && (priorityTargetsPool.length > 0 || secondaryTargetsPool.length > 0)) {
+        const priority = priorityTargetsPool.length > 0;
+        const drawPile = priority ? priorityTargetsPool : secondaryTargetsPool;
         const start = Math.floor(Math.random() * (drawPile.length));
-        const target = context.canRepeatTargets && drawPile === validTargetsPool ? drawPile[start] : drawPile.splice(start, 1)[0];
+        const target = context.canRepeatTargets && drawPile === secondaryTargetsPool ? drawPile[start] : drawPile.splice(start, 1)[0];
         context.getTargetData(target.id).markRecommended(i + 1);
         i++;
       }
