@@ -12,7 +12,7 @@
 				"id": "projectfu",
 				"type": "system",
 				"compatibility": {
-					"verified": "4.5.0"
+					"minimum": "4.5.0"
 				}
 			}
 		],
