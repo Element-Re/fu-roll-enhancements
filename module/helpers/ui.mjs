@@ -1,7 +1,8 @@
 import {MODULE} from './utils.mjs';
 
 export function _pingTokenClickAction(event) {
-    const tokenId = event.target.dataset.tokenId;
+    const owner = event.target.closest('[data-token-id]');
+    const tokenId = owner.dataset.tokenId;
     const token = game.canvas.tokens.get(tokenId);
     if (token) canvas.ping(token.center);
 }

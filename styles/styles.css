@@ -306,14 +306,12 @@
   .target {
     display: flex;
     flex-direction: row;
+    justify-content: space-between;
+    place-items: center;
     padding: 4px;
   }
 
-  label {
-    flex: 1 0 auto;
-  }
-
-  a {
-    place-self: center;
+  .target, .target * {
+    cursor: pointer;
   }
 }

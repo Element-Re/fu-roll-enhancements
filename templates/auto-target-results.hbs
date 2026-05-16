@@ -12,11 +12,11 @@
     <section class="target-results targets">
         {{#if results}}
             {{#each results}}
-                <div class="target total default" data-token-id="{{token.id}}">
+                <a class="target total default" data-token-id="{{token.id}}" data-action="pingToken">
                     <label>{{token.name}} <span>{{#if (gt count 1)}}(x{{count}}){{/if}}</span></label>
                     <span>{{#if forcedBy}}({{forcedBy.name}}){{/if}}</span>
-                    <a class="inline-control icon fa-solid fa-bullseye-arrow" data-action="pingToken" data-token-id="{{token.id}}"></a>
-                </div>
+                    <i class="fas fa-crosshairs"></i>
+                </a>
             {{/each}}
         {{else}}
             <section class="detail-desc">
