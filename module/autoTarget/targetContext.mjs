@@ -138,10 +138,7 @@ export class TargetContext {
         };
         const messageData = ChatMessage.applyRollMode({
             content: await renderTemplate(TEMPLATES.AUTO_TARGET_RESULTS, templateData),
-            speaker: {
-                actor: this.actor,
-                token: this.actor.token
-            },
+            speaker: ChatMessage.getSpeaker({token: this.actor.token}),
             flavor: `${this.item.name}`,
             [`flags.${MODULE}.context.type`]: 'auto-target-results'
 
