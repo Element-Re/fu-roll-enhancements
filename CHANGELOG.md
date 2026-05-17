@@ -16,8 +16,10 @@ modify Auto Target results before finalizing and dispatching them. The intent of
 targeting edge cases that have been brought to my attention, by admitting that the user is way smarter than I can ever
 make the Auto Target algorithm, while still providing enough guidance to help them make quick decisions.
 
-*Which is not to say that I wouldn't like to try to support some of the more common edge cases in the future, but this
-is hopefully an acceptable middle ground for now.*
+*(Which is not to say that I wouldn't like to try to support some of the more common edge cases in the future, but this
+is hopefully an acceptable middle ground for now.)*
+
+<img width="702" height="389" alt="image" src="https://github.com/user-attachments/assets/9fcb0c8d-3163-4325-be03-f804b9850174" />
 
 #### Improved Auto Target Results
 
