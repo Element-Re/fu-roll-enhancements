@@ -197,7 +197,7 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
         if (!this.complete) {
             this.complete = true;
 
-            const finalTargets = this.pendingTargets.values().map(target => {
+            const finalTargets = [...this.pendingTargets.values()].map(target => {
                 const data = target.data;
                 data.count = target.count;
                 data.setUserModified();
