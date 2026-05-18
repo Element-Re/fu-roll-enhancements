@@ -3,9 +3,17 @@
         <img src="{{item.img}}" class="item-image" alt="{{item.name}}" />
         <span>{{item.name}}</span>
     </section>
-    <section class="settings">
+    <section class="options">
         <label>
-            {{localize "fu-roll-enhancements.autoTarget.options.repeat.label"}}
+            <span>{{localize "fu-roll-enhancements.targetGuide.options.maxTargets.label"}}</span>
+            <input type="number" name="maxTargets" value="{{maxTargets}}" />
+        </label>
+        <label>
+            <span>{{localize "fu-roll-enhancements.targetGuide.options.sortTargetPoolByTier.label"}}</span>
+            <input type="checkbox" name="sortTargetPoolByTier"{{#if sortTargetPoolByTier}} checked{{/if}} />
+        </label>
+        <label>
+            <span>{{localize "fu-roll-enhancements.targetGuide.options.repeat.label"}}</span>
             <input type="checkbox" name="repeatTargets"{{#if repeatTargets}} checked{{/if}} />
         </label>
     </section>

@@ -2,24 +2,24 @@ import {getTokenThumbnail} from '../helpers/media.mjs';
 
 export class TargetData {
 
+    uid = foundry.utils.randomID();
+
     token;
     context;
     thumbnail;
 
-    randomSortWeight = Math.random();
+    presentationWeight = Math.random();
 
     valid = false;
-    invalidReasons = [];
+    invalidReason;
 
     priority = false;
-    priorityReasons = [];
+    priorityReason;
 
-    recommendationCount = 0;
-    recommendationOrdering = [];
+    recommended = false;
+    recommendationReason;
 
-    _currentCount;
-
-    userModified = false;
+    userSelected = false;
 
     log = [];
 
@@ -34,14 +34,6 @@ export class TargetData {
 
     get actor() {
         return this.token.actor;
-    }
-
-    get recommended() {
-        return this.recommendationCount > 0;
-    }
-
-    get selected() {
-        return this._count > 0;
     }
 
     get isFriendly() {
@@ -72,18 +64,6 @@ export class TargetData {
         return 3;
     }
 
-    get count() {
-        return this._currentCount ?? this.recommendationCount;
-    }
-
-    set count(value) {
-        this._currentCount = value;
-    }
-
-    toPendingTarget(count = this.recommendationCount) {
-        return {token: this.token, count, data: this, thumbnail: this.thumbnail};
-    }
-
     async init() {
         this.thumbnail = await getTokenThumbnail(this.token);
     }
@@ -95,26 +75,21 @@ export class TargetData {
     invalidate(reason) {
         this.valid = false;
 
-        if (reason) {
-            this.invalidReasons.push(reason);
-        }
+        this.invalidReason = reason;
     }
 
     markPriority(reason) {
         this.priority = true;
-
-        if (reason) {
-            this.priorityReasons.push(reason);
-        }
+        this.priorityReason = reason;
     }
 
-    markRecommended(order) {
-        this.recommendationCount++;
-        this.recommendationOrdering.push(order);
+    markRecommended(reason) {
+        this.recommended = true;
+        this.recommendationReason = reason;
     }
 
-    setUserModified(modified = true) {
-        this.userModified = modified;
+    setUserSelected(modified = true) {
+        this.userSelected = modified;
     }
 
     /**
@@ -124,20 +99,20 @@ export class TargetData {
      */
     static sort(a, b) {
 
+        return a.presentationWeight - b.presentationWeight;
+    }
+
+    /**
+     * @param a TargetData
+     * @param b TargetData
+     * @returns {number}
+     */
+    static tierSort(a, b) {
+
         if (a.displayTier !== b.displayTier) {
             return a.displayTier - b.displayTier;
         }
 
-        if (
-            a.recommendationOrdering.length > 0 &&
-            b.recommendationOrdering.length > 0
-        ) {
-            const a_order = Math.min(...a.recommendationOrdering);
-            const b_order = Math.min(...b.recommendationOrdering);
-            if (a_order !== b_order) return a_order - b_order;
-        }
-
-        return a.randomSortWeight - b.randomSortWeight;
+        return a.presentationWeight - b.presentationWeight;
     }
-
 }

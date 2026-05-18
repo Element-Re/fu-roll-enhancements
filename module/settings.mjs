@@ -18,7 +18,7 @@ export const registerSettings = () => {
 	game.settings.register(MODULE, 'enableAutoSpend', {
 		name: `${MODULE}.settings.enableAutoSpend.name`,
 		hint: `${MODULE}.settings.enableAutoSpend.hint`,
-		scope: 'client',
+		scope: 'user',
 		config: true,
 		requiresReload: false,
 		type: Boolean,
@@ -28,7 +28,7 @@ export const registerSettings = () => {
 	game.settings.register(MODULE, 'autoTargetMode', {
 		name: `${MODULE}.settings.autoTargetMode.name`,
 		hint: `${MODULE}.settings.autoTargetMode.hint`,
-		scope: 'client',
+		scope: 'user',
 		config: true,
 		requiresReload: false,
 		type: String,
@@ -38,6 +38,16 @@ export const registerSettings = () => {
 			'guided': `${MODULE}.settings.autoTargetMode.options.guided`,
 			'auto': `${MODULE}.settings.autoTargetMode.options.auto`
 		}
+	});
+
+	game.settings.register(MODULE, 'sortTargetPoolByTier', {
+		name: `${MODULE}.settings.sortTargetPoolByTier.name`,
+		hint: `${MODULE}.settings.sortTargetPoolByTier.hint`,
+		scope: 'user',
+		config: false,
+		requiresReload: false,
+		type: Boolean,
+		default: false
 	});
 
 	game.settings.register(MODULE, 'allowPlayerAutoTarget', {
@@ -53,7 +63,7 @@ export const registerSettings = () => {
 	game.settings.register(MODULE, 'defaultAutoTargetBehavior', {
 		name: `${MODULE}.settings.defaultAutoTargetBehavior.name`,
 		hint: `${MODULE}.settings.defaultAutoTargetBehavior.hint`,
-		scope: 'client',
+		scope: 'user',
 		config: true,
 		requiresReload: false,
 		type: String,
