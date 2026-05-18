@@ -135,7 +135,7 @@
       flex-direction: column;
       counter-reset: targets;
       border-radius: 8px;
-      overflow: scroll;
+      overflow: auto;
 
 
       .target label::before {
@@ -297,18 +297,12 @@
       background-color: var(--color-error-bg);
     }
 
-    img.thumbnail {
+    img.thumbnail, img.icon {
       flex: 0 0 24px;
       border-radius: 4px;
-      max-height: 24px;
-      max-width: 24px;
-    }
-
-    img.icon {
-      flex: 0 0 24px;
-      border-radius: 4px;
-      max-height: 24px;
-      max-width: 24px;
+      height: 24px;
+      width: 24px;
+      object-fit: contain;
     }
 
     label {
@@ -336,8 +330,8 @@
 
     .thumbnail, .icon {
       border-radius: 4px;
-      max-height: 24px;
-      max-width: 24px;
+      height: 24px;
+      width: 24px;
       object-fit: contain;
     }
 
