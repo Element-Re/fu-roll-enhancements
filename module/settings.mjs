@@ -40,16 +40,6 @@ export const registerSettings = () => {
 		}
 	});
 
-	game.settings.register(MODULE, 'sortTargetPoolByTier', {
-		name: `${MODULE}.settings.sortTargetPoolByTier.name`,
-		hint: `${MODULE}.settings.sortTargetPoolByTier.hint`,
-		scope: 'user',
-		config: false,
-		requiresReload: false,
-		type: Boolean,
-		default: false
-	});
-
 	game.settings.register(MODULE, 'allowPlayerAutoTarget', {
 		name: `${MODULE}.settings.allowPlayerAutoTarget.name`,
 		hint: `${MODULE}.settings.allowPlayerAutoTarget.hint`,

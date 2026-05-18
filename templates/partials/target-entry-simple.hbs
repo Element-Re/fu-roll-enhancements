@@ -1,4 +1,10 @@
 <button data-uid="{{uid}}" data-action="updateTarget" data-update="delete" class="button target">
     <img src="{{thumbnail}}" class="thumbnail" alt="{{token.name}}" >
     <label>{{token.name}}</label>
+    {{#each priorityReasons~}}
+        {{#if icon}}<img class="icon" src="{{icon}}" alt="{{reason}}" data-tooltip="{{reason}}">{{/if}}
+    {{~/each}}
+    {{#each invalidReasons~}}
+        {{#if icon}}<img class="icon" src="{{icon}}" alt="{{reason}}" data-tooltip="{{reason}}">{{/if}}
+    {{~/each}}
 </button>

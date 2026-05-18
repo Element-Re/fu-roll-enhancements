@@ -13,7 +13,7 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
     pendingTargets;
     settings = {
         maxTargets: 0,
-        sortTargetPoolByTier: game.settings.get(MODULE, 'sortTargetPoolByTier'),
+        sortTargetPoolByTier: false,
         repeatTargets: false,
     };
 
@@ -248,8 +248,6 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
                     }
                 }
             }
-        } else if (setting === 'sortTargetPoolByTier') {
-            game.settings.set(MODULE, setting, this.settings.sortTargetPoolByTier);
         }
 
         this.render({parts: ['pendingTargets', 'targetPool']});

@@ -5,16 +5,16 @@
     </section>
     <section class="options">
         <label>
-            <span>{{localize "fu-roll-enhancements.targetGuide.options.maxTargets.label"}}</span>
-            <input type="number" name="maxTargets" value="{{maxTargets}}" />
-        </label>
-        <label>
             <span>{{localize "fu-roll-enhancements.targetGuide.options.sortTargetPoolByTier.label"}}</span>
             <input type="checkbox" name="sortTargetPoolByTier"{{#if sortTargetPoolByTier}} checked{{/if}} />
         </label>
         <label>
             <span>{{localize "fu-roll-enhancements.targetGuide.options.repeat.label"}}</span>
             <input type="checkbox" name="repeatTargets"{{#if repeatTargets}} checked{{/if}} />
+        </label>
+        <label>
+            <span>{{localize "fu-roll-enhancements.targetGuide.options.maxTargets.label"}}</span>
+            <input type="number" name="maxTargets" value="{{maxTargets}}" />
         </label>
     </section>
 </header>
