@@ -11,13 +11,13 @@ export class TargetData {
     presentationWeight = Math.random();
 
     valid = false;
-    invalidReason;
+    invalidReasons = [];
 
     priority = false;
-    priorityReason;
+    priorityReasons = [];
 
     recommended = false;
-    recommendationReason;
+    recommendationReasons = [];
 
     userSelected = false;
 
@@ -75,17 +75,17 @@ export class TargetData {
     invalidate(reason) {
         this.valid = false;
 
-        this.invalidReason = reason;
+        this.invalidReasons.push(reason);
     }
 
     markPriority(reason) {
         this.priority = true;
-        this.priorityReason = reason;
+        this.priorityReasons.push(reason);
     }
 
     markRecommended(reason) {
         this.recommended = true;
-        this.recommendationReason = reason;
+        this.recommendationReasons.push(reason);
     }
 
     setUserSelected(modified = true) {

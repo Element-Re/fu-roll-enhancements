@@ -13,8 +13,11 @@
         {{#if results}}
             {{#each results}}
                 <a class="target total default" data-token-id="{{token.id}}" data-action="pingToken">
+                    <img class="thumbnail" src="{{thumbnail}}" alt="{{token.name}}">
                     <label>{{token.name}} <span>{{#if (gt count 1)}}(x{{count}}){{/if}}</span></label>
-                    <span>{{#if forcedBy}}({{forcedBy.name}}){{/if}}</span>
+                    <span class="priority-reasons">{{#each priorityReasons~}}
+                        {{#if icon}}<img class="icon" src="{{icon}}" alt="{{reason}}" data-tooltip="{{reason}}">{{/if}}
+                    {{~/each}}</span>
                     <i class="fas fa-crosshairs"></i>
                 </a>
             {{/each}}

@@ -64,7 +64,11 @@ export class AutoTarget {
 
       context.setFinalTargets(finalTargets);
     } else {
-      context.setFinalTargets(context.recommendedTargets);
+      const finalTargets = context.recommendedTargets;
+
+      await Promise.all(finalTargets.map(target => target.init()));
+
+      context.setFinalTargets(finalTargets);
     }
     return context;
   }
