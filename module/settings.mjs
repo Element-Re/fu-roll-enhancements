@@ -18,7 +18,7 @@ export const registerSettings = () => {
 	game.settings.register(MODULE, 'enableAutoSpend', {
 		name: `${MODULE}.settings.enableAutoSpend.name`,
 		hint: `${MODULE}.settings.enableAutoSpend.hint`,
-		scope: 'client',
+		scope: 'user',
 		config: true,
 		requiresReload: false,
 		type: Boolean,
@@ -28,7 +28,7 @@ export const registerSettings = () => {
 	game.settings.register(MODULE, 'autoTargetMode', {
 		name: `${MODULE}.settings.autoTargetMode.name`,
 		hint: `${MODULE}.settings.autoTargetMode.hint`,
-		scope: 'client',
+		scope: 'user',
 		config: true,
 		requiresReload: false,
 		type: String,
@@ -53,7 +53,7 @@ export const registerSettings = () => {
 	game.settings.register(MODULE, 'defaultAutoTargetBehavior', {
 		name: `${MODULE}.settings.defaultAutoTargetBehavior.name`,
 		hint: `${MODULE}.settings.defaultAutoTargetBehavior.hint`,
-		scope: 'client',
+		scope: 'user',
 		config: true,
 		requiresReload: false,
 		type: String,

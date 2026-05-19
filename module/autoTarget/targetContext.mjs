@@ -1,7 +1,8 @@
-import {TargetData} from './targetData.mjs';
+import {TargetData as all, TargetData} from './targetData.mjs';
 import {TargetStrategy} from './targetStrategy.mjs';
 import {TEMPLATES} from '../templates.mjs';
 import {MODULE} from '../helpers/utils.mjs';
+import {FORCE_TARGET_EFFECTS} from '../constants/autoTarget.mjs';
 
 export class TargetContext {
 
@@ -11,7 +12,11 @@ export class TargetContext {
     strategy;
     label;
 
+    /**
+     * @type {Map<string, TargetData[]>}
+     */
     targets = new Map();
+    originalTargets = [];
 
     finalTargets = [];
 
@@ -27,7 +32,34 @@ export class TargetContext {
         this.roller = TargetStrategy.getRollerFor(item);
 
         for (const target of targetPool) {
-            this.addTarget(new TargetData(target, this));
+            const targetData = new TargetData(target, this);
+            this.originalTargets.push(targetData);
+            this.addTarget(targetData);
+        }
+    }
+
+    extendTargetPool (requestedMax) {
+
+        const currentMax = this.allTargets.length / this.originalTargets.length;
+
+        if (requestedMax > currentMax) {
+            const additionalExtensions = requestedMax - currentMax;
+
+            for (let i = 0; i < additionalExtensions; i++) {
+                for (const target of this.originalTargets) {
+                    const newTarget = new TargetData(target.token, this);
+                    if (target.valid) {
+                        const reason = ''; // TODO
+                        newTarget.validate(reason);
+                    } else {
+                        const reason = ''; // TODO
+                        newTarget.invalidate(reason);
+                    }
+
+                    this.addTarget(newTarget);
+                }
+            }
+
         }
     }
 
@@ -46,14 +78,74 @@ export class TargetContext {
     setStrategy(strategy) {
         this.strategy = strategy;
         this.label = strategy.label;
+        const maxTargets = strategy.maxTargets;
+
+        if (this.strategy.canRepeatTargets) {
+            this.extendTargetPool(maxTargets);
+        }
+
+        const targetCandidates = strategy.getTargetCandidates(this.allTargets.map(t => t.token));
+        // Bail if our strategy didn't give us a proper Set.
+        if (!(targetCandidates instanceof Set)) return;
+        for (const candidate of targetCandidates) {
+            this.getTargetData(candidate.id).forEach(t => t.validate());
+        }
+
+        if (typeof maxTargets === 'number' && maxTargets > 0) {
+
+            // Force targets only for rolls targeting enemies.
+            if (strategy.canForceTargets) {
+                [...this.actor.appliedEffects].forEach(e => {
+                    const effectStatuses = [...e.statuses];
+                    if (e.sourceInfo && effectStatuses.some(s => FORCE_TARGET_EFFECTS.includes(s))) {
+
+                        this.info(game.i18n.format(`${MODULE}.autoTarget.context.info.priorityTargetEffectFound`), {name: e.name});
+                        const origin = fromUuidSync(e.sourceInfo.itemUuid ?? e.sourceInfo.actorUuid);
+                        const forcedTarget = this.getSortedTargets().find(t => t.valid && t.actor.uuid === (origin.actor || origin)?.uuid);
+                        if (forcedTarget) {
+                            this.info(game.i18n.format(`${MODULE}.autoTarget.context.info.priorityTargetFound`), {name: forcedTarget.token.name});
+                            forcedTarget.markPriority({reason: e.name, icon: e.img});
+                        } else {
+                            const message = game.i18n.format(`${MODULE}.autoTarget.errors.forcedTargetInvalid`, {
+                                effect: e.name,
+                                roller: (this.actor.token || this.actor.prototypeToken).name });
+                            this.warn(message);
+                            ui.notifications.warn(message);
+                            return false;
+                        }
+                    }
+                });
+            }
+
+
+
+            const targetPool = this.getSortedTargets({sortByTier: true, unique: false})
+                .filter(t => t.valid)
+                .slice(0, this.recommendedMaxTargets);
+
+            for (const target of targetPool) {
+                const reason = ''; // TODO
+                target.markRecommended({reason});
+            }
+
+        } else targetCandidates.forEach(target => {
+            this.getTargetData(target.id).forEach(t => t.markRecommended(this.recommendedTargets.push(target)));
+        });
     }
 
     clearLabel() {
         this.label = undefined;
     }
 
-    addTarget(targetState) {
-        this.targets.set(targetState.id, targetState);
+    /**
+     * @param target TargetData
+     */
+    addTarget(target) {
+        if(!this.targets.has(target.id)) {
+            this.targets.set(target.id, [target]);
+        } else {
+            this.targets.get(target.id).push(target);
+        }
     }
 
     getTargetData(id) {
@@ -61,7 +153,7 @@ export class TargetContext {
     }
 
     get allTargets() {
-        return [...this.targets.values()];
+        return [...this.targets.values()].reduce((subset, current) => current.concat(subset), []);
     }
 
     get validTargets() {
@@ -77,27 +169,50 @@ export class TargetContext {
     }
 
     get modifiedTargets() {
-        return this.allTargets.filter(t => t.userModified);
+        return this.allTargets.filter(t => t.userSelected);
     }
 
-    get sortedTargets() {
-        return [...this.targets.values()]
-            .sort(TargetData.sort);
+    getTargetUIDMap() {
+        return new Map(this.allTargets.map(t => [t.uid, t]));
     }
 
-    get enemyTargets() {
-        return this.sortedTargets
+    getSortedTargets({sortByTier = false, unique = false} = {}) {
+
+        if (unique) {
+            const allSorted = this.allTargets.sort(sortByTier ? TargetData.tierSort : TargetData.sort);
+            const found = new Set();
+
+            return allSorted.filter(target => {
+                if (!found.has(target.id)) {
+                    found.add(target.id);
+                    return true;
+                } else return false;
+            });
+
+        } else {
+            return this.allTargets
+                .sort(sortByTier ? TargetData.tierSort : TargetData.sort);
+        }
+    }
+
+    getEnemyTargets({sortByTier, unique}) {
+        return this.getSortedTargets({sortByTier, unique})
             .filter(t => t.isHostile);
     }
 
-    get allyTargets() {
-        return this.sortedTargets
+    getAllyTargets({sortByTier, unique}) {
+        return this.getSortedTargets({sortByTier, unique})
             .filter(t => t.isFriendly && t.token.id !== this.roller.id);
     }
 
-    get rollerTargets() {
-        return this.sortedTargets
+    getRollerTargets({sortByTier, unique}) {
+        return this.getSortedTargets({sortByTier, unique})
             .filter(t => t.token.id === this.roller.id);
+    }
+
+    getAllyAndRollerTargets({sortByTier, unique}) {
+        return this.getSortedTargets({sortByTier, unique})
+            .filter(t => t.isFriendly);
     }
 
     get canRepeatTargets() {
@@ -113,9 +228,8 @@ export class TargetContext {
     }
 
     get recommendedTargets() {
-        return this.allTargets
-            .filter(t => t.recommended)
-            .sort(TargetData.sort);
+        return this.getSortedTargets()
+            .filter(t => t.recommended);
     }
 
     get finalTargetCount() {
@@ -123,7 +237,7 @@ export class TargetContext {
     }
 
     /**
-     * @param targets Token[]
+     * @param targets {Token[]}
      */
     setFinalTargets(targets) {
         this.finalTargets = [...targets];

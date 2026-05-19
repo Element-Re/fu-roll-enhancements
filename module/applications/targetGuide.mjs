@@ -12,13 +12,15 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
 
     pendingTargets;
     settings = {
+        maxTargets: 0,
+        sortTargetPoolByTier: false,
         repeatTargets: false,
     };
 
     handlers = {
         targetHoverIn: TargetGuide._onTargetHoverIn.bind(this),
         targetHoverOut: TargetGuide._onTargetHoverOut.bind(this),
-        settingsCheckboxChange: TargetGuide._onSettingsCheckboxChange.bind(this)
+        optionsInputChange: TargetGuide._onOptionsInputChange.bind(this)
     };
 
     static DEFAULT_OPTIONS = {
@@ -56,6 +58,7 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
     constructor(targetContext, callbacks) {
         super();
         this.targetContext = targetContext;
+        this.settings.maxTargets = targetContext.recommendedMaxTargets;
         this.settings.repeatTargets = targetContext.canRepeatTargets;
         this.resolve = callbacks.resolve;
         this.reject = callbacks.reject;
@@ -66,27 +69,33 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
      */
     async _prepareContext() {
 
-        await Promise.all(this.targetContext.targets.values().map(target => target.init()));
+        await Promise.all(this.targetContext.allTargets.map(target => target.init()));
         if (!this.pendingTargets) {
             this.pendingTargets = this._generatePendingTargets();
         }
 
+        const targetOptions = {
+            sortByTier: this.settings.sortTargetPoolByTier,
+            unique: !this.settings.repeatTargets
+        };
+
         return {
             item: this.targetContext.item,
-            pendingTargets: this.pendingTargets.values(),
+            pendingTargets: Object.fromEntries(this.pendingTargets),
             validTargets: {
-                enemies: this.targetContext.enemyTargets,
-                allies: this.targetContext.allyTargets,
-                self: this.targetContext.rollerTargets
+                enemies: this.targetContext.getEnemyTargets(targetOptions),
+                allies: this.targetContext.getAllyTargets(targetOptions),
+                self: this.targetContext.getRollerTargets(targetOptions),
             },
-            pendingTargetCount: this.pendingTargetCount,
-            recommendedMaxTargets: this.targetContext.recommendedMaxTargets,
-            repeatTargets: this.settings.repeatTargets
+            pendingTargetCount: this.pendingTargets.size,
+            maxTargets: this.settings.maxTargets,
+            sortTargetPoolByTier: this.settings.sortTargetPoolByTier,
+            repeatTargets: this.settings.repeatTargets,
         };
     }
 
     get pendingTargetCount() {
-        return this.pendingTargets.values().reduce((total, target) => { return total + target.count; }, 0);
+        return this.pendingTargets.length;
     }
 
     /**
@@ -98,10 +107,11 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
             targetEntry.addEventListener('mouseenter', this.handlers.targetHoverIn);
             targetEntry.addEventListener('mouseleave', this.handlers.targetHoverOut);
         }
-        const repeatTargetsField = this.element.querySelector('header .settings input[name="repeatTargets"]');
-        if (repeatTargetsField) {
-            repeatTargetsField.addEventListener('change', this.handlers.settingsCheckboxChange);
-        }
+
+        this.element.querySelectorAll('header .options input')
+            .forEach(checkbox => {
+                checkbox.addEventListener('change', this.handlers.optionsInputChange);
+            });
     }
 
     /**
@@ -120,7 +130,7 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
      * @private
      */
     _generatePendingTargets() {
-        return new Map([...this.targetContext.recommendedTargets].map(t => ([t.id, t.toPendingTarget()])));
+        return new Map([...this.targetContext.recommendedTargets].map(t => [t.uid, t]));
     }
 
     /**
@@ -145,28 +155,19 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
      */
     static _updateTarget(event, target) {
 
-        const id = target.dataset.tokenId;
         const update = target.dataset.update;
-        if (!id) return;
+        const uid = target.dataset.uid;
 
-        if (update === 'increment') {
-            const pendingTarget = this.pendingTargets.get(id);
-            if (!pendingTarget) {
-                const target = this.targetContext.targets.get(id);
-                this.pendingTargets.set(id, target.toPendingTarget(1) );
-            } else if (this.settings.repeatTargets) {
-                pendingTarget.count++;
-            }
-        } else if (update === 'decrement') {
-            const pendingTarget = this.pendingTargets.get(id);
-            if (!pendingTarget) return;
-            pendingTarget.count--;
-            if (pendingTarget.count <= 0) {
-                this.pendingTargets.delete(id);
-            }
+        if (update === 'insert') {
+
+            const pendingTarget = this.targetContext.getTargetUIDMap().get(uid);
+            this.pendingTargets.set(uid, pendingTarget);
+
+        } else if (update === 'delete') {
+            this.pendingTargets.delete(uid);
         }
 
-        this.render({parts: ['pendingTargets']});
+        this.render({parts: ['pendingTargets', 'targetPool']});
     }
 
     /**
@@ -175,7 +176,7 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
     static _resetTargets(_event, _target) {
         this.pendingTargets = this._generatePendingTargets();
 
-        this.render({parts: ['pendingTargets']});
+        this.render({parts: ['pendingTargets', 'targetPool']});
     }
 
     /**
@@ -197,18 +198,11 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
         if (!this.complete) {
             this.complete = true;
 
-            const finalTargets = [...this.pendingTargets.values()].map(target => {
-                const data = target.data;
-                data.count = target.count;
-                data.setUserModified();
-                return data;
-            });
+            const finalTargets = [...this.pendingTargets.values()];
 
-            const finalTargetIds = new Set(finalTargets.map(target => target.id));
-
-            this.targetContext.recommendedTargets
-                .filter(t => !finalTargetIds.has(t.id))
-                .forEach(t => t.setUserModified());
+            for (const target of finalTargets) {
+                target.setUserSelected();
+            }
 
             this.targetContext.clearLabel();
             this.close().then(() => this.resolve(finalTargets) );
@@ -235,10 +229,27 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
     /**
      * @private
      */
-    _onUpdateSetting() {
-        if (!this.settings.repeatTargets) {
-            this.pendingTargets.forEach(target => target.count = target.count > 1 ? 1 : target.count);
+    _onUpdateSetting(setting) {
+        if (setting === 'maxTargets') {
+            if (this.settings.repeatTargets) {
+                this.targetContext.extendTargetPool(this.settings.maxTargets);
+            }
+        } else if (setting === 'repeatTargets') {
+            if (this.settings.repeatTargets) {
+                this.targetContext.extendTargetPool(this.settings.maxTargets);
+            } else if (setting === this.settings.maxTargets) {
+                const found = new Set();
+
+                for (const pendingTarget of this.pendingTargets.values()) {
+                    if(!found.has(pendingTarget.id)) {
+                        found.add(pendingTarget.id);
+                    } else {
+                        this.pendingTargets.delete(pendingTarget.uid);
+                    }
+                }
+            }
         }
+
         this.render({parts: ['pendingTargets', 'targetPool']});
     }
 
@@ -273,12 +284,16 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
      * @private
      * @this TargetGuide
      */
-    static _onSettingsCheckboxChange(event) {
-        const checkbox = event.target;
-        if(checkbox) {
-            this.settings[checkbox.name] = event.target.checked;
+    static _onOptionsInputChange(event) {
+        const input = event.target;
+        if(input.type === 'checkbox') {
+            this.settings[input.name] = event.target.checked;
+        } else if (input.type === 'number') {
+            this.settings[input.name] = event.target.valueAsNumber;
+        } else {
+            this.settings[input.name] = event.target.value;
         }
-        this._onUpdateSetting();
+        this._onUpdateSetting(input.name);
     }
 
 }

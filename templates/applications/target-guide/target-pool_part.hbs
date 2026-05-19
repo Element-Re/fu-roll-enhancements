@@ -2,14 +2,14 @@
     <fieldset class="enemies-list">
         <legend>{{localize "fu-roll-enhancements.targetGuide.enemies.label"}}</legend>
         {{#each validTargets.enemies}}
-            {{> "modules/fu-roll-enhancements/templates/partials/target-entry.hbs"}}
+            {{> "modules/fu-roll-enhancements/templates/partials/target-entry.hbs" this=this pendingTargets=../pendingTargets}}
         {{/each}}
     </fieldset>
 
     <fieldset class="allies-list">
         <legend>{{localize "fu-roll-enhancements.targetGuide.allies.label"}}</legend>
         {{#each validTargets.allies}}
-            {{> "modules/fu-roll-enhancements/templates/partials/target-entry.hbs"}}
+            {{> "modules/fu-roll-enhancements/templates/partials/target-entry.hbs" this=this pendingTargets=../pendingTargets}}
         {{/each}}
     </fieldset>
 
@@ -17,7 +17,7 @@
         <fieldset class="self-list">
             <legend>{{localize "fu-roll-enhancements.targetGuide.self.label"}}</legend>
             {{#each validTargets.self}}
-                {{> "modules/fu-roll-enhancements/templates/partials/target-entry.hbs"}}
+                {{> "modules/fu-roll-enhancements/templates/partials/target-entry.hbs" this=this pendingTargets=../pendingTargets}}
             {{/each}}
         </fieldset>
     {{/if}}

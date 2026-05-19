@@ -89,15 +89,16 @@
 
     header {
       display: flex;
+      gap: 1rem;
       grid-row: 1;
       grid-column: 1 / span 3;
       justify-content: space-between;
       place-items: center;
       margin-bottom: 1em;
-      font-family: var(--font-h4), serif;
-      font-size: var(--font-h4-size);
 
       .item-label {
+        font-family: var(--font-h4), serif;
+        font-size: var(--font-h4-size);
         display: flex;
         flex-direction: row;
         gap: 0.5rem;
@@ -109,8 +110,22 @@
         }
       }
 
-      .settings {
+      .options {
+        display: flex;
+        flex-direction: row;
+        gap: 0.75rem;
 
+        label {
+          display: flex;
+          flex-direction: row;
+          place-items: center;
+          gap: 0.5rem;
+        }
+
+        input[type='number'] {
+          text-align: center;
+          width: calc(2ch + 1rem + 2px);
+        }
       }
     }
 
@@ -120,6 +135,8 @@
       flex-direction: column;
       counter-reset: targets;
       border-radius: 8px;
+      overflow: auto;
+
 
       .target label::before {
         counter-increment: targets;
@@ -225,12 +242,18 @@
     gap: 4px;
     cursor: pointer;
     height: 32px;
+    text-align: left;
 
-    &:not(.button) {
+    &:disabled {
+      filter: grayscale(50%);
+      opacity: 0.85;
+    }
+
+    &[data-update="insert"] {
       border: 1px solid transparent;
     }
 
-    &.button.hover {
+    &[data-update="delete"].hover {
       background-color: var(--button-hover-background-color);
     }
 
@@ -274,18 +297,12 @@
       background-color: var(--color-error-bg);
     }
 
-    img.thumbnail {
+    img.thumbnail, img.icon {
       flex: 0 0 24px;
       border-radius: 4px;
-      max-height: 24px;
-      max-width: 24px;
-    }
-
-    img.icon {
-      flex: 0 0 24px;
-      border-radius: 4px;
-      max-height: 24px;
-      max-width: 24px;
+      height: 24px;
+      width: 24px;
+      object-fit: contain;
     }
 
     label {
@@ -303,12 +320,42 @@
 }
 
 .chat-message .target-results {
+
+  counter-reset: targets;
   .target {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     place-items: center;
-    padding: 4px;
+    padding: 2px;
+    gap: 0.25rem;
+
+    .thumbnail, .icon {
+      border-radius: 4px;
+      height: 24px;
+      width: 24px;
+      object-fit: contain;
+    }
+
+    .priority-reasons {
+      flex: 0 0 max-content;
+    }
+
+    label {
+      flex: 1 1 auto;
+      text-wrap: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      &::before {
+        counter-increment: targets;
+        content: counter(targets) ". ";
+      }
+    }
+  }
+
+  i.fas {
+    font-size: 20px;
+    padding: 2px;
   }
 
   .target, .target * {

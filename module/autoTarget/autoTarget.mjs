@@ -57,62 +57,6 @@ export class AutoTarget {
     context.info(game.i18n.format(`${MODULE}.autoTarget.context.info.usingStrategy`), {name: strategy.label});
     context.setStrategy(strategy);
 
-    const targetCandidates = strategy.getTargetCandidates(targetPool);
-    // Bail if our strategy didn't give us a proper Set.
-    if (!(targetCandidates instanceof Set)) return;
-    for (const candidate of targetCandidates) {
-      context.getTargetData(candidate.id);
-      context.getTargetData(candidate.id).validate();
-    }
-
-    const maxTargets = strategy.maxTargets;
-
-    if (typeof maxTargets === 'number' && maxTargets > 0) {
-
-      // Force targets only for rolls targeting enemies.
-      if (strategy.canForceTargets) {
-        [...item.actor.appliedEffects].forEach(e => {
-          const effectStatuses = [...e.statuses];
-          if (e.sourceInfo && effectStatuses.some(s => FORCE_TARGET_EFFECTS.includes(s))) {
-
-            context.info(game.i18n.format(`${MODULE}.autoTarget.context.info.priorityTargetEffectFound`), {name: e.name});
-            const origin = fromUuidSync(e.sourceInfo.itemUuid ?? e.sourceInfo.actorUuid);
-            const forcedTarget = context.validTargets.find(t => t.actor.uuid === (origin.actor || origin)?.uuid);
-            if (forcedTarget) {
-              context.info(game.i18n.format(`${MODULE}.autoTarget.context.info.priorityTargetFound`), {name: forcedTarget.token.name});
-              forcedTarget.markPriority({reason: e.name, icon: e.img});
-            } else {
-              const message = game.i18n.format(`${MODULE}.autoTarget.errors.forcedTargetInvalid`, {
-                effect: e.name,
-                roller: (item.actor.token || item.actor.prototypeToken).name });
-              context.warn(message);
-              ui.notifications.warn(message);
-              return false;
-            }
-          }
-        });
-      }
-
-      const priorityTargetsPool = [...context.priorityTargets];
-      const secondaryTargetsPool = context.canRepeatTargets ?
-          [...context.validTargets] :
-          context.validTargets.filter(t => !priorityTargetsPool.includes(t));
-
-
-
-      let i = 0;
-      while (i < maxTargets && (priorityTargetsPool.length > 0 || secondaryTargetsPool.length > 0)) {
-        const priority = priorityTargetsPool.length > 0;
-        const drawPile = priority ? priorityTargetsPool : secondaryTargetsPool;
-        const start = Math.floor(Math.random() * (drawPile.length));
-        const target = context.canRepeatTargets && drawPile === secondaryTargetsPool ? drawPile[start] : drawPile.splice(start, 1)[0];
-        context.getTargetData(target.id).markRecommended(i + 1);
-        i++;
-      }
-    } else targetCandidates.forEach(target => {
-      context.getTargetData(target.id).markRecommended(context.recommendedTargets.push(target));
-    });
-
     if (getTargetMode() === 'guided') {
 
       const finalTargets = await TargetGuide.wait(context);
@@ -120,7 +64,11 @@ export class AutoTarget {
 
       context.setFinalTargets(finalTargets);
     } else {
-      context.setFinalTargets(context.recommendedTargets);
+      const finalTargets = context.recommendedTargets;
+
+      await Promise.all(finalTargets.map(target => target.init()));
+
+      context.setFinalTargets(finalTargets);
     }
     return context;
   }
