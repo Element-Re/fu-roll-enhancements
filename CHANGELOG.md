@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changes
 
 #### New Feature: Guided Targeting
+<img width="611" height="389" alt="image" src="https://github.com/user-attachments/assets/84bd88bb-8862-4ded-9058-de30109459ed" />
 
 This new optional mode introduces a step in the Auto Target workflow which provides the user a chance to review and
 modify Auto Target results before finalizing and dispatching them. The intent of this feature is to support the many
@@ -19,9 +20,10 @@ make the Auto Target algorithm, while still providing enough guidance to help th
 *(Which is not to say that I wouldn't like to try to support some of the more common edge cases in the future, but this
 is hopefully an acceptable middle ground for now.)*
 
-<img width="702" height="389" alt="image" src="https://github.com/user-attachments/assets/9fcb0c8d-3163-4325-be03-f804b9850174" />
+For more information on this feature and how to use it, check out the [project wiki page](https://github.com/Element-Re/fu-roll-enhancements/wiki/Target-Guide).
 
 #### Improved Auto Target Results
+<img width="294" height="181" alt="image" src="https://github.com/user-attachments/assets/9c9a77a2-8183-49eb-8dc3-cb4f0cc2076d" />
 
 Auto Target results have gotten a once-over. In addition to using styling more consistent with the system itself, you
 can now click on a target in the generated chat message to ping its token on the canvas to help you quickly identify it.
