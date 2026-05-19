@@ -11,6 +11,7 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
     complete = false;
 
     pendingTargets;
+    pendingOrder;
     settings = {
         maxTargets: 0,
         sortTargetPoolByTier: false,
@@ -20,7 +21,10 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
     handlers = {
         targetHoverIn: TargetGuide._onTargetHoverIn.bind(this),
         targetHoverOut: TargetGuide._onTargetHoverOut.bind(this),
-        optionsInputChange: TargetGuide._onOptionsInputChange.bind(this)
+        optionsInputChange: TargetGuide._onOptionsInputChange.bind(this),
+        targetDragStart: TargetGuide._onTargetDragStart.bind(this),
+        targetDragOver: TargetGuide._onTargetDragOver.bind(this),
+        targetDrop: TargetGuide._onTargetDrop.bind(this),
     };
 
     static DEFAULT_OPTIONS = {
@@ -72,6 +76,7 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
         await Promise.all(this.targetContext.allTargets.map(target => target.init()));
         if (!this.pendingTargets) {
             this.pendingTargets = this._generatePendingTargets();
+            this.pendingOrder = [...this.pendingTargets.keys()];
         }
 
         const targetOptions = {
@@ -81,7 +86,7 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
 
         return {
             item: this.targetContext.item,
-            pendingTargets: Object.fromEntries(this.pendingTargets),
+            pendingTargets: this.pendingOrder.map(uid => this.pendingTargets.get(uid)),
             validTargets: {
                 enemies: this.targetContext.getEnemyTargets(targetOptions),
                 allies: this.targetContext.getAllyTargets(targetOptions),
@@ -98,6 +103,21 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
         return this.pendingTargets.length;
     }
 
+    get orderedPendingTargets() {
+        return this.pendingOrder.map(uid => this.pendingTargets.get(uid));
+    }
+
+    addPendingTarget(targetData) {
+        this.pendingTargets.set(targetData.uid, targetData);
+        this.pendingOrder.push(targetData.uid);
+    }
+
+    deletePendingTarget(targetData) {
+        this.pendingTargets.delete(targetData.uid);
+        const pendingTargetIndex = this.pendingOrder.indexOf(targetData.uid);
+        this.pendingOrder.splice(pendingTargetIndex, 1);
+    }
+
     /**
      * @override
      */
@@ -106,6 +126,12 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
         for (const targetEntry of targetEntries) {
             targetEntry.addEventListener('mouseenter', this.handlers.targetHoverIn);
             targetEntry.addEventListener('mouseleave', this.handlers.targetHoverOut);
+        }
+        const pendingTargetEntries = this.element.querySelectorAll('.pending-targets .target[draggable]');
+        for (const targetEntry of pendingTargetEntries) {
+            targetEntry.addEventListener('dragstart', this.handlers.targetDragStart);
+            targetEntry.addEventListener('dragover', this.handlers.targetDragOver);
+            targetEntry.addEventListener('drop', this.handlers.targetDrop);
         }
 
         this.element.querySelectorAll('header .options input')
@@ -150,6 +176,8 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
         });
     }
 
+
+
     /**
      * @this {TargetGuide}
      */
@@ -158,13 +186,11 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
         const update = target.dataset.update;
         const uid = target.dataset.uid;
 
+        const pendingTarget = this.targetContext.getTargetUIDMap().get(uid);
         if (update === 'insert') {
-
-            const pendingTarget = this.targetContext.getTargetUIDMap().get(uid);
-            this.pendingTargets.set(uid, pendingTarget);
-
+            this.addPendingTarget(pendingTarget);
         } else if (update === 'delete') {
-            this.pendingTargets.delete(uid);
+            this.deletePendingTarget(pendingTarget);
         }
 
         this.render({parts: ['pendingTargets', 'targetPool']});
@@ -294,6 +320,37 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
             this.settings[input.name] = event.target.value;
         }
         this._onUpdateSetting(input.name);
+    }
+
+    /**
+     * @param event Event
+     * @private
+     * @this TargetGuide
+     */
+    static _onTargetDragStart(event) {
+        const newIndex = event.target.dataset.index;
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', newIndex);
+    }
+
+    /**
+     * @param event Event
+     * @private
+     * @this TargetGuide
+     */
+    static _onTargetDrop(event) {
+        const oldIndex = Number(event.dataTransfer.getData('text/plain'));
+        const newIndex = Number(event.target.dataset.index);
+        if(oldIndex !== newIndex) {
+            const uid = this.pendingOrder.splice(oldIndex, 1)[0];
+            this.pendingOrder.splice(newIndex, 0, uid);
+        }
+
+        this.render({parts: ['pendingTargets']});
+    }
+
+    static _onTargetDragOver(event) {
+        event.preventDefault();
     }
 
 }
