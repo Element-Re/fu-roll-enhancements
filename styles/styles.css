@@ -320,6 +320,8 @@
 }
 
 .chat-message .target-results {
+
+  counter-reset: targets;
   .target {
     display: flex;
     flex-direction: row;
@@ -335,8 +337,19 @@
       object-fit: contain;
     }
 
+    .priority-reasons {
+      flex: 0 0 max-content;
+    }
+
     label {
-      flex: 1 0 auto;
+      flex: 1 1 auto;
+      text-wrap: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      &::before {
+        counter-increment: targets;
+        content: counter(targets) ". ";
+      }
     }
   }
 
