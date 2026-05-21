@@ -88,7 +88,7 @@ export class TargetContext {
         // Bail if our strategy didn't give us a proper Set.
         if (!(targetCandidates instanceof Set)) return;
         for (const candidate of targetCandidates) {
-            this.getTargetData(candidate.id).forEach(t => t.validate());
+            this.targets.get(candidate.id).forEach(t => t.validate());
         }
 
         if (typeof maxTargets === 'number' && maxTargets > 0) {
@@ -128,8 +128,8 @@ export class TargetContext {
                 target.markRecommended({reason});
             }
 
-        } else targetCandidates.forEach(target => {
-            this.getTargetData(target.id).forEach(t => t.markRecommended(this.recommendedTargets.push(target)));
+        } else targetCandidates.forEach(token => {
+            this.targets.get(token.id).forEach(t => t.markRecommended(this.recommendedTargets.push(token)));
         });
     }
 
@@ -141,15 +141,11 @@ export class TargetContext {
      * @param target TargetData
      */
     addTarget(target) {
-        if(!this.targets.has(target.id)) {
-            this.targets.set(target.id, [target]);
+        if(!this.targets.has(target.token.id)) {
+            this.targets.set(target.token.id, [target]);
         } else {
-            this.targets.get(target.id).push(target);
+            this.targets.get(target.token.id).push(target);
         }
-    }
-
-    getTargetData(id) {
-        return this.targets.get(id);
     }
 
     get allTargets() {
@@ -172,8 +168,12 @@ export class TargetContext {
         return this.allTargets.filter(t => t.userSelected);
     }
 
-    getTargetUIDMap() {
-        return new Map(this.allTargets.map(t => [t.uid, t]));
+    /**
+     * Gets all TargetData entries indexed by Instance ID
+     * @returns {Map<string, TargetData>}
+     */
+    getTargetDataIDMap() {
+        return new Map(this.allTargets.map(t => [t.id, t]));
     }
 
     getSortedTargets({sortByTier = false, unique = false} = {}) {
@@ -183,8 +183,8 @@ export class TargetContext {
             const found = new Set();
 
             return allSorted.filter(target => {
-                if (!found.has(target.id)) {
-                    found.add(target.id);
+                if (!found.has(target.token.id)) {
+                    found.add(target.token.id);
                     return true;
                 } else return false;
             });
@@ -244,7 +244,7 @@ export class TargetContext {
     }
 
     async applyFinalTargets() {
-        game.canvas.tokens.setTargets(this.finalTargets.map(t => t.id));
+        game.canvas.tokens.setTargets(this.finalTargets.map(t => t.token.id));
 
         const templateData = {
             results: this.finalTargets,
