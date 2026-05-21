@@ -1,4 +1,4 @@
-<button data-action="updateTarget" data-update="insert" data-uid="{{uid}}" {{#if (lookup pendingTargets uid)}}disabled {{/if}}class="target {{#if priority}}priority{{else if recommended}}recommended{{else if valid}}valid{{else}}invalid{{/if}}">
+<button draggable="true" data-action="updateTarget" data-collection="targetPool" data-id="{{id}}" data-token-id="{{token.id}}" {{#if (lookup pendingTargets id)}}disabled {{/if}}class="target {{#if priority}}priority{{else if recommended}}recommended{{else if valid}}valid{{else}}invalid{{/if}}">
     <img src="{{thumbnail}}" class="thumbnail" alt="{{token.name}}" >
     <label>{{token.name}}</label>
     {{#each priorityReasons~}}

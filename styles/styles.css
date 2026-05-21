@@ -249,11 +249,11 @@
       opacity: 0.85;
     }
 
-    &[data-update="insert"] {
+    &[data-collection="targetPool"] {
       border: 1px solid transparent;
     }
 
-    &[data-update="delete"].hover {
+    &[data-collection="pendingTargets"].hover {
       background-color: var(--button-hover-background-color);
     }
 

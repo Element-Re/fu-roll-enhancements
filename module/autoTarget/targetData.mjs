@@ -2,7 +2,7 @@ import {getTokenThumbnail} from '../helpers/media.mjs';
 
 export class TargetData {
 
-    uid = foundry.utils.randomID();
+    id = foundry.utils.randomID();
 
     token;
     context;
@@ -26,10 +26,6 @@ export class TargetData {
     constructor(token, context) {
         this.token = token;
         this.context = context;
-    }
-
-    get id() {
-        return this.token.id;
     }
 
     get actor() {

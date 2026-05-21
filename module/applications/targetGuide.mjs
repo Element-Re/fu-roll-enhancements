@@ -23,8 +23,9 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
         targetHoverOut: TargetGuide._onTargetHoverOut.bind(this),
         optionsInputChange: TargetGuide._onOptionsInputChange.bind(this),
         targetDragStart: TargetGuide._onTargetDragStart.bind(this),
+        pendingTargetDrop: TargetGuide._onPendingTargetDrop.bind(this),
+        poolTargetDrop: TargetGuide._onPoolTargetDrop.bind(this),
         targetDragOver: TargetGuide._onTargetDragOver.bind(this),
-        targetDrop: TargetGuide._onTargetDrop.bind(this),
     };
 
     static DEFAULT_OPTIONS = {
@@ -86,7 +87,7 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
 
         return {
             item: this.targetContext.item,
-            pendingTargets: this.pendingOrder.map(uid => this.pendingTargets.get(uid)),
+            pendingTargets: Object.fromEntries(this.pendingOrder.map(uid => [uid, this.pendingTargets.get(uid)])),
             validTargets: {
                 enemies: this.targetContext.getEnemyTargets(targetOptions),
                 allies: this.targetContext.getAllyTargets(targetOptions),
@@ -107,22 +108,34 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
         return this.pendingOrder.map(uid => this.pendingTargets.get(uid));
     }
 
-    addPendingTarget(targetData) {
-        this.pendingTargets.set(targetData.uid, targetData);
-        this.pendingOrder.push(targetData.uid);
+    /**
+     * @param id {string}  The id of the target entry to add.
+     * @param index {number | null} The optional index at which to insert the new target in the Pending Targets list.
+     */
+    addPendingTarget(id, index= null) {
+        const target = this.targetContext.getTargetDataIDMap().get(id);
+        this.pendingTargets.set(id, target);
+        if (typeof index === 'number' && index >= 0) {
+            this.pendingOrder.splice(index, 0, id);
+        } else this.pendingOrder.push(id);
     }
 
-    deletePendingTarget(targetData) {
-        this.pendingTargets.delete(targetData.uid);
-        const pendingTargetIndex = this.pendingOrder.indexOf(targetData.uid);
+    /**
+     * @param id {string}
+     * @returns {number} The index that the deleted target previously held in the Pending Targets list.
+     */
+    deletePendingTarget(id) {
+        this.pendingTargets.delete(id);
+        const pendingTargetIndex = this.pendingOrder.indexOf(id);
         this.pendingOrder.splice(pendingTargetIndex, 1);
+        return pendingTargetIndex;
     }
 
     /**
      * @override
      */
     _onRender(_context, _options) {
-        const targetEntries = this.element.querySelectorAll('.target[data-token-id]');
+        const targetEntries = this.element.querySelectorAll('.target[data-id]');
         for (const targetEntry of targetEntries) {
             targetEntry.addEventListener('mouseenter', this.handlers.targetHoverIn);
             targetEntry.addEventListener('mouseleave', this.handlers.targetHoverOut);
@@ -131,7 +144,14 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
         for (const targetEntry of pendingTargetEntries) {
             targetEntry.addEventListener('dragstart', this.handlers.targetDragStart);
             targetEntry.addEventListener('dragover', this.handlers.targetDragOver);
-            targetEntry.addEventListener('drop', this.handlers.targetDrop);
+            targetEntry.addEventListener('drop', this.handlers.pendingTargetDrop);
+        }
+
+        const poolTargetEntries = this.element.querySelectorAll('.target-pool .target[draggable]');
+        for (const targetEntry of poolTargetEntries) {
+            targetEntry.addEventListener('dragstart', this.handlers.targetDragStart);
+            targetEntry.addEventListener('dragover', this.handlers.targetDragOver);
+            targetEntry.addEventListener('drop', this.handlers.poolTargetDrop);
         }
 
         this.element.querySelectorAll('header .options input')
@@ -156,7 +176,7 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
      * @private
      */
     _generatePendingTargets() {
-        return new Map([...this.targetContext.recommendedTargets].map(t => [t.uid, t]));
+        return new Map([...this.targetContext.recommendedTargets].map(t => [t.id, t]));
     }
 
     /**
@@ -177,24 +197,6 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
     }
 
 
-
-    /**
-     * @this {TargetGuide}
-     */
-    static _updateTarget(event, target) {
-
-        const update = target.dataset.update;
-        const uid = target.dataset.uid;
-
-        const pendingTarget = this.targetContext.getTargetUIDMap().get(uid);
-        if (update === 'insert') {
-            this.addPendingTarget(pendingTarget);
-        } else if (update === 'delete') {
-            this.deletePendingTarget(pendingTarget);
-        }
-
-        this.render({parts: ['pendingTargets', 'targetPool']});
-    }
 
     /**
      * @this {TargetGuide}
@@ -270,14 +272,31 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
                     if(!found.has(pendingTarget.id)) {
                         found.add(pendingTarget.id);
                     } else {
-                        this.pendingTargets.delete(pendingTarget.uid);
+                        this.pendingTargets.delete(pendingTarget.id);
                     }
                 }
             }
         }
-
         this.render({parts: ['pendingTargets', 'targetPool']});
     }
+
+    /**
+     * @param event Event
+     * @private
+     * @this TargetGuide
+     */
+    static _onOptionsInputChange(event) {
+        const input = event.target;
+        if(input.type === 'checkbox') {
+            this.settings[input.name] = event.target.checked;
+        } else if (input.type === 'number') {
+            this.settings[input.name] = event.target.valueAsNumber;
+        } else {
+            this.settings[input.name] = event.target.value;
+        }
+        this._onUpdateSetting(input.name);
+    }
+
 
     /**
      * @param event Event
@@ -306,20 +325,20 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
     }
 
     /**
-     * @param event Event
-     * @private
-     * @this TargetGuide
+     * @this {TargetGuide}
      */
-    static _onOptionsInputChange(event) {
-        const input = event.target;
-        if(input.type === 'checkbox') {
-            this.settings[input.name] = event.target.checked;
-        } else if (input.type === 'number') {
-            this.settings[input.name] = event.target.valueAsNumber;
-        } else {
-            this.settings[input.name] = event.target.value;
+    static _updateTarget(event, target) {
+
+        const sourceCollection = target.dataset.collection;
+        const id = target.dataset.id;
+
+        if (sourceCollection === 'targetPool') {
+            this.addPendingTarget(id);
+        } else if (sourceCollection === 'pendingTargets') {
+            this.deletePendingTarget(id);
         }
-        this._onUpdateSetting(input.name);
+
+        this.render({parts: ['pendingTargets', 'targetPool']});
     }
 
     /**
@@ -328,9 +347,36 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
      * @this TargetGuide
      */
     static _onTargetDragStart(event) {
-        const newIndex = event.target.dataset.index;
+        const data = {
+            id: event.target.dataset.id,
+            collection: event.target.dataset.collection
+        };
         event.dataTransfer.effectAllowed = 'move';
-        event.dataTransfer.setData('text/plain', newIndex);
+        event.dataTransfer.setData('text/plain', JSON.stringify(data));
+    }
+
+
+    /**
+     * @param event Event
+     * @private
+     * @this TargetGuide
+     */
+    static _onPendingTargetDrop(event) {
+        const data = JSON.parse(event.dataTransfer.getData('text/plain'));
+        const sourceCollection = data.collection;
+        const replaceID = event.target.dataset.id;
+        const newIndex = Number(this.pendingOrder.indexOf(replaceID));
+
+        if (sourceCollection === 'pendingTargets') {
+            const oldIndex = this.pendingOrder.indexOf(data.id);
+            if(oldIndex !== newIndex) {
+                this.pendingOrder.splice(oldIndex, 1);
+                this.pendingOrder.splice(newIndex, 0, data.id);
+            }
+        } else if (sourceCollection === 'targetPool') {
+            this.addPendingTarget(data.id, newIndex);
+        }
+        this.render({parts: ['pendingTargets', 'targetPool']});
     }
 
     /**
@@ -338,15 +384,20 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
      * @private
      * @this TargetGuide
      */
-    static _onTargetDrop(event) {
-        const oldIndex = Number(event.dataTransfer.getData('text/plain'));
-        const newIndex = Number(event.target.dataset.index);
-        if(oldIndex !== newIndex) {
-            const uid = this.pendingOrder.splice(oldIndex, 1)[0];
-            this.pendingOrder.splice(newIndex, 0, uid);
-        }
+    static _onPoolTargetDrop(event) {
+        const data = JSON.parse(event.dataTransfer.getData('text/plain'));
+        const sourceCollection = data.collection;
+        if (sourceCollection === 'pendingTargets') {
+            const oldID = data.id;
+            const newID = event.target.dataset.id;
 
-        this.render({parts: ['pendingTargets']});
+            if(typeof newID === 'string' && typeof oldID === 'string' && oldID !== newID) {
+                const index = this.deletePendingTarget(oldID);
+                this.addPendingTarget(newID, index);
+            }
+
+            this.render(['pendingTargets', 'targetPool']);
+        }
     }
 
     static _onTargetDragOver(event) {
