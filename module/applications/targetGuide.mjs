@@ -370,8 +370,8 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
         if (sourceCollection === 'pendingTargets') {
             const oldIndex = this.pendingOrder.indexOf(data.id);
             if(oldIndex !== newIndex) {
-                this.pendingOrder.splice(oldIndex, 1);
-                this.pendingOrder.splice(newIndex, 0, data.id);
+                [this.pendingOrder[oldIndex], this.pendingOrder[newIndex]] =
+                    [this.pendingOrder[newIndex], this.pendingOrder[oldIndex]];
             }
         } else if (sourceCollection === 'targetPool') {
             this.addPendingTarget(data.id, newIndex);
