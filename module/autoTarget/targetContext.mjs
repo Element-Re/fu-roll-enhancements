@@ -38,6 +38,9 @@ export class TargetContext {
         }
     }
 
+    /**
+     * @param requestedMax { Number }
+     */
     extendTargetPool (requestedMax) {
 
         const currentMax = this.allTargets.length / this.originalTargets.length;
@@ -63,18 +66,30 @@ export class TargetContext {
         }
     }
 
+    /**
+     * @param message { String }
+     */
     info(message) {
         this.log.push({message, level: 'info'});
     }
 
+    /**
+     * @param message { String }
+     */
     warn(message) {
         this.log.push({message, level: 'warning'});
     }
 
+    /**
+     * @param message { String }
+     */
     error(message) {
         this.log.push({message, level: 'error'});
     }
 
+    /**
+     * @param strategy { TargetStrategy }
+     */
     setStrategy(strategy) {
         this.strategy = strategy;
         this.label = strategy.label;
@@ -148,22 +163,37 @@ export class TargetContext {
         }
     }
 
+    /**
+     * @returns { TargetData[] }
+     */
     get allTargets() {
         return [...this.targets.values()].reduce((subset, current) => current.concat(subset), []);
     }
 
+    /**
+     * @returns { TargetData[] }
+     */
     get validTargets() {
         return this.allTargets.filter(t => t.valid);
     }
 
+    /**
+     * @returns { TargetData[] }
+     */
     get invalidTargets() {
         return this.allTargets.filter(t => !t.valid);
     }
 
+    /**
+     * @returns { TargetData[] }
+     */
     get priorityTargets() {
         return this.allTargets.filter(t => t.priority);
     }
 
+    /**
+     * @returns { TargetData[] }
+     */
     get modifiedTargets() {
         return this.allTargets.filter(t => t.userSelected);
     }
@@ -176,6 +206,11 @@ export class TargetContext {
         return new Map(this.allTargets.map(t => [t.id, t]));
     }
 
+    /**
+     * @param sortByTier { boolean }
+     * @param unique { boolean }
+     * @returns { TargetData[] }
+     */
     getSortedTargets({sortByTier = false, unique = false} = {}) {
 
         if (unique) {
@@ -195,43 +230,73 @@ export class TargetContext {
         }
     }
 
+    /**
+     * @param sortByTier { boolean }
+     * @param unique { boolean }
+     * @returns { TargetData[] }
+     */
     getEnemyTargets({sortByTier, unique}) {
         return this.getSortedTargets({sortByTier, unique})
             .filter(t => t.isHostile);
     }
 
-    getAllyTargets({sortByTier, unique}) {
-        return this.getSortedTargets({sortByTier, unique})
-            .filter(t => t.isFriendly && t.token.id !== this.roller.id);
+    /**
+     * @param sortByTier { boolean }
+     * @param unique { boolean }
+     * @param includeRoller { boolean }
+     * @returns { TargetData[] }
+     */
+    getAllyTargets({sortByTier, unique, includeRoller = false}) {
+        let allyTargets = this.getSortedTargets({sortByTier, unique})
+            .filter(t => t.isFriendly);
+        if (!includeRoller) {
+            allyTargets = allyTargets.filter(t => t.token.id !== this.roller.id);
+        }
+        return allyTargets;
     }
 
+    /**
+     * @param sortByTier { boolean }
+     * @param unique { boolean }
+     * @returns { TargetData[] }
+     */
     getRollerTargets({sortByTier, unique}) {
         return this.getSortedTargets({sortByTier, unique})
             .filter(t => t.token.id === this.roller.id);
     }
 
-    getAllyAndRollerTargets({sortByTier, unique}) {
-        return this.getSortedTargets({sortByTier, unique})
-            .filter(t => t.isFriendly);
-    }
-
+    /**
+     * @returns { boolean }
+     */
     get canRepeatTargets() {
         return this.strategy.canRepeatTargets;
     }
 
+    /**
+     * @returns { boolean }
+     */
     get canForceTargets() {
         return this.strategy.canForceTargets;
     }
 
+    /**
+     * @returns { Number }
+     */
     get recommendedMaxTargets() {
         return this.strategy.maxTargets;
     }
 
+    /**
+     * @returns { TargetData[] }
+     */
     get recommendedTargets() {
         return this.getSortedTargets()
             .filter(t => t.recommended);
     }
 
+    /**
+     * @returns { Number }
+     */
     get finalTargetCount() {
         return this.finalTargets.length;
     }
@@ -243,6 +308,10 @@ export class TargetContext {
         this.finalTargets = [...targets];
     }
 
+    /**
+     * Updates the user's targets on the canvas based on the final targets.
+     * @returns {Promise<void>}
+     */
     async applyFinalTargets() {
         game.canvas.tokens.setTargets(this.finalTargets.map(t => t.token.id));
 
