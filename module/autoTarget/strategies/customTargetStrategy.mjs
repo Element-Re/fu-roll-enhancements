@@ -13,6 +13,11 @@ import {isValidTarget} from '../../helpers/target.mjs';
  */
 export class CustomTargetStrategy extends TargetStrategy {
 
+    /**
+     * @private
+     */
+    _options;
+
     constructor(item, options) {
         super(item);
         this._options = options;
@@ -76,7 +81,11 @@ export class CustomTargetStrategy extends TargetStrategy {
     }
 
     get maxTargets() {
-        return this.options.maxTargets;
+        if (!this.options.targetType) {
+            return 0;
+        } else {
+            return this.options.maxTargets;
+        }
     }
 
     get label() {
