@@ -55,7 +55,7 @@ export class TargetStrategy {
     }
 
     /**
-     * @returns {number} The maximum number of targets, for this strategy's item.
+     * @returns {number | null} The maximum number of targets for this strategy's item.
      */
     get maxTargets() {
         throw new Error('Not implemented');

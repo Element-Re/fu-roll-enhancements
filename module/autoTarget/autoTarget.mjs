@@ -7,6 +7,7 @@ import {CustomTargetStrategy} from './strategies/customTargetStrategy.mjs';
 import {FORCE_TARGET_EFFECTS} from '../constants/autoTarget.mjs';
 import {isValidTarget} from '../helpers/target.mjs';
 import {TargetGuide} from '../applications/targetGuide.mjs';
+import {TargetStrategy} from './targetStrategy.mjs';
 
 export function _activeEffectHandler(actor, effect) {
   const newValue = String(effect.value);
@@ -19,7 +20,8 @@ export function _activeEffectHandler(actor, effect) {
 }
 
 export class AutoTarget {
-  static #strategies = [CustomTargetStrategy, AttackTargetStrategy, TargetRuleTargetStrategy];
+  static #defaultStrategies = [AttackTargetStrategy, TargetRuleTargetStrategy];
+  static #strategies = [CustomTargetStrategy, ...AutoTarget.#defaultStrategies];
   static #getStrategyFor(item) {
     if(typeof item !== 'object' || item.documentName !== 'Item') {
       console.warn('Not an item: ', item);
@@ -82,8 +84,13 @@ export class AutoTarget {
     return item.getFlag(MODULE, 'autoTarget');
   }
 
+  /**
+   * Whether the passed item has a possible default strategy.
+   * @param item {FUItem}
+   * @returns {boolean}
+   */
   static hasDefaultStrategyFor(item) {
-    for(const strategy of this.#strategies.filter(s => !(s instanceof CustomTargetStrategy))) {
+    for(const strategy of this.#defaultStrategies) {
       if(strategy.isValidFor(item)) {
         return true;
       }

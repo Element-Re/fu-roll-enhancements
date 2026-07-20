@@ -185,15 +185,20 @@ export class TargetGuide extends HandlebarsApplicationMixin(ApplicationV2) {
      */
     static async wait(targetContext) {
 
-        return new Promise((resolve, reject) => {
+        // Show the TargetGuide if the target context can recommend at least one target.
+        // This includes null, which means "any number of targets";
+        if (targetContext.recommendedMaxTargets > 0 || targetContext.recommendedMaxTargets === null) {
+            return new Promise((resolve, reject) => {
 
-            const app = new this(targetContext, {
-                resolve,
-                reject
+                const app = new this(targetContext, {
+                    resolve,
+                    reject
+                });
+
+                app.render(true);
             });
+        } else return null;
 
-            app.render(true);
-        });
     }
 
 
