@@ -118,7 +118,7 @@ export async function showAutoTargetDialog(item) {
     const enableLabel = dialogBodyElement.querySelector(`label:has(input[name="flags.${MODULE}.autoTarget.enable"])`);
     enableLabel.setAttribute('data-tooltip', game.i18n.localize(`${MODULE}.autoTarget.options.enable.locked.enableDisableHint`));
 
-    return DialogV2.wait({
+    const options = await DialogV2.wait({
         id: 'auto-target-dialog',
         classes: ['roll-enhancements', 'auto-target-dialog'],
         rejectClose: true,
@@ -132,7 +132,7 @@ export async function showAutoTargetDialog(item) {
                 label: `${MODULE}.autoTarget.dialog.buttons.target`,
                 callback: (_event, _button, dialog) => {
                     const formInput = getFormInput(dialog.element);
-                    return AutoTarget.execute(item, formInput.flags[MODULE].autoTarget);
+                    return formInput.flags[MODULE].autoTarget;
                 }
             },
             {
@@ -147,7 +147,7 @@ export async function showAutoTargetDialog(item) {
                         foundry.utils.expandObject({[`flags.${MODULE}.autoTarget.enable`]: true})
                     );
                     await item.update(updateData);
-                    return AutoTarget.execute(item, autoTargetOptions);
+                    return autoTargetOptions;
                 }
             },
             {
@@ -159,9 +159,9 @@ export async function showAutoTargetDialog(item) {
                 action: 'disable',
                 icon: 'fas fa-ban',
                 label: `${MODULE}.autoTarget.dialog.buttons.disable`,
-                callback: () => {
+                callback: async () => {
                     if (AutoTarget.hasDefaultStrategyFor(item)) {
-                        return item.update({
+                        await item.update({
                             [`flags.${MODULE}.autoTarget`]: {
                                 enable: true,
                                 targetType: null,
@@ -169,7 +169,7 @@ export async function showAutoTargetDialog(item) {
                             }
                         });
                     } else {
-                        return item.setFlag(MODULE, 'autoSpend.enable', false);
+                        await item.setFlag(MODULE, 'autoSpend.enable', false);
                     }
                 }
             }
@@ -178,6 +178,7 @@ export async function showAutoTargetDialog(item) {
             console.log(`${MODULE} | closing auto-target dialog`);
         },
     });
+    if (options) return AutoTarget.execute(item, options);
 }
 
 export function getFormInput(element) {
