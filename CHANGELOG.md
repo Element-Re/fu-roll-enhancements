@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.0.3]
+* Resolves an error thrown when choosing "Skip" or "Disable" in the Auto Target Dialog
+
 ## [3.0.2]
 * Guided Targeting should no longer pop up for items that normally would not have Auto Targeting (including disabled items with default behavior like attacks or spells).
 * The Auto Target dialog should now close immediately when submitted instead of waiting for Guided Targeting to finish.
