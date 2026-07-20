@@ -178,7 +178,7 @@ export async function showAutoTargetDialog(item) {
             console.log(`${MODULE} | closing auto-target dialog`);
         },
     });
-    if (options) return AutoTarget.execute(item, options);
+    if (typeof options === 'object') return AutoTarget.execute(item, options);
 }
 
 export function getFormInput(element) {
