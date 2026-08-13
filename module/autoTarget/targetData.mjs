@@ -1,4 +1,5 @@
 import {getTokenThumbnail} from '../helpers/media.mjs';
+import {getTargetWeight} from '../helpers/effects.mjs';
 
 export class TargetData {
 
@@ -8,7 +9,7 @@ export class TargetData {
     context;
     thumbnail;
 
-    presentationWeight = Math.random();
+    selectionScore;
 
     valid = false;
     invalidReasons = [];
@@ -26,6 +27,7 @@ export class TargetData {
     constructor(token, context) {
         this.token = token;
         this.context = context;
+        this.selectionScore = -Math.log(Math.random()) / getTargetWeight(token);
     }
 
     get actor() {
@@ -95,7 +97,7 @@ export class TargetData {
      */
     static sort(a, b) {
 
-        return a.presentationWeight - b.presentationWeight;
+        return a.selectionScore - b.selectionScore;
     }
 
     /**
@@ -109,6 +111,6 @@ export class TargetData {
             return a.displayTier - b.displayTier;
         }
 
-        return a.presentationWeight - b.presentationWeight;
+        return a.selectionScore - b.selectionScore;
     }
 }

@@ -4,10 +4,8 @@ import {TargetContext} from './targetContext.mjs';
 import {AttackTargetStrategy} from './strategies/attackTargetStrategy.mjs';
 import {TargetRuleTargetStrategy} from './strategies/targetRuleTargetStrategy.mjs';
 import {CustomTargetStrategy} from './strategies/customTargetStrategy.mjs';
-import {FORCE_TARGET_EFFECTS} from '../constants/autoTarget.mjs';
 import {isValidTarget} from '../helpers/target.mjs';
 import {TargetGuide} from '../applications/targetGuide.mjs';
-import {TargetStrategy} from './targetStrategy.mjs';
 
 export function _activeEffectHandler(actor, effect) {
   const newValue = String(effect.value);
