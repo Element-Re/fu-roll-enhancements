@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.1.0]
+### Changes
+#### New Feature: Weighted Targeting
+This release adds support for weighted targeting, wherein a potential target can be assigned a greater target weight such that it is more likely to be targeted. 
+
+To give an actor a greater target weight, set the flag `fu-roll-enhancements.targetWeight` to a number greater than 0 on an actor.
+
+For example, create an effect which has the change:
+
+`flags.fu-roll-enhancements.targetWeight` | `OVERRIDE` | `3`.
+
+This would assign a target weight of 3 to the actor, making it three times as likely to be targeted as other targets.
+
 ## [3.0.3]
 * Resolves an error thrown when choosing "Skip" or "Disable" in the Auto Target Dialog
 
