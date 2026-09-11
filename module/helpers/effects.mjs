@@ -1,7 +1,8 @@
 import {MODULE} from './utils.mjs';
 
 /**
- * Gets the numerical weighted chance of a token being targeted based on an actor flag, if present.
+ * Gets the mathematical weight used to calculate the probability of a token being targeted based on an actor flag,
+ * if present.
  */
 export function getTargetWeight(token) {
 
