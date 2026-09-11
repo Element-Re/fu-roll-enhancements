@@ -9,6 +9,10 @@ export class TargetData {
     context;
     thumbnail;
 
+    /**
+     * Random score used to sort target entry among others.
+     * Intent is for highest N scores to get selected as targets.
+     */
     selectionScore;
 
     valid = false;
@@ -27,6 +31,8 @@ export class TargetData {
     constructor(token, context) {
         this.token = token;
         this.context = context;
+        // Generate random key used to sort target entry among any number of others.
+        // Based on Efraimdis-Spirakis weighted random sampling.
         this.selectionScore = -Math.log(Math.random()) / getTargetWeight(token);
     }
 
